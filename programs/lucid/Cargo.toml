@@ -1,0 +1,21 @@
+[package]
+name = "lucid"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+no-entrypoint = []
+idl = []
+
+[dependencies]
+pinocchio = { version = "0.11", features = ["alloc"] }
+pinocchio-system = "0.6"
+pinocchio-log = "0.5"
+pinocchio-pubkey = "0.3"
+five8_const = "1.0"
+solana-address = { version = "2.6", features = ["curve25519"] }
+shank = "0.4"

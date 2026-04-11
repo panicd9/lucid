@@ -1,0 +1,14 @@
+[package]
+name = "lucid-client"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Auto-generated Rust client for the Lucid program"
+
+[dependencies]
+borsh = { version = "1.5", features = ["derive"] }
+solana-account-info = "2.2"
+solana-cpi = "2.2"
+solana-instruction = "2.2"
+solana-program-error = "2.2"
+solana-pubkey = "2.2"

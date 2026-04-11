@@ -1,0 +1,45 @@
+{
+  "name": "@lucid/client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JavaScript client for the Lucid program",
+  "sideEffects": false,
+  "module": "dist/src/index.mjs",
+  "main": "dist/src/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/src/index.mjs",
+      "require": "./dist/src/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.declarations.json",
+    "test": "ava"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^2.0.0"
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^2.0.0",
+    "ava": "^6.1.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  },
+  "ava": {
+    "require": ["tsup/register"],
+    "timeout": "30000",
+    "typescript": {
+      "compile": false,
+      "rewritePaths": {
+        "test/": "dist/test/"
+      }
+    }
+  },
+  "packageManager": "pnpm@9.1.0",
+  "engines": {
+    "node": ">=v20.0.0"
+  }
+}

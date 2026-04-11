@@ -1,0 +1,20 @@
+{
+  "name": "lucid",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "generate:idl": "shank idl -r programs/lucid -o idl",
+    "generate:clients": "zx ./scripts/generate-clients.mjs"
+  },
+  "devDependencies": {
+    "@codama/renderers-js": "^1.0.0",
+    "@codama/renderers-rust": "^1.0.0",
+    "@codama/nodes-from-anchor": "^1.1.6",
+    "codama": "^1.2.6",
+    "zx": "^8.3.2"
+  },
+  "engines": {
+    "node": ">=v20.0.0"
+  }
+}

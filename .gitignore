@@ -1,0 +1,20 @@
+# Rust
+target/
+
+# Node
+node_modules/
+
+# Client build artifacts
+clients/js/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Test artifacts
+test-ledger/

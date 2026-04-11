@@ -1,0 +1,725 @@
+{
+  "version": "0.1.0",
+  "name": "lucid",
+  "instructions": [
+    {
+      "name": "CreateWallet",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA to create"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Vault PDA to create"
+          ]
+        },
+        {
+          "name": "metaIntentAdd",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Meta-intent for ADD operations"
+          ]
+        },
+        {
+          "name": "metaIntentRemove",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Meta-intent for REMOVE operations"
+          ]
+        },
+        {
+          "name": "metaIntentUpdate",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Meta-intent for UPDATE operations"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "Rent payer"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "AddIntent",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA"
+          ]
+        },
+        {
+          "name": "intent",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Intent PDA to create"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "Rent payer"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "AddIntentsBatch",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "Rent payer"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "DeactivateIntent",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA"
+          ]
+        },
+        {
+          "name": "intent",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Intent PDA to deactivate"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Approver of the intent"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "FreezeWallet",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA"
+          ]
+        },
+        {
+          "name": "metaIntent",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Any meta-intent PDA (for approver verification)"
+          ]
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Approver"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    },
+    {
+      "name": "Propose",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA"
+          ]
+        },
+        {
+          "name": "intent",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Intent PDA"
+          ]
+        },
+        {
+          "name": "proposal",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Proposal PDA to create"
+          ]
+        },
+        {
+          "name": "instructionsSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Instructions sysvar (for Ed25519 verification)"
+          ]
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true,
+          "docs": [
+            "Rent payer"
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 10
+      }
+    },
+    {
+      "name": "Approve",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA"
+          ]
+        },
+        {
+          "name": "intent",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Intent PDA"
+          ]
+        },
+        {
+          "name": "proposal",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Proposal PDA"
+          ]
+        },
+        {
+          "name": "instructionsSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Instructions sysvar (for Ed25519 verification)"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 11
+      }
+    },
+    {
+      "name": "Cancel",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA"
+          ]
+        },
+        {
+          "name": "intent",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Intent PDA"
+          ]
+        },
+        {
+          "name": "proposal",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Proposal PDA"
+          ]
+        },
+        {
+          "name": "instructionsSysvar",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Instructions sysvar (for Ed25519 verification)"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 12
+      }
+    },
+    {
+      "name": "Execute",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Wallet PDA"
+          ]
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Vault PDA (CPI signer)"
+          ]
+        },
+        {
+          "name": "intent",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Intent PDA"
+          ]
+        },
+        {
+          "name": "proposal",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Proposal PDA"
+          ]
+        },
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Event authority PDA"
+          ]
+        },
+        {
+          "name": "program",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "Lucid program (self, for CPI)"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 20
+      }
+    },
+    {
+      "name": "Cleanup",
+      "accounts": [
+        {
+          "name": "proposal",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Proposal PDA to close"
+          ]
+        },
+        {
+          "name": "intent",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Intent PDA (decrement active count)"
+          ]
+        },
+        {
+          "name": "rentRefund",
+          "isMut": true,
+          "isSigner": false,
+          "docs": [
+            "Recipient of rent refund"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 30
+      }
+    },
+    {
+      "name": "EmitEvent",
+      "accounts": [
+        {
+          "name": "eventAuthority",
+          "isMut": false,
+          "isSigner": true,
+          "docs": [
+            "Event authority PDA (must be signer)"
+          ]
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 228
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Wallet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "proposalIndex",
+            "type": "u64"
+          },
+          {
+            "name": "intentCount",
+            "type": "u8"
+          },
+          {
+            "name": "frozen",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "nameLen",
+            "type": "u8"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                4
+              ]
+            }
+          },
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Vault",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "IntentHeader",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "timelockSeconds",
+            "type": "u32"
+          },
+          {
+            "name": "activeProposalCount",
+            "type": "u16"
+          },
+          {
+            "name": "bytePoolLen",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "intentIndex",
+            "type": "u8"
+          },
+          {
+            "name": "intentType",
+            "type": "u8"
+          },
+          {
+            "name": "approved",
+            "type": "u8"
+          },
+          {
+            "name": "approvalThreshold",
+            "type": "u8"
+          },
+          {
+            "name": "cancellationThreshold",
+            "type": "u8"
+          },
+          {
+            "name": "proposerCount",
+            "type": "u8"
+          },
+          {
+            "name": "approverCount",
+            "type": "u8"
+          },
+          {
+            "name": "paramCount",
+            "type": "u8"
+          },
+          {
+            "name": "accountCount",
+            "type": "u8"
+          },
+          {
+            "name": "instructionCount",
+            "type": "u8"
+          },
+          {
+            "name": "dataSegmentCount",
+            "type": "u8"
+          },
+          {
+            "name": "seedCount",
+            "type": "u8"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Proposal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "wallet",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "intent",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proposalIndex",
+            "type": "u64"
+          },
+          {
+            "name": "proposer",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "approvalBitmap",
+            "type": "u16"
+          },
+          {
+            "name": "cancellationBitmap",
+            "type": "u16"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "pad",
+            "type": {
+              "array": [
+                "u8",
+                2
+              ]
+            }
+          },
+          {
+            "name": "proposedAt",
+            "type": "i64"
+          },
+          {
+            "name": "approvedAt",
+            "type": "i64"
+          },
+          {
+            "name": "rentRefund",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "paramsDataLen",
+            "type": "u16"
+          },
+          {
+            "name": "reserved",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH"
+  }
+}
