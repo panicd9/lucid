@@ -1,0 +1,24 @@
+[package]
+name = "lucid-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "lucid"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+solana-sdk = "2.2"
+solana-client = "2.2"
+solana-program = "2.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+bs58 = "0.5"
+sha2 = "0.10"
+anyhow = "1"
+colored = "2"
+shellexpand = "3"
+chrono = "0.4"
+hex = "0.4"
+ed25519-dalek = "1.0"

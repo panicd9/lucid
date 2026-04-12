@@ -1,0 +1,282 @@
+use anyhow::{Context, Result};
+use colored::Colorize;
+use solana_sdk::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+    signer::Signer,
+    system_program,
+    transaction::Transaction,
+};
+use std::str::FromStr;
+
+use crate::pda;
+use crate::rpc;
+use crate::types::*;
+
+pub fn propose(
+    wallet_str: &str,
+    intent_index: u8,
+    params_str: Option<&str>,
+    expiry_secs: u64,
+    keypair_path: &str,
+    url: &str,
+) -> Result<()> {
+    let client = rpc::create_client(url);
+    let payer = rpc::load_keypair(keypair_path)?;
+    let program_id = pda::PROGRAM_ID;
+
+    let wallet_pubkey = Pubkey::from_str(wallet_str).context("Invalid wallet address")?;
+
+    // Fetch wallet to get proposal_index and name
+    let wallet_data = rpc::fetch_account(&client, &wallet_pubkey)?;
+    if wallet_data.len() < PREFIX_LEN + WALLET_DATA_LEN {
+        anyhow::bail!("Invalid wallet account data");
+    }
+    if wallet_data[0] != DISC_WALLET {
+        anyhow::bail!("Account is not a Wallet");
+    }
+
+    let wd = &wallet_data[PREFIX_LEN..];
+    let proposal_index = u64::from_le_bytes(wd[0..8].try_into()?);
+    let name_len = wd[11] as usize;
+    let wallet_name = std::str::from_utf8(&wd[16..16 + name_len.min(32)])?;
+
+    // Derive intent PDA
+    let (intent_pda, _) = pda::find_intent_pda(&wallet_pubkey, intent_index, &program_id);
+
+    // Parse params into bytes
+    let params_data = if let Some(ps) = params_str {
+        parse_params_to_bytes(ps, &client, &intent_pda)?
+    } else {
+        Vec::new()
+    };
+
+    // Build expiry timestamp
+    let now = chrono::Utc::now();
+    let expiry_time = now + chrono::Duration::seconds(expiry_secs as i64);
+    let expiry_str = expiry_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+    // Fetch intent to read template for message rendering
+    let intent_data = rpc::fetch_account(&client, &intent_pda)?;
+    let template = read_template_string(&intent_data);
+
+    // Render template with params for display
+    let rendered = render_template_simple(&template.unwrap_or_default(), params_str);
+
+    // Build the offchain message
+    let body = format!(
+        "expires {}: propose {} | wallet: {} proposal: {}",
+        expiry_str, rendered, wallet_name, proposal_index
+    );
+
+    let mut message = Vec::new();
+    // \xffsolana offchain (16 bytes)
+    message.extend_from_slice(b"\xffsolana offchain");
+    // version: 0
+    message.push(0);
+    // format: 0 (ASCII)
+    message.push(0);
+    // length: u16 LE
+    let body_bytes = body.as_bytes();
+    message.extend_from_slice(&(body_bytes.len() as u16).to_le_bytes());
+    // body
+    message.extend_from_slice(body_bytes);
+
+    // Build Ed25519 precompile instruction
+    let ed25519_ix = crate::rpc::build_ed25519_instruction(&payer, &message)?;
+
+    // Derive proposal PDA
+    let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, proposal_index, &program_id);
+
+    // Build Lucid propose instruction
+    // disc=10 + proposal_index(u64 LE) + params_data
+    let mut ix_data = Vec::new();
+    ix_data.push(10u8); // Propose discriminator
+    ix_data.extend_from_slice(&proposal_index.to_le_bytes());
+    ix_data.extend_from_slice(&params_data);
+
+    let instructions_sysvar = solana_sdk::sysvar::instructions::id();
+
+    let accounts = vec![
+        AccountMeta::new(wallet_pubkey, false),
+        AccountMeta::new(intent_pda, false),
+        AccountMeta::new(proposal_pda, false),
+        AccountMeta::new_readonly(instructions_sysvar, false),
+        AccountMeta::new(payer.pubkey(), true),
+        AccountMeta::new_readonly(system_program::id(), false),
+    ];
+
+    let propose_ix = Instruction::new_with_bytes(program_id, &ix_data, accounts);
+
+    let recent_blockhash = client.get_latest_blockhash()?;
+    let tx = Transaction::new_signed_with_payer(
+        &[ed25519_ix, propose_ix],
+        Some(&payer.pubkey()),
+        &[&payer],
+        recent_blockhash,
+    );
+
+    let sig = rpc::send_and_confirm(&client, &tx)?;
+
+    println!("{}", "Proposal created!".green().bold());
+    println!("  Wallet:    {}", wallet_pubkey);
+    println!("  Intent:    {} (index {})", intent_pda, intent_index);
+    println!("  Proposal:  {} (index {})", proposal_pda, proposal_index);
+    println!("  Message:   {}", body);
+    println!("  Expires:   {}", expiry_str);
+    println!("  Signature: {}", sig);
+
+    Ok(())
+}
+
+fn parse_params_to_bytes(
+    params_str: &str,
+    client: &solana_client::rpc_client::RpcClient,
+    intent_pda: &Pubkey,
+) -> Result<Vec<u8>> {
+    // Fetch intent to understand param types
+    let intent_data = rpc::fetch_account(client, intent_pda)?;
+    if intent_data.len() < PREFIX_LEN + INTENT_HEADER_LEN {
+        anyhow::bail!("Invalid intent account data");
+    }
+
+    let ih = &intent_data[PREFIX_LEN..];
+    let param_count = ih[48] as usize;
+    let proposer_count = ih[46] as usize;
+    let approver_count = ih[47] as usize;
+
+    // Read param entries to get their types
+    let params_offset = PREFIX_LEN + INTENT_HEADER_LEN + (proposer_count * 32) + (approver_count * 32);
+    let mut param_types = Vec::new();
+    for i in 0..param_count {
+        let entry_offset = params_offset + (i * PARAM_ENTRY_SIZE);
+        if entry_offset + PARAM_ENTRY_SIZE <= intent_data.len() {
+            let pt = intent_data[entry_offset + 12]; // param_type offset in ParamEntry
+            param_types.push(pt);
+        }
+    }
+
+    // Parse key=value pairs
+    let pairs: Vec<&str> = params_str.split(',').collect();
+    let mut result = Vec::new();
+
+    for (i, pair) in pairs.iter().enumerate() {
+        let value = if let Some((_k, v)) = pair.split_once('=') {
+            v.trim()
+        } else {
+            pair.trim()
+        };
+
+        let pt = if i < param_types.len() {
+            param_types[i]
+        } else {
+            PARAM_TYPE_U64
+        };
+
+        match pt {
+            PARAM_TYPE_ADDRESS => {
+                let pk = Pubkey::from_str(value).context("Invalid address param")?;
+                result.extend_from_slice(pk.as_ref());
+            }
+            PARAM_TYPE_U64 => {
+                let v: u64 = value.parse().context("Invalid u64 param")?;
+                result.extend_from_slice(&v.to_le_bytes());
+            }
+            PARAM_TYPE_I64 => {
+                let v: i64 = value.parse().context("Invalid i64 param")?;
+                result.extend_from_slice(&v.to_le_bytes());
+            }
+            PARAM_TYPE_STRING => {
+                let bytes = value.as_bytes();
+                result.extend_from_slice(&(bytes.len() as u16).to_le_bytes());
+                result.extend_from_slice(bytes);
+            }
+            PARAM_TYPE_BOOL => {
+                let v: bool = value.parse().context("Invalid bool param")?;
+                result.push(if v { 1 } else { 0 });
+            }
+            PARAM_TYPE_U8 => {
+                let v: u8 = value.parse().context("Invalid u8 param")?;
+                result.push(v);
+            }
+            PARAM_TYPE_U16 => {
+                let v: u16 = value.parse().context("Invalid u16 param")?;
+                result.extend_from_slice(&v.to_le_bytes());
+            }
+            PARAM_TYPE_U32 => {
+                let v: u32 = value.parse().context("Invalid u32 param")?;
+                result.extend_from_slice(&v.to_le_bytes());
+            }
+            PARAM_TYPE_U128 => {
+                let v: u128 = value.parse().context("Invalid u128 param")?;
+                result.extend_from_slice(&v.to_le_bytes());
+            }
+            _ => {
+                // Default to raw bytes
+                let v: u64 = value.parse().unwrap_or(0);
+                result.extend_from_slice(&v.to_le_bytes());
+            }
+        }
+    }
+
+    Ok(result)
+}
+
+fn read_template_string(data: &[u8]) -> Option<String> {
+    if data.len() < PREFIX_LEN + INTENT_HEADER_LEN {
+        return None;
+    }
+    let ih = &data[PREFIX_LEN..];
+    let byte_pool_len = u16::from_le_bytes([ih[38], ih[39]]) as usize;
+    let proposer_count = ih[46] as usize;
+    let approver_count = ih[47] as usize;
+    let param_count = ih[48] as usize;
+    let account_count = ih[49] as usize;
+    let instruction_count = ih[50] as usize;
+    let data_segment_count = ih[51] as usize;
+    let seed_count = ih[52] as usize;
+
+    if byte_pool_len < 4 {
+        return None;
+    }
+
+    let bp_offset = PREFIX_LEN + INTENT_HEADER_LEN
+        + (proposer_count * 32)
+        + (approver_count * 32)
+        + (param_count * PARAM_ENTRY_SIZE)
+        + (account_count * ACCOUNT_ENTRY_SIZE)
+        + (instruction_count * INSTRUCTION_ENTRY_SIZE)
+        + (data_segment_count * DATA_SEGMENT_ENTRY_SIZE)
+        + (seed_count * SEED_ENTRY_SIZE);
+
+    if bp_offset + 4 > data.len() {
+        return None;
+    }
+
+    let tmpl_offset = u16::from_le_bytes([data[bp_offset], data[bp_offset + 1]]) as usize;
+    let tmpl_len = u16::from_le_bytes([data[bp_offset + 2], data[bp_offset + 3]]) as usize;
+    let abs_start = bp_offset + 4 + tmpl_offset;
+    let abs_end = abs_start + tmpl_len;
+    if abs_end > data.len() {
+        return None;
+    }
+    String::from_utf8(data[abs_start..abs_end].to_vec()).ok()
+}
+
+fn render_template_simple(template: &str, params_str: Option<&str>) -> String {
+    if let Some(ps) = params_str {
+        let values: Vec<&str> = ps.split(',').collect();
+        let mut result = template.to_string();
+        for (i, val) in values.iter().enumerate() {
+            let value = if let Some((_k, v)) = val.split_once('=') {
+                v.trim()
+            } else {
+                val.trim()
+            };
+            result = result.replace(&format!("{{{}}}", i), value);
+        }
+        result
+    } else {
+        template.to_string()
+    }
+}
