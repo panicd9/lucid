@@ -21,7 +21,7 @@ export class VerificationEngine {
   verify(intent: IntentDefinition, idl?: AnchorIdl): VerificationResult {
     // Try Tier 1 first
     const tier1 = verifyKnownProgram(intent);
-    if (tier1.status === 'verified') return tier1;
+    if (tier1.status === 'verified' || tier1.status === 'mismatch') return tier1;
 
     // Try Tier 2 if IDL provided
     if (idl) {

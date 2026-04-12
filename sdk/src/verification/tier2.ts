@@ -113,6 +113,7 @@ export function verifyIdlStructural(
     // Any structural error (accounts, args, discriminator) is a hard mismatch
     const hasCriticalError = errors.some(
       (e) =>
+        e.includes('Name mismatch') ||
         e.includes('Account count') ||
         e.includes('writable mismatch') ||
         e.includes('signer mismatch') ||

@@ -126,7 +126,7 @@ export class IntentGenerator {
         type: mapped,
         label: arg.name.replace(/_/g, ' '),
         constraintType: 'none',
-        constraintValue: BigInt(0),
+        constraintValue: 0,
       });
     }
     return params;

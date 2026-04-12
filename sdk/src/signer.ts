@@ -147,11 +147,8 @@ export class IntentSigner {
    * Build the human-readable message that is Ed25519-signed.
    * This is the message that would appear on a Ledger screen.
    *
-   * Format:
-   *   lucid:{wallet_name}\n
-   *   {action} #{proposal_index}\n
-   *   {template with params filled in}\n
-   *   exp:{expiry}
+   * Format (semicolon-delimited, single line):
+   *   lucid;wallet:{wallet_name};{action} #{proposal_index};{template with params filled in};exp:{expiry}
    *
    * @param intentTemplate - The intent template string with {param} placeholders
    * @param params - Key-value map to fill into the template
@@ -180,17 +177,18 @@ export class IntentSigner {
       );
     }
 
-    const lines = [
-      `lucid:${walletName}`,
+    const parts = [
+      'lucid',
+      `wallet:${walletName}`,
       `${action} #${proposalIndex}`,
     ];
 
     if (filled) {
-      lines.push(filled);
+      parts.push(filled);
     }
 
-    lines.push(`exp:${expiry}`);
+    parts.push(`exp:${expiry}`);
 
-    return lines.join('\n');
+    return parts.join(';');
   }
 }

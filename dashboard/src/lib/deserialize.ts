@@ -413,7 +413,7 @@ export function countBits(bitmap: number): number {
   let n = bitmap;
   while (n) {
     count += n & 1;
-    n >>= 1;
+    n >>>= 1;
   }
   return count;
 }

@@ -76,9 +76,10 @@ export class LucidWallet {
         throw new Error(`Wallet not found: ${walletAddress}`);
       }
 
-      const data = Buffer.from(accountInfo.value.data[0], 'base64');
+      const raw = Buffer.from(accountInfo.value.data[0], 'base64');
 
-      // Decode wallet state (matches the on-chain layout from Codama):
+      // Skip 2-byte prefix (discriminator + version) to reach struct data
+      // On-chain layout after prefix:
       // proposalIndex: u64 (8 bytes)
       // intentCount:   u8  (1 byte)
       // frozen:        u8  (1 byte)
@@ -86,6 +87,8 @@ export class LucidWallet {
       // nameLen:       u8  (1 byte)
       // reserved:      [u8; 4] (4 bytes)
       // name:          [u8; 32] (32 bytes)
+      const PREFIX_LEN = 2;
+      const data = raw.subarray(PREFIX_LEN);
       const proposalIndex = data.readBigUInt64LE(0);
       const intentCount = data[8];
       const frozen = data[9];

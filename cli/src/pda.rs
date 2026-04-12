@@ -1,7 +1,7 @@
 use solana_sdk::pubkey::Pubkey;
 
 /// Program ID - placeholder until deployed
-pub const PROGRAM_ID: Pubkey = solana_sdk::pubkey!("11111111111111111111111111111112");
+pub const PROGRAM_ID: Pubkey = solana_sdk::pubkey!("LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH");
 
 pub const WALLET_SEED: &[u8] = b"wallet";
 pub const VAULT_SEED: &[u8] = b"vault";

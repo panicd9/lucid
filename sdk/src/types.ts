@@ -22,7 +22,7 @@ export interface ParamDefinition {
   type: 'address' | 'u64' | 'i64' | 'string' | 'bool' | 'u8' | 'u16' | 'u32' | 'u128';
   label: string;
   constraintType: 'none' | 'less_than_u64' | 'greater_than_u64';
-  constraintValue: bigint;
+  constraintValue: number;
 }
 
 export interface AccountDefinition {
