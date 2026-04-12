@@ -31,38 +31,33 @@ printf "${BOLD}║      Lucid — Full Test Suite         ║${NC}\n"
 printf "${BOLD}╚══════════════════════════════════════╝${NC}\n\n"
 
 # ── 0. Build SBF binary ───────────────────────────────────────────────
-printf "${YELLOW}[0/7] Build SBF binary${NC}\n"
+printf "${YELLOW}[0/5] Build SBF binary${NC}\n"
 run "cargo build-sbf" cargo build-sbf --manifest-path programs/lucid/Cargo.toml
 
 # ── 1. On-chain program ──────────────────────────────────────────────
-printf "${YELLOW}[1/7] On-chain program${NC}\n"
+printf "${YELLOW}[1/5] On-chain program${NC}\n"
 run "cargo check (lucid program)" cargo check -p lucid
 
-# ── 2. Rust integration tests (LiteSVM) ──────────────────────────────
-printf "${YELLOW}[2/7] Rust integration tests${NC}\n"
+# ── 3. Rust integration tests (LiteSVM) ──────────────────────────────
+printf "${YELLOW}[2/5] Rust integration tests${NC}\n"
 run "lifecycle tests"  cargo test -p lucid-tests --test lifecycle  -- --nocapture
 run "proposal tests"   cargo test -p lucid-tests --test proposal   -- --nocapture
 run "security tests"   cargo test -p lucid-tests --test security   -- --nocapture
 run "golden vectors"   cargo test -p lucid-tests --lib             -- --nocapture
 
-# ── 3. CLI ────────────────────────────────────────────────────────────
-printf "${YELLOW}[3/7] CLI tests${NC}\n"
+# ── 4. CLI ────────────────────────────────────────────────────────────
+printf "${YELLOW}[3/5] CLI tests${NC}\n"
 run "cli tests" cargo test -p lucid-cli
 
-# ── 4. SDK ────────────────────────────────────────────────────────────
-printf "${YELLOW}[4/7] SDK${NC}\n"
+# ── 5. SDK ────────────────────────────────────────────────────────────
+printf "${YELLOW}[4/5] SDK${NC}\n"
 run "sdk typecheck" npm run types --prefix sdk
 run "sdk tests"     npm test      --prefix sdk
 
-# ── 5. Dashboard ──────────────────────────────────────────────────────
-printf "${YELLOW}[5/7] Dashboard${NC}\n"
+# ── 6. Dashboard ──────────────────────────────────────────────────────
+printf "${YELLOW}[5/5] Dashboard${NC}\n"
 run "dashboard build" npm run build --prefix dashboard
 run "dashboard tests" npm test      --prefix dashboard
-
-# ── 6. JS client (skipped — no test files yet) ───────────────────────
-printf "${YELLOW}[6/7] JS client${NC}\n"
-printf "${BOLD}── js client tests${NC}\n"
-printf "${YELLOW}   ⊘ skipped (no test files in clients/js/test/)${NC}\n\n"
 
 # ── Summary ───────────────────────────────────────────────────────────
 echo ""
