@@ -29,12 +29,10 @@ fn wallet_pda_different_names_produce_different_pdas() {
 fn vault_pda_chains_from_wallet() {
     let pid = program_id();
     let (wallet_pda, _) = find_wallet_pda(b"my-wallet", &pid);
-    let (vault_pda, vault_bump) = find_vault_pda(&wallet_pda, &pid);
+    let (vault_pda, _) = find_vault_pda(&wallet_pda, &pid);
 
     // Vault PDA must be different from the wallet PDA
     assert_ne!(vault_pda, wallet_pda);
-    // Bump must be valid
-    assert!(vault_bump <= 255);
     // Must be a valid off-curve point (not on the ed25519 curve)
     assert!(
         Pubkey::find_program_address(&[b"vault", wallet_pda.as_ref()], &pid).0 == vault_pda
@@ -77,8 +75,6 @@ fn event_authority_pda_returns_valid_pubkey() {
 
     // Must not be the default all-zeros pubkey
     assert_ne!(ea_pda, Pubkey::default());
-    // Bump in range (trivially true for u8, but confirm it round-trips)
-    assert!(bump <= 255);
     // Re-derive to confirm
     let (ea_pda2, bump2) = Pubkey::find_program_address(&[b"event_authority"], &pid);
     assert_eq!(ea_pda, ea_pda2);
@@ -89,19 +85,18 @@ fn event_authority_pda_returns_valid_pubkey() {
 fn all_bumps_are_valid_u8() {
     let pid = program_id();
 
-    let (_, b1) = find_wallet_pda(b"bump-test", &pid);
-    let (w, _) = find_wallet_pda(b"bump-test", &pid);
-    let (_, b2) = find_vault_pda(&w, &pid);
-    let (_, b3) = find_intent_pda(&w, 0, &pid);
-    let (i, _) = find_intent_pda(&w, 0, &pid);
-    let (_, b4) = find_proposal_pda(&i, 0, &pid);
-    let (_, b5) = find_event_authority_pda(&pid);
+    let (w_pda, w_bump) = find_wallet_pda(b"bump-test", &pid);
+    let (v_pda, v_bump) = find_vault_pda(&w_pda, &pid);
+    let (i_pda, i_bump) = find_intent_pda(&w_pda, 0, &pid);
+    let (p_pda, p_bump) = find_proposal_pda(&i_pda, 0, &pid);
+    let (e_pda, e_bump) = find_event_authority_pda(&pid);
 
-    // All bumps are u8 so this is inherently true, but verify they are
-    // the canonical (highest valid) bump by re-deriving.
-    for bump in [b1, b2, b3, b4, b5] {
-        assert!(bump <= 255);
-    }
+    // Verify each bump matches Pubkey::find_program_address (canonical highest bump)
+    assert_eq!(Pubkey::find_program_address(&[b"wallet", b"bump-test"], &pid), (w_pda, w_bump));
+    assert_eq!(Pubkey::find_program_address(&[b"vault", w_pda.as_ref()], &pid), (v_pda, v_bump));
+    assert_eq!(Pubkey::find_program_address(&[b"intent", w_pda.as_ref(), &[0]], &pid), (i_pda, i_bump));
+    assert_eq!(Pubkey::find_program_address(&[b"proposal", i_pda.as_ref(), &0u64.to_le_bytes()], &pid), (p_pda, p_bump));
+    assert_eq!(Pubkey::find_program_address(&[b"event_authority"], &pid), (e_pda, e_bump));
 }
 
 #[test]

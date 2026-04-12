@@ -4,7 +4,6 @@ use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     signer::Signer,
-    system_program,
     transaction::Transaction,
 };
 use std::str::FromStr;
@@ -103,7 +102,7 @@ pub fn propose(
         AccountMeta::new(proposal_pda, false),
         AccountMeta::new_readonly(instructions_sysvar, false),
         AccountMeta::new(payer.pubkey(), true),
-        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(solana_sdk::system_program::ID, false),
     ];
 
     let propose_ix = Instruction::new_with_bytes(program_id, &ix_data, accounts);

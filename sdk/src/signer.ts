@@ -158,7 +158,7 @@ export class IntentSigner {
    * @param walletName - Short wallet identifier
    * @param proposalIndex - The proposal number
    * @param action - "propose" | "approve" | "cancel"
-   * @param expiry - Timestamp string (YYYY-MM-DD HH:MM:SS)
+   * @param expiry - Timestamp string (DD Mon YYYY HH:MM:SS, e.g. "12 Apr 2026 18:00:00")
    * @returns The formatted message body string
    */
   buildMessage(

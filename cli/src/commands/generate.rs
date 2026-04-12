@@ -18,8 +18,6 @@ struct AnchorInstruction {
     accounts: Vec<AnchorAccount>,
     #[serde(default)]
     args: Vec<AnchorArg>,
-    #[serde(default)]
-    discriminant: Option<AnchorDiscriminant>,
 }
 
 #[derive(serde::Deserialize)]
@@ -40,13 +38,6 @@ struct AnchorArg {
     name: String,
     #[serde(rename = "type")]
     arg_type: serde_json::Value,
-}
-
-#[derive(serde::Deserialize)]
-struct AnchorDiscriminant {
-    #[serde(rename = "type")]
-    disc_type: Option<String>,
-    value: serde_json::Value,
 }
 
 pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {

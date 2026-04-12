@@ -90,14 +90,14 @@ pub fn render_custom_template(template: &str, params: &[String]) -> String {
     result
 }
 
-/// Build a future expiry timestamp string
+/// Build a future expiry timestamp string (DD Mon YYYY HH:MM:SS)
 pub fn future_expiry() -> String {
-    "2030-01-01 00:00:00".to_string()
+    "01 Jan 2030 00:00:00".to_string()
 }
 
-/// Build an expired timestamp string
+/// Build an expired timestamp string (DD Mon YYYY HH:MM:SS)
 pub fn past_expiry() -> String {
-    "2020-01-01 00:00:00".to_string()
+    "01 Jan 2020 00:00:00".to_string()
 }
 
 /// Convert a solana_keypair::Keypair to an ed25519_dalek::SigningKey

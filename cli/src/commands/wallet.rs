@@ -4,7 +4,6 @@ use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     signer::Signer,
-    system_program,
     transaction::Transaction,
 };
 use std::str::FromStr;
@@ -81,7 +80,7 @@ pub fn create(
         AccountMeta::new(intent1, false),
         AccountMeta::new(intent2, false),
         AccountMeta::new(payer.pubkey(), true),
-        AccountMeta::new_readonly(system_program::id(), false),
+        AccountMeta::new_readonly(solana_sdk::system_program::ID, false),
     ];
 
     let ix = Instruction::new_with_bytes(program_id, &data, accounts);
@@ -363,7 +362,7 @@ pub fn add_intents(
             AccountMeta::new(wallet_pubkey, false),
             AccountMeta::new(intent_pda, false),
             AccountMeta::new(payer.pubkey(), true),
-            AccountMeta::new_readonly(system_program::id(), false),
+            AccountMeta::new_readonly(solana_sdk::system_program::ID, false),
         ];
 
         let ix = Instruction::new_with_bytes(program_id, &data, accounts);

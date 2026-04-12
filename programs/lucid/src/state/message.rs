@@ -350,11 +350,11 @@ pub fn base58_encode(input: &[u8]) -> ([u8; 44], usize) {
 }
 
 /// Parse timestamp from the end of the message body.
-/// Expected suffix: "; expires: YYYY-MM-DD HH:MM:SS"
+/// Expected suffix: "; expires: DD Mon YYYY HH:MM:SS"
 /// Returns the timestamp string bytes.
 pub fn parse_expiry_from_body(body: &[u8]) -> Result<&[u8], ProgramError> {
-    // "; expires: " = 11 bytes, timestamp = 19 bytes
-    let suffix_len = 11 + 19; // 30
+    // "; expires: " = 11 bytes, timestamp = 20 bytes ("DD Mon YYYY HH:MM:SS")
+    let suffix_len = 11 + 20; // 31
     if body.len() < suffix_len {
         return Err(ProgramError::Custom(crate::state::errors::ERR_INVALID_OFFCHAIN_HEADER));
     }

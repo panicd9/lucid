@@ -58,10 +58,10 @@ describe('IntentSigner.buildMessage', () => {
         'treasury',
         42n,
         'propose',
-        '2026-01-01 00:00:00'
+        '01 Jan 2026 00:00:00'
       );
       expect(msg).toBe(
-        'propose transfer 1000 to Bob | wallet: treasury; proposal: #42; expires: 2026-01-01 00:00:00'
+        'propose transfer 1000 to Bob | wallet: treasury; proposal: #42; expires: 01 Jan 2026 00:00:00'
       );
     });
 
@@ -72,7 +72,7 @@ describe('IntentSigner.buildMessage', () => {
         'vault',
         1n,
         'propose',
-        '2026-01-01 00:00:00'
+        '01 Jan 2026 00:00:00'
       );
       expect(msg).toContain('transfer 500 to {recipient}');
     });

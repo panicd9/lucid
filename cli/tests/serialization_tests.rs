@@ -30,11 +30,6 @@ fn write_i64(buf: &mut [u8], offset: usize, val: i64) {
     buf[offset..offset + 8].copy_from_slice(&val.to_le_bytes());
 }
 
-/// Read a little-endian u64 from `buf` at `offset`.
-fn read_u64(buf: &[u8], offset: usize) -> u64 {
-    u64::from_le_bytes(buf[offset..offset + 8].try_into().unwrap())
-}
-
 /// Read a little-endian u16 from `buf` at `offset`.
 fn read_u16(buf: &[u8], offset: usize) -> u16 {
     u16::from_le_bytes(buf[offset..offset + 2].try_into().unwrap())

@@ -3127,7 +3127,6 @@ dependencies = [
  "sha2 0.10.9",
  "shellexpand",
  "solana-client 2.3.13",
- "solana-program",
  "solana-sdk",
  "tempfile",
 ]

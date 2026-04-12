@@ -4,7 +4,6 @@ use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     signer::Signer,
-    system_program,
     transaction::Transaction,
 };
 use std::str::FromStr;
@@ -112,7 +111,7 @@ pub fn execute(
                 pda::find_intent_pda(&wallet_pubkey, new_intent_index, &program_id);
             accounts.push(AccountMeta::new(new_intent_pda, false));
             accounts.push(AccountMeta::new(payer.pubkey(), true));
-            accounts.push(AccountMeta::new_readonly(system_program::id(), false));
+            accounts.push(AccountMeta::new_readonly(solana_sdk::system_program::ID, false));
         }
         INTENT_TYPE_REMOVE | INTENT_TYPE_UPDATE => {
             // Meta-remove/update: need target_intent account

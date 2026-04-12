@@ -51,6 +51,6 @@ pub fn load_keypair(path: &str) -> Result<Keypair> {
         .with_context(|| format!("Failed to read keypair file: {}", expanded))?;
     let bytes: Vec<u8> = serde_json::from_str(&data)
         .with_context(|| "Failed to parse keypair JSON")?;
-    Keypair::from_bytes(&bytes)
+    Keypair::try_from(bytes.as_slice())
         .map_err(|e| anyhow::anyhow!("Invalid keypair: {}", e))
 }

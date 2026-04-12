@@ -90,32 +90,29 @@ struct Ed25519DataOwned {
 /// Parse expiry timestamp from message body and validate against current clock
 fn validate_expiry<'a>(body: &'a [u8], clock: &Clock) -> Result<&'a [u8], ProgramError> {
     let expiry_str = parse_expiry_from_body(body)?;
-    // Parse "YYYY-MM-DD HH:MM:SS" into a unix timestamp approximation
-    // We validate that the signature hasn't expired
-    let expiry_ts = parse_iso8601_to_unix(expiry_str)?;
+    // Parse "DD Mon YYYY HH:MM:SS" into a unix timestamp
+    let expiry_ts = parse_timestamp_to_unix(expiry_str)?;
     if clock.unix_timestamp > expiry_ts {
         return Err(ProgramError::Custom(ERR_EXPIRED));
     }
     Ok(expiry_str)
 }
 
-/// Rough ISO8601 "YYYY-MM-DD HH:MM:SS" → unix timestamp parser (no leap seconds)
-fn parse_iso8601_to_unix(s: &[u8]) -> Result<i64, ProgramError> {
-    if s.len() != 19 {
+/// Parse "DD Mon YYYY HH:MM:SS" (20 chars) → unix timestamp (no leap seconds)
+fn parse_timestamp_to_unix(s: &[u8]) -> Result<i64, ProgramError> {
+    if s.len() != 20 {
         return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
     }
-    let year = parse_decimal(&s[0..4])? as i64;
-    let month = parse_decimal(&s[5..7])? as i64;
-    let day = parse_decimal(&s[8..10])? as i64;
-    let hour = parse_decimal(&s[11..13])? as i64;
-    let min = parse_decimal(&s[14..16])? as i64;
-    let sec = parse_decimal(&s[17..19])? as i64;
+    let day = parse_decimal(&s[0..2])? as i64;
+    let month = parse_month_name(&s[3..6])? as i64;
+    let year = parse_decimal(&s[7..11])? as i64;
+    let hour = parse_decimal(&s[12..14])? as i64;
+    let min = parse_decimal(&s[15..17])? as i64;
+    let sec = parse_decimal(&s[18..20])? as i64;
 
-    // Days from months (approximate, handles most cases)
     let days_in_months: [i64; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     let mut total_days: i64 = 0;
 
-    // Years since epoch (1970)
     for y in 1970..year {
         total_days += if is_leap(y) { 366 } else { 365 };
     }
@@ -128,6 +125,25 @@ fn parse_iso8601_to_unix(s: &[u8]) -> Result<i64, ProgramError> {
     total_days += day - 1;
 
     Ok(total_days * 86400 + hour * 3600 + min * 60 + sec)
+}
+
+/// Parse 3-letter month name to 1-based month number
+fn parse_month_name(s: &[u8]) -> Result<u32, ProgramError> {
+    match s {
+        b"Jan" => Ok(1),
+        b"Feb" => Ok(2),
+        b"Mar" => Ok(3),
+        b"Apr" => Ok(4),
+        b"May" => Ok(5),
+        b"Jun" => Ok(6),
+        b"Jul" => Ok(7),
+        b"Aug" => Ok(8),
+        b"Sep" => Ok(9),
+        b"Oct" => Ok(10),
+        b"Nov" => Ok(11),
+        b"Dec" => Ok(12),
+        _ => Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER)),
+    }
 }
 
 fn is_leap(y: i64) -> bool {
