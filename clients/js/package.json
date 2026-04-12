@@ -14,7 +14,10 @@
       "require": "./dist/src/index.js"
     }
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsup && tsc -p tsconfig.declarations.json",
     "test": "ava"
@@ -23,13 +26,16 @@
     "@solana/web3.js": "^2.0.0"
   },
   "devDependencies": {
+    "@ava/typescript": "^6.0.0",
     "@solana/web3.js": "^2.0.0",
     "ava": "^6.1.0",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0"
   },
   "ava": {
-    "require": ["tsup/register"],
+    "require": [
+      "tsup/register"
+    ],
     "timeout": "30000",
     "typescript": {
       "compile": false,

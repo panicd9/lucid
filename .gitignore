@@ -4,8 +4,9 @@ target/
 # Node
 node_modules/
 
-# Client build artifacts
+# Build artifacts
 clients/js/dist/
+dashboard/dist/
 
 # IDE
 .idea/
