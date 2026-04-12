@@ -144,19 +144,22 @@ export class IntentSigner {
   }
 
   /**
-   * Build the human-readable message that is Ed25519-signed.
+   * Build the human-readable message body that is Ed25519-signed.
    * This is the message that would appear on a Ledger screen.
    *
-   * Format (semicolon-delimited, single line):
-   *   lucid;wallet:{wallet_name};{action} #{proposal_index};{template with params filled in};exp:{expiry}
+   * On-chain format (matches programs/lucid/src/state/message.rs):
+   *   {action} {rendered_template} | wallet: {name}; proposal: #{index}; expires: {timestamp}
+   *
+   * The full signed payload wraps this body in a Solana offchain message envelope
+   * (\xffsolana offchain + version + format + length + body).
    *
    * @param intentTemplate - The intent template string with {param} placeholders
    * @param params - Key-value map to fill into the template
    * @param walletName - Short wallet identifier
    * @param proposalIndex - The proposal number
    * @param action - "propose" | "approve" | "cancel"
-   * @param expiry - ISO timestamp string for expiry
-   * @returns The formatted message string
+   * @param expiry - Timestamp string (YYYY-MM-DD HH:MM:SS)
+   * @returns The formatted message body string
    */
   buildMessage(
     intentTemplate: string,
@@ -177,18 +180,8 @@ export class IntentSigner {
       );
     }
 
-    const parts = [
-      'lucid',
-      `wallet:${walletName}`,
-      `${action} #${proposalIndex}`,
-    ];
-
-    if (filled) {
-      parts.push(filled);
-    }
-
-    parts.push(`exp:${expiry}`);
-
-    return parts.join(';');
+    // "{action} {rendered_template} | wallet: {name}; proposal: #{index}; expires: {timestamp}"
+    const actionPart = filled ? `${action} ${filled}` : action;
+    return `${actionPart} | wallet: ${walletName}; proposal: #${proposalIndex}; expires: ${expiry}`;
   }
 }

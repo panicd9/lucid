@@ -19,6 +19,8 @@ solana-system-interface = { version = "2.0", features = ["bincode"] }
 solana-sdk-ids = "3.0"
 ed25519-dalek = { version = "2.1", features = ["rand_core"] }
 rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
 [[test]]
 name = "lifecycle"

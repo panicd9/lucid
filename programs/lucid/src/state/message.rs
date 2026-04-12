@@ -8,7 +8,7 @@ use crate::state::constants::*;
 ///
 /// Format:
 /// \xffsolana offchain + version(0) + format(0=ASCII) + length(u16 LE)
-/// + body: "expires {iso8601}: {action} {rendered_template} | wallet: {name} proposal: {index}"
+/// + body: "{action} {rendered_template} | wallet: {name}; proposal: #{index}; expires: {timestamp}"
 pub fn build_message(
     expiry_str: &[u8],
     action: &[u8],
@@ -25,16 +25,6 @@ pub fn build_message(
     let mut body = [0u8; 450];
     let mut bpos = 0;
 
-    // "expires "
-    let expires_prefix = b"expires ";
-    copy_to(&mut body, &mut bpos, expires_prefix)?;
-
-    // ISO8601 timestamp
-    copy_to(&mut body, &mut bpos, expiry_str)?;
-
-    // ": "
-    copy_to(&mut body, &mut bpos, b": ")?;
-
     // action ("propose", "approve", "cancel")
     copy_to(&mut body, &mut bpos, action)?;
 
@@ -47,15 +37,22 @@ pub fn build_message(
     // " | wallet: "
     copy_to(&mut body, &mut bpos, b" | wallet: ")?;
 
-    // wallet name
+    // wallet name + separator
     copy_to(&mut body, &mut bpos, wallet_name)?;
+    copy_to(&mut body, &mut bpos, b"; ")?;
 
-    // " proposal: "
-    copy_to(&mut body, &mut bpos, b" proposal: ")?;
+    // "proposal: #"
+    copy_to(&mut body, &mut bpos, b"proposal: #")?;
 
     // proposal index as decimal string
     let idx_str = u64_to_decimal(proposal_index);
     copy_to(&mut body, &mut bpos, &idx_str.0[..idx_str.1])?;
+
+    // "; expires: "
+    copy_to(&mut body, &mut bpos, b"; expires: ")?;
+
+    // timestamp
+    copy_to(&mut body, &mut bpos, expiry_str)?;
 
     // Now build the full message with offchain header
     // \xffsolana offchain (16 bytes)
@@ -231,7 +228,8 @@ pub fn render_intent_message(
 
     copy_to(&mut buf, &mut pos, b" | wallet: ")?;
     copy_to(&mut buf, &mut pos, wallet_name)?;
-    copy_to(&mut buf, &mut pos, b" proposal: ")?;
+    copy_to(&mut buf, &mut pos, b"; ")?;
+    copy_to(&mut buf, &mut pos, b"proposal: #")?;
     let idx = u64_to_decimal(proposal_index);
     copy_to(&mut buf, &mut pos, &idx.0[..idx.1])?;
 
@@ -351,25 +349,18 @@ pub fn base58_encode(input: &[u8]) -> ([u8; 44], usize) {
     (buf, pos)
 }
 
-/// Parse ISO8601 timestamp from message body.
-/// Expected prefix: "expires YYYY-MM-DD HH:MM:SS: "
+/// Parse timestamp from the end of the message body.
+/// Expected suffix: "; expires: YYYY-MM-DD HH:MM:SS"
 /// Returns the timestamp string bytes.
 pub fn parse_expiry_from_body(body: &[u8]) -> Result<&[u8], ProgramError> {
-    // "expires " = 8 bytes
-    if body.len() < 8 {
+    // "; expires: " = 11 bytes, timestamp = 19 bytes
+    let suffix_len = 11 + 19; // 30
+    if body.len() < suffix_len {
         return Err(ProgramError::Custom(crate::state::errors::ERR_INVALID_OFFCHAIN_HEADER));
     }
-    if &body[..8] != b"expires " {
+    let suffix_start = body.len() - suffix_len;
+    if &body[suffix_start..suffix_start + 11] != b"; expires: " {
         return Err(ProgramError::Custom(crate::state::errors::ERR_INVALID_OFFCHAIN_HEADER));
     }
-    // Find ": " after the timestamp
-    // Format: "YYYY-MM-DD HH:MM:SS" = 19 chars
-    let ts_end = 8 + 19;
-    if body.len() < ts_end + 2 {
-        return Err(ProgramError::Custom(crate::state::errors::ERR_INVALID_OFFCHAIN_HEADER));
-    }
-    if &body[ts_end..ts_end + 2] != b": " {
-        return Err(ProgramError::Custom(crate::state::errors::ERR_INVALID_OFFCHAIN_HEADER));
-    }
-    Ok(&body[8..ts_end])
+    Ok(&body[suffix_start + 11..])
 }

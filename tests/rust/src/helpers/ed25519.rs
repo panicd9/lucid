@@ -13,8 +13,8 @@ pub fn build_offchain_message(
     proposal_index: u64,
 ) -> Vec<u8> {
     let body = format!(
-        "expires {}: {} {} | wallet: {} proposal: {}",
-        expiry_str, action, rendered_template, wallet_name, proposal_index
+        "{} {} | wallet: {}; proposal: #{}; expires: {}",
+        action, rendered_template, wallet_name, proposal_index, expiry_str
     );
 
     let body_bytes = body.as_bytes();
@@ -104,4 +104,58 @@ pub fn past_expiry() -> String {
 pub fn keypair_to_signing_key(keypair: &solana_keypair::Keypair) -> SigningKey {
     let bytes = keypair.to_bytes();
     SigningKey::from_bytes(&bytes[..32].try_into().unwrap())
+}
+
+/// Canonical message format — single source of truth is tests/vectors/message_format.json.
+///
+/// If the format changes, update the golden file and all three producers:
+///   1. programs/lucid/src/state/message.rs  (on-chain build_message)
+///   2. tests/rust/src/helpers/ed25519.rs     (test helper build_offchain_message)
+///   3. sdk/src/signer.ts                     (SDK IntentSigner.buildMessage)
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(serde::Deserialize)]
+    struct MessageVector {
+        description: String,
+        action: String,
+        rendered_template: String,
+        wallet_name: String,
+        proposal_index: u64,
+        expiry: String,
+        expected_body: String,
+    }
+
+    fn load_vectors() -> Vec<MessageVector> {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/vectors/message_format.json");
+        let content = std::fs::read_to_string(path)
+            .expect("Failed to read tests/vectors/message_format.json — golden file missing");
+        serde_json::from_str(&content).expect("Failed to parse message_format.json")
+    }
+
+    #[test]
+    fn message_body_matches_golden_vectors() {
+        let vectors = load_vectors();
+        assert!(!vectors.is_empty(), "Golden file must contain at least one vector");
+
+        for v in &vectors {
+            let msg = build_offchain_message(
+                &v.expiry,
+                &v.action,
+                &v.rendered_template,
+                &v.wallet_name,
+                v.proposal_index,
+            );
+
+            // Skip the 20-byte offchain header (16 prefix + version + format + 2 length) to get body
+            let body = std::str::from_utf8(&msg[OFFCHAIN_HEADER_PREFIX.len() + 4..]).unwrap();
+
+            assert_eq!(
+                body, v.expected_body,
+                "Vector '{}' failed.\n  Got:      {}\n  Expected: {}",
+                v.description, body, v.expected_body
+            );
+        }
+    }
 }
