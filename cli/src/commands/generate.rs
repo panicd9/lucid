@@ -4,48 +4,110 @@ use std::path::Path;
 
 use crate::types::*;
 
-/// Anchor IDL structures (subset we care about)
-#[derive(serde::Deserialize)]
-struct AnchorIdl {
+/// Normalized instruction/account/arg types used by the generator.
+struct NormalizedIdl {
     name: String,
     address: String,
-    instructions: Vec<AnchorInstruction>,
+    instructions: Vec<NormalizedInstruction>,
 }
 
-#[derive(serde::Deserialize)]
-struct AnchorInstruction {
+struct NormalizedInstruction {
     name: String,
-    #[serde(default)]
-    accounts: Vec<AnchorAccount>,
-    #[serde(default)]
-    args: Vec<AnchorArg>,
+    discriminator: Option<Vec<u8>>,
+    accounts: Vec<NormalizedAccount>,
+    args: Vec<NormalizedArg>,
 }
 
-#[derive(serde::Deserialize)]
-struct AnchorAccount {
+struct NormalizedAccount {
     name: String,
-    #[serde(rename = "isMut")]
     is_mut: bool,
-    #[serde(rename = "isSigner")]
     is_signer: bool,
-    #[serde(default)]
     pda: Option<serde_json::Value>,
-    #[serde(default)]
     address: Option<String>,
 }
 
-#[derive(serde::Deserialize)]
-struct AnchorArg {
+struct NormalizedArg {
     name: String,
-    #[serde(rename = "type")]
     arg_type: serde_json::Value,
+}
+
+/// Parse IDL JSON, detecting old vs new Anchor format automatically.
+fn parse_idl(content: &str) -> Result<NormalizedIdl> {
+    let raw: serde_json::Value = serde_json::from_str(content).context("Failed to parse IDL JSON")?;
+
+    // Detect format: new format has "metadata.name", old has "name" directly
+    let is_new_format = raw.get("metadata").is_some();
+
+    let name = if is_new_format {
+        raw["metadata"]["name"].as_str().unwrap_or("unknown").to_string()
+    } else {
+        raw["name"].as_str().unwrap_or("unknown").to_string()
+    };
+
+    let address = raw["address"].as_str()
+        .ok_or_else(|| anyhow::anyhow!("IDL missing 'address' field"))?
+        .to_string();
+
+    let instructions = raw["instructions"].as_array()
+        .ok_or_else(|| anyhow::anyhow!("IDL missing 'instructions' array"))?;
+
+    let mut normalized_ixs = Vec::new();
+    for ix in instructions {
+        let ix_name = ix["name"].as_str().unwrap_or("unknown").to_string();
+
+        // Discriminator: new format has it pre-computed, old format we compute it
+        let discriminator = ix.get("discriminator")
+            .and_then(|d| d.as_array())
+            .map(|arr| arr.iter().map(|v| v.as_u64().unwrap_or(0) as u8).collect());
+
+        // Accounts
+        let mut accounts = Vec::new();
+        if let Some(accts) = ix["accounts"].as_array() {
+            for acct in accts {
+                let acct_name = acct["name"].as_str().unwrap_or("unknown").to_string();
+                let (is_mut, is_signer) = if is_new_format {
+                    (acct["writable"].as_bool().unwrap_or(false),
+                     acct["signer"].as_bool().unwrap_or(false))
+                } else {
+                    (acct["isMut"].as_bool().unwrap_or(false),
+                     acct["isSigner"].as_bool().unwrap_or(false))
+                };
+                accounts.push(NormalizedAccount {
+                    name: acct_name,
+                    is_mut,
+                    is_signer,
+                    pda: acct.get("pda").cloned(),
+                    address: acct.get("address").and_then(|a| a.as_str()).map(|s| s.to_string()),
+                });
+            }
+        }
+
+        // Args: new format nests under "args[].type", old uses "args[].type" too
+        let mut args = Vec::new();
+        if let Some(ax) = ix["args"].as_array() {
+            for arg in ax {
+                args.push(NormalizedArg {
+                    name: arg["name"].as_str().unwrap_or("unknown").to_string(),
+                    arg_type: arg["type"].clone(),
+                });
+            }
+        }
+
+        normalized_ixs.push(NormalizedInstruction {
+            name: ix_name,
+            discriminator,
+            accounts,
+            args,
+        });
+    }
+
+    Ok(NormalizedIdl { name, address, instructions: normalized_ixs })
 }
 
 pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
     let idl_content = std::fs::read_to_string(idl_path)
         .with_context(|| format!("Failed to read IDL: {}", idl_path))?;
-    let idl: AnchorIdl =
-        serde_json::from_str(&idl_content).context("Failed to parse IDL JSON")?;
+    let idl = parse_idl(&idl_content)?;
 
     std::fs::create_dir_all(output_dir)?;
 
@@ -72,15 +134,19 @@ pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
 }
 
 fn generate_intent_from_instruction(
-    ix: &AnchorInstruction,
+    ix: &NormalizedInstruction,
     program_id: &str,
 ) -> Result<IntentDefinition> {
-    // Compute discriminator: SHA-256("global:{snake_case_name}")[..8]
-    let disc_input = format!("global:{}", snake_case(&ix.name));
-    let mut hasher = Sha256::new();
-    hasher.update(disc_input.as_bytes());
-    let hash = hasher.finalize();
-    let discriminator: Vec<u8> = hash[..8].to_vec();
+    // Use pre-computed discriminator if available, otherwise compute from name
+    let discriminator = if let Some(disc) = &ix.discriminator {
+        disc.clone()
+    } else {
+        let disc_input = format!("global:{}", snake_case(&ix.name));
+        let mut hasher = Sha256::new();
+        hasher.update(disc_input.as_bytes());
+        let hash = hasher.finalize();
+        hash[..8].to_vec()
+    };
 
     // Map args to params
     let mut params: Vec<ParamDef> = Vec::new();
@@ -181,7 +247,7 @@ fn map_idl_type(ty: &serde_json::Value) -> String {
 }
 
 fn infer_account_source(
-    acct: &AnchorAccount,
+    acct: &NormalizedAccount,
     params: &[ParamDef],
 ) -> (String, Option<serde_json::Value>) {
     let name_lower = acct.name.to_lowercase();
@@ -237,7 +303,7 @@ fn infer_account_source(
     ("param".to_string(), None)
 }
 
-fn generate_template(ix_name: &str, args: &[AnchorArg]) -> String {
+fn generate_template(ix_name: &str, args: &[NormalizedArg]) -> String {
     let readable_name = snake_case(ix_name).replace('_', " ");
 
     // Special patterns
@@ -282,8 +348,8 @@ fn generate_template(ix_name: &str, args: &[AnchorArg]) -> String {
 
 fn classify_risk(
     ix_name: &str,
-    args: &[AnchorArg],
-    accounts: &[AnchorAccount],
+    args: &[NormalizedArg],
+    accounts: &[NormalizedAccount],
 ) -> (String, u32) {
     let name_lower = ix_name.to_lowercase();
 

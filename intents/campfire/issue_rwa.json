@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "programId": "Ab1nTbMuFjcfoRJWWAdxPAVotYz2kzPxS18Yzie2iiQt",
+  "instructionName": "issue_rwa",
+  "discriminator": [
+    200,
+    165,
+    209,
+    206,
+    4,
+    2,
+    138,
+    195
+  ],
+  "params": [
+    {
+      "name": "pool_id",
+      "paramType": "u64",
+      "constraintType": "none",
+      "constraintValue": 0
+    }
+  ],
+  "accounts": [
+    {
+      "name": "admin",
+      "source": "vault",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "global_config",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "pool",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "pool_authority",
+      "source": "pda",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "rwa_mint",
+      "source": "param",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "rwa_vault",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "transfer_hook_program",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "extra_account_metas",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "system_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "11111111111111111111111111111111"
+    },
+    {
+      "name": "token_program",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "associated_token_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        200,
+        165,
+        209,
+        206,
+        4,
+        2,
+        138,
+        195
+      ],
+      "paramIndex": null
+    },
+    {
+      "segmentType": "param",
+      "data": null,
+      "paramIndex": 0
+    }
+  ],
+  "seeds": [],
+  "template": "issue rwa: {pool_id}",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

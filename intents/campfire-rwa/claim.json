@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "programId": "6N4KJsm6TPooxvGMrp8PVLXXcp5vMEZJpffzRS29rG6h",
+  "instructionName": "claim",
+  "discriminator": [
+    62,
+    198,
+    214,
+    193,
+    213,
+    159,
+    108,
+    210
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "claimant",
+      "source": "param",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "rwa_mint",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "mint_state",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "holder_token",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "holder_ledger",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "vault",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "yield_mint",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "claimant_yield_ata",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "token_program",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "associated_token_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+    },
+    {
+      "name": "system_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "11111111111111111111111111111111"
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "claim",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

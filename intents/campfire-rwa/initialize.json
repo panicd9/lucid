@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "programId": "6N4KJsm6TPooxvGMrp8PVLXXcp5vMEZJpffzRS29rG6h",
+  "instructionName": "initialize",
+  "discriminator": [
+    43,
+    34,
+    13,
+    49,
+    167,
+    88,
+    235,
+    235
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "extra_metas_account",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "mint",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "system_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "11111111111111111111111111111111"
+    },
+    {
+      "name": "payer",
+      "source": "vault",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        43,
+        34,
+        13,
+        49,
+        167,
+        88,
+        235,
+        235
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "initialize",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

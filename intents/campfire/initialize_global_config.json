@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "programId": "Ab1nTbMuFjcfoRJWWAdxPAVotYz2kzPxS18Yzie2iiQt",
+  "instructionName": "initialize_global_config",
+  "discriminator": [
+    113,
+    216,
+    122,
+    131,
+    225,
+    209,
+    22,
+    55
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "admin",
+      "source": "vault",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "global_config",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "system_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "11111111111111111111111111111111"
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        113,
+        216,
+        122,
+        131,
+        225,
+        209,
+        22,
+        55
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "initialize global config",
+  "riskLevel": "MEDIUM",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

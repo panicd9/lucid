@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "programId": "Ab1nTbMuFjcfoRJWWAdxPAVotYz2kzPxS18Yzie2iiQt",
+  "instructionName": "deposit",
+  "discriminator": [
+    242,
+    35,
+    198,
+    137,
+    82,
+    225,
+    242,
+    182
+  ],
+  "params": [
+    {
+      "name": "pool_id",
+      "paramType": "u64",
+      "constraintType": "none",
+      "constraintValue": 0
+    },
+    {
+      "name": "amount",
+      "paramType": "u64",
+      "constraintType": "none",
+      "constraintValue": 0
+    }
+  ],
+  "accounts": [
+    {
+      "name": "user",
+      "source": "param",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "pool",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "pool_authority",
+      "source": "pda",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "deposit_vault",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "user_deposit_ata",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "deposit_mint",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "depositor_info",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "system_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "11111111111111111111111111111111"
+    },
+    {
+      "name": "token_program",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "associated_token_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "paramIndex": null
+    },
+    {
+      "segmentType": "param",
+      "data": null,
+      "paramIndex": 0
+    },
+    {
+      "segmentType": "param",
+      "data": null,
+      "paramIndex": 1
+    }
+  ],
+  "seeds": [],
+  "template": "deposit: {pool_id}, {amount}",
+  "riskLevel": "HIGH",
+  "timelockSeconds": 3600,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

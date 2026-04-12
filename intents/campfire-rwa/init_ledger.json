@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "programId": "6N4KJsm6TPooxvGMrp8PVLXXcp5vMEZJpffzRS29rG6h",
+  "instructionName": "init_ledger",
+  "discriminator": [
+    91,
+    194,
+    32,
+    83,
+    92,
+    206,
+    54,
+    67
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "payer",
+      "source": "vault",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "owner",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "mint",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "ledger",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "system_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "11111111111111111111111111111111"
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        91,
+        194,
+        32,
+        83,
+        92,
+        206,
+        54,
+        67
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "init ledger",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

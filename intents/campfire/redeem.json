@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "programId": "Ab1nTbMuFjcfoRJWWAdxPAVotYz2kzPxS18Yzie2iiQt",
+  "instructionName": "redeem",
+  "discriminator": [
+    184,
+    12,
+    86,
+    149,
+    70,
+    196,
+    97,
+    225
+  ],
+  "params": [
+    {
+      "name": "_pool_id",
+      "paramType": "u64",
+      "constraintType": "none",
+      "constraintValue": 0
+    }
+  ],
+  "accounts": [
+    {
+      "name": "pool",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "pool_authority",
+      "source": "pda",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "rwa_vault",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "rwa_mint",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "user_rwa_ata",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "depositor_info",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "user",
+      "source": "param",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "system_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "11111111111111111111111111111111"
+    },
+    {
+      "name": "token_program",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "associated_token_program",
+      "source": "static",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        184,
+        12,
+        86,
+        149,
+        70,
+        196,
+        97,
+        225
+      ],
+      "paramIndex": null
+    },
+    {
+      "segmentType": "param",
+      "data": null,
+      "paramIndex": 0
+    }
+  ],
+  "seeds": [],
+  "template": "redeem: {_pool_id}",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}
