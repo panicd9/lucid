@@ -12,6 +12,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   transformEncoder,
   type AccountMeta,
   type Address,
@@ -25,8 +27,11 @@ import {
   type ReadonlyUint8Array,
   type WritableAccount,
 } from "@solana/kit";
+import {
+  getAccountMetaFactory,
+  type ResolvedInstructionAccount,
+} from "@solana/program-client-core";
 import { LUCID_PROGRAM_ADDRESS } from "../programs";
-import { getAccountMetaFactory, type ResolvedAccount } from "../shared";
 
 export const CANCEL_DISCRIMINATOR = 12;
 
@@ -139,7 +144,7 @@ export function getCancelInstruction<
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
-    ResolvedAccount
+    ResolvedInstructionAccount
   >;
 
   // Resolve default values.
@@ -151,10 +156,10 @@ export function getCancelInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.wallet),
-      getAccountMeta(accounts.intent),
-      getAccountMeta(accounts.proposal),
-      getAccountMeta(accounts.instructionsSysvar),
+      getAccountMeta("wallet", accounts.wallet),
+      getAccountMeta("intent", accounts.intent),
+      getAccountMeta("proposal", accounts.proposal),
+      getAccountMeta("instructionsSysvar", accounts.instructionsSysvar),
     ],
     data: getCancelInstructionDataEncoder().encode({}),
     programAddress,
@@ -194,8 +199,13 @@ export function parseCancelInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedCancelInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 4) {
-    // TODO: Coded error.
-    throw new Error("Not enough accounts");
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 4,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

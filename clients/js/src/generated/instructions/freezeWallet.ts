@@ -12,6 +12,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -28,8 +30,11 @@ import {
   type TransactionSigner,
   type WritableAccount,
 } from "@solana/kit";
+import {
+  getAccountMetaFactory,
+  type ResolvedInstructionAccount,
+} from "@solana/program-client-core";
 import { LUCID_PROGRAM_ADDRESS } from "../programs";
-import { getAccountMetaFactory, type ResolvedAccount } from "../shared";
 
 export const FREEZE_WALLET_DISCRIMINATOR = 4;
 
@@ -128,15 +133,15 @@ export function getFreezeWalletInstruction<
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
-    ResolvedAccount
+    ResolvedInstructionAccount
   >;
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.wallet),
-      getAccountMeta(accounts.metaIntent),
-      getAccountMeta(accounts.authority),
+      getAccountMeta("wallet", accounts.wallet),
+      getAccountMeta("metaIntent", accounts.metaIntent),
+      getAccountMeta("authority", accounts.authority),
     ],
     data: getFreezeWalletInstructionDataEncoder().encode({}),
     programAddress,
@@ -173,8 +178,13 @@ export function parseFreezeWalletInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedFreezeWalletInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
-    // TODO: Coded error.
-    throw new Error("Not enough accounts");
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 3,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

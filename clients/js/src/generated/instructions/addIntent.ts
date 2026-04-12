@@ -12,6 +12,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -28,8 +30,11 @@ import {
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
+import {
+  getAccountMetaFactory,
+  type ResolvedInstructionAccount,
+} from "@solana/program-client-core";
 import { LUCID_PROGRAM_ADDRESS } from "../programs";
-import { getAccountMetaFactory, type ResolvedAccount } from "../shared";
 
 export const ADD_INTENT_DISCRIMINATOR = 1;
 
@@ -140,7 +145,7 @@ export function getAddIntentInstruction<
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
-    ResolvedAccount
+    ResolvedInstructionAccount
   >;
 
   // Resolve default values.
@@ -152,10 +157,10 @@ export function getAddIntentInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.wallet),
-      getAccountMeta(accounts.intent),
-      getAccountMeta(accounts.payer),
-      getAccountMeta(accounts.systemProgram),
+      getAccountMeta("wallet", accounts.wallet),
+      getAccountMeta("intent", accounts.intent),
+      getAccountMeta("payer", accounts.payer),
+      getAccountMeta("systemProgram", accounts.systemProgram),
     ],
     data: getAddIntentInstructionDataEncoder().encode({}),
     programAddress,
@@ -195,8 +200,13 @@ export function parseAddIntentInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedAddIntentInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 4) {
-    // TODO: Coded error.
-    throw new Error("Not enough accounts");
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 4,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

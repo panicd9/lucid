@@ -12,6 +12,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -28,8 +30,11 @@ import {
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
+import {
+  getAccountMetaFactory,
+  type ResolvedInstructionAccount,
+} from "@solana/program-client-core";
 import { LUCID_PROGRAM_ADDRESS } from "../programs";
-import { getAccountMetaFactory, type ResolvedAccount } from "../shared";
 
 export const ADD_INTENTS_BATCH_DISCRIMINATOR = 2;
 
@@ -129,7 +134,7 @@ export function getAddIntentsBatchInstruction<
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
-    ResolvedAccount
+    ResolvedInstructionAccount
   >;
 
   // Resolve default values.
@@ -141,9 +146,9 @@ export function getAddIntentsBatchInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.wallet),
-      getAccountMeta(accounts.payer),
-      getAccountMeta(accounts.systemProgram),
+      getAccountMeta("wallet", accounts.wallet),
+      getAccountMeta("payer", accounts.payer),
+      getAccountMeta("systemProgram", accounts.systemProgram),
     ],
     data: getAddIntentsBatchInstructionDataEncoder().encode({}),
     programAddress,
@@ -180,8 +185,13 @@ export function parseAddIntentsBatchInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedAddIntentsBatchInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
-    // TODO: Coded error.
-    throw new Error("Not enough accounts");
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 3,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

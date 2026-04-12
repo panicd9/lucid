@@ -12,6 +12,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   transformEncoder,
   type AccountMeta,
   type Address,
@@ -24,8 +26,11 @@ import {
   type ReadonlyUint8Array,
   type WritableAccount,
 } from "@solana/kit";
+import {
+  getAccountMetaFactory,
+  type ResolvedInstructionAccount,
+} from "@solana/program-client-core";
 import { LUCID_PROGRAM_ADDRESS } from "../programs";
-import { getAccountMetaFactory, type ResolvedAccount } from "../shared";
 
 export const CLEANUP_DISCRIMINATOR = 30;
 
@@ -119,15 +124,15 @@ export function getCleanupInstruction<
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
-    ResolvedAccount
+    ResolvedInstructionAccount
   >;
 
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.proposal),
-      getAccountMeta(accounts.intent),
-      getAccountMeta(accounts.rentRefund),
+      getAccountMeta("proposal", accounts.proposal),
+      getAccountMeta("intent", accounts.intent),
+      getAccountMeta("rentRefund", accounts.rentRefund),
     ],
     data: getCleanupInstructionDataEncoder().encode({}),
     programAddress,
@@ -164,8 +169,13 @@ export function parseCleanupInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedCleanupInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
-    // TODO: Coded error.
-    throw new Error("Not enough accounts");
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 3,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

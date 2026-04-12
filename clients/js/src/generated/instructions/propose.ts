@@ -12,6 +12,8 @@ import {
   getStructEncoder,
   getU8Decoder,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+  SolanaError,
   transformEncoder,
   type AccountMeta,
   type AccountSignerMeta,
@@ -28,8 +30,11 @@ import {
   type WritableAccount,
   type WritableSignerAccount,
 } from "@solana/kit";
+import {
+  getAccountMetaFactory,
+  type ResolvedInstructionAccount,
+} from "@solana/program-client-core";
 import { LUCID_PROGRAM_ADDRESS } from "../programs";
-import { getAccountMetaFactory, type ResolvedAccount } from "../shared";
 
 export const PROPOSE_DISCRIMINATOR = 10;
 
@@ -53,7 +58,7 @@ export type ProposeInstruction<
   InstructionWithAccounts<
     [
       TAccountWallet extends string
-        ? ReadonlyAccount<TAccountWallet>
+        ? WritableAccount<TAccountWallet>
         : TAccountWallet,
       TAccountIntent extends string
         ? WritableAccount<TAccountIntent>
@@ -154,7 +159,7 @@ export function getProposeInstruction<
 
   // Original accounts.
   const originalAccounts = {
-    wallet: { value: input.wallet ?? null, isWritable: false },
+    wallet: { value: input.wallet ?? null, isWritable: true },
     intent: { value: input.intent ?? null, isWritable: true },
     proposal: { value: input.proposal ?? null, isWritable: true },
     instructionsSysvar: {
@@ -166,7 +171,7 @@ export function getProposeInstruction<
   };
   const accounts = originalAccounts as Record<
     keyof typeof originalAccounts,
-    ResolvedAccount
+    ResolvedInstructionAccount
   >;
 
   // Resolve default values.
@@ -182,12 +187,12 @@ export function getProposeInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, "programId");
   return Object.freeze({
     accounts: [
-      getAccountMeta(accounts.wallet),
-      getAccountMeta(accounts.intent),
-      getAccountMeta(accounts.proposal),
-      getAccountMeta(accounts.instructionsSysvar),
-      getAccountMeta(accounts.payer),
-      getAccountMeta(accounts.systemProgram),
+      getAccountMeta("wallet", accounts.wallet),
+      getAccountMeta("intent", accounts.intent),
+      getAccountMeta("proposal", accounts.proposal),
+      getAccountMeta("instructionsSysvar", accounts.instructionsSysvar),
+      getAccountMeta("payer", accounts.payer),
+      getAccountMeta("systemProgram", accounts.systemProgram),
     ],
     data: getProposeInstructionDataEncoder().encode({}),
     programAddress,
@@ -233,8 +238,13 @@ export function parseProposeInstruction<
     InstructionWithData<ReadonlyUint8Array>,
 ): ParsedProposeInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 6) {
-    // TODO: Coded error.
-    throw new Error("Not enough accounts");
+    throw new SolanaError(
+      SOLANA_ERROR__PROGRAM_CLIENTS__INSUFFICIENT_ACCOUNT_METAS,
+      {
+        actualAccountMetas: instruction.accounts.length,
+        expectedAccountMetas: 6,
+      },
+    );
   }
   let accountIndex = 0;
   const getNextAccount = () => {

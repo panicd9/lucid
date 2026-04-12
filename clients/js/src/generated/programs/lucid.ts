@@ -10,12 +10,52 @@ import {
   assertIsInstructionWithAccounts,
   containsBytes,
   getU8Encoder,
+  SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
+  SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
+  SolanaError,
   type Address,
+  type ClientWithPayer,
+  type ClientWithRpc,
+  type ClientWithTransactionPlanning,
+  type ClientWithTransactionSending,
+  type GetAccountInfoApi,
+  type GetMultipleAccountsApi,
   type Instruction,
   type InstructionWithData,
   type ReadonlyUint8Array,
 } from "@solana/kit";
 import {
+  addSelfFetchFunctions,
+  addSelfPlanAndSendFunctions,
+  type SelfFetchFunctions,
+  type SelfPlanAndSendFunctions,
+} from "@solana/program-client-core";
+import {
+  getIntentHeaderCodec,
+  getProposalCodec,
+  getVaultCodec,
+  getWalletCodec,
+  type IntentHeader,
+  type IntentHeaderArgs,
+  type Proposal,
+  type ProposalArgs,
+  type Vault,
+  type VaultArgs,
+  type Wallet,
+  type WalletArgs,
+} from "../accounts";
+import {
+  getAddIntentInstruction,
+  getAddIntentsBatchInstruction,
+  getApproveInstruction,
+  getCancelInstruction,
+  getCleanupInstruction,
+  getCreateWalletInstruction,
+  getDeactivateIntentInstruction,
+  getEmitEventInstruction,
+  getExecuteInstruction,
+  getFreezeWalletInstruction,
+  getProposeInstruction,
   parseAddIntentInstruction,
   parseAddIntentsBatchInstruction,
   parseApproveInstruction,
@@ -27,6 +67,16 @@ import {
   parseExecuteInstruction,
   parseFreezeWalletInstruction,
   parseProposeInstruction,
+  type AddIntentInput,
+  type AddIntentsBatchInput,
+  type ApproveInput,
+  type CancelInput,
+  type CleanupInput,
+  type CreateWalletInput,
+  type DeactivateIntentInput,
+  type EmitEventInput,
+  type ExecuteInput,
+  type FreezeWalletInput,
   type ParsedAddIntentInstruction,
   type ParsedAddIntentsBatchInstruction,
   type ParsedApproveInstruction,
@@ -38,6 +88,7 @@ import {
   type ParsedExecuteInstruction,
   type ParsedFreezeWalletInstruction,
   type ParsedProposeInstruction,
+  type ProposeInput,
 } from "../instructions";
 
 export const LUCID_PROGRAM_ADDRESS =
@@ -101,8 +152,9 @@ export function identifyLucidInstruction(
   if (containsBytes(data, getU8Encoder().encode(228), 0)) {
     return LucidInstruction.EmitEvent;
   }
-  throw new Error(
-    "The provided instruction could not be identified as a lucid instruction.",
+  throw new SolanaError(
+    SOLANA_ERROR__PROGRAM_CLIENTS__FAILED_TO_IDENTIFY_INSTRUCTION,
+    { instructionData: data, programName: "lucid" },
   );
 }
 
@@ -226,8 +278,142 @@ export function parseLucidInstruction<TProgram extends string>(
       };
     }
     default:
-      throw new Error(
-        `Unrecognized instruction type: ${instructionType as string}`,
+      throw new SolanaError(
+        SOLANA_ERROR__PROGRAM_CLIENTS__UNRECOGNIZED_INSTRUCTION_TYPE,
+        { instructionType: instructionType as string, programName: "lucid" },
       );
   }
 }
+
+export type LucidPlugin = {
+  accounts: LucidPluginAccounts;
+  instructions: LucidPluginInstructions;
+};
+
+export type LucidPluginAccounts = {
+  wallet: ReturnType<typeof getWalletCodec> &
+    SelfFetchFunctions<WalletArgs, Wallet>;
+  vault: ReturnType<typeof getVaultCodec> &
+    SelfFetchFunctions<VaultArgs, Vault>;
+  intentHeader: ReturnType<typeof getIntentHeaderCodec> &
+    SelfFetchFunctions<IntentHeaderArgs, IntentHeader>;
+  proposal: ReturnType<typeof getProposalCodec> &
+    SelfFetchFunctions<ProposalArgs, Proposal>;
+};
+
+export type LucidPluginInstructions = {
+  createWallet: (
+    input: MakeOptional<CreateWalletInput, "payer">,
+  ) => ReturnType<typeof getCreateWalletInstruction> & SelfPlanAndSendFunctions;
+  addIntent: (
+    input: MakeOptional<AddIntentInput, "payer">,
+  ) => ReturnType<typeof getAddIntentInstruction> & SelfPlanAndSendFunctions;
+  addIntentsBatch: (
+    input: MakeOptional<AddIntentsBatchInput, "payer">,
+  ) => ReturnType<typeof getAddIntentsBatchInstruction> &
+    SelfPlanAndSendFunctions;
+  deactivateIntent: (
+    input: DeactivateIntentInput,
+  ) => ReturnType<typeof getDeactivateIntentInstruction> &
+    SelfPlanAndSendFunctions;
+  freezeWallet: (
+    input: FreezeWalletInput,
+  ) => ReturnType<typeof getFreezeWalletInstruction> & SelfPlanAndSendFunctions;
+  propose: (
+    input: MakeOptional<ProposeInput, "payer">,
+  ) => ReturnType<typeof getProposeInstruction> & SelfPlanAndSendFunctions;
+  approve: (
+    input: ApproveInput,
+  ) => ReturnType<typeof getApproveInstruction> & SelfPlanAndSendFunctions;
+  cancel: (
+    input: CancelInput,
+  ) => ReturnType<typeof getCancelInstruction> & SelfPlanAndSendFunctions;
+  execute: (
+    input: ExecuteInput,
+  ) => ReturnType<typeof getExecuteInstruction> & SelfPlanAndSendFunctions;
+  cleanup: (
+    input: CleanupInput,
+  ) => ReturnType<typeof getCleanupInstruction> & SelfPlanAndSendFunctions;
+  emitEvent: (
+    input: EmitEventInput,
+  ) => ReturnType<typeof getEmitEventInstruction> & SelfPlanAndSendFunctions;
+};
+
+export type LucidPluginRequirements = ClientWithRpc<
+  GetAccountInfoApi & GetMultipleAccountsApi
+> &
+  ClientWithPayer &
+  ClientWithTransactionPlanning &
+  ClientWithTransactionSending;
+
+export function lucidProgram() {
+  return <T extends LucidPluginRequirements>(client: T) => {
+    return {
+      ...client,
+      lucid: <LucidPlugin>{
+        accounts: {
+          wallet: addSelfFetchFunctions(client, getWalletCodec()),
+          vault: addSelfFetchFunctions(client, getVaultCodec()),
+          intentHeader: addSelfFetchFunctions(client, getIntentHeaderCodec()),
+          proposal: addSelfFetchFunctions(client, getProposalCodec()),
+        },
+        instructions: {
+          createWallet: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getCreateWalletInstruction({
+                ...input,
+                payer: input.payer ?? client.payer,
+              }),
+            ),
+          addIntent: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getAddIntentInstruction({
+                ...input,
+                payer: input.payer ?? client.payer,
+              }),
+            ),
+          addIntentsBatch: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getAddIntentsBatchInstruction({
+                ...input,
+                payer: input.payer ?? client.payer,
+              }),
+            ),
+          deactivateIntent: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getDeactivateIntentInstruction(input),
+            ),
+          freezeWallet: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getFreezeWalletInstruction(input),
+            ),
+          propose: (input) =>
+            addSelfPlanAndSendFunctions(
+              client,
+              getProposeInstruction({
+                ...input,
+                payer: input.payer ?? client.payer,
+              }),
+            ),
+          approve: (input) =>
+            addSelfPlanAndSendFunctions(client, getApproveInstruction(input)),
+          cancel: (input) =>
+            addSelfPlanAndSendFunctions(client, getCancelInstruction(input)),
+          execute: (input) =>
+            addSelfPlanAndSendFunctions(client, getExecuteInstruction(input)),
+          cleanup: (input) =>
+            addSelfPlanAndSendFunctions(client, getCleanupInstruction(input)),
+          emitEvent: (input) =>
+            addSelfPlanAndSendFunctions(client, getEmitEventInstruction(input)),
+        },
+      },
+    };
+  };
+}
+
+type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

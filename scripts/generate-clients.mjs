@@ -16,8 +16,9 @@ const codama = createFromRoot(rootNodeFromAnchor(idl));
 // Render JavaScript client.
 const jsClient = path.join(__dirname, '..', 'clients', 'js');
 codama.accept(
-  renderJavaScriptVisitor(path.join(jsClient, 'src', 'generated'), {
+  renderJavaScriptVisitor(jsClient, {
     deleteFolderBeforeRendering: true,
+    syncPackageJson: false,
   })
 );
 
