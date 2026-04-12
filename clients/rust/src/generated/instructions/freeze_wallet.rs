@@ -14,11 +14,11 @@ pub const FREEZE_WALLET_DISCRIMINATOR: u8 = 4;
 #[derive(Debug)]
 pub struct FreezeWallet {
     /// Wallet PDA
-    pub wallet: solana_pubkey::Pubkey,
+    pub wallet: solana_address::Address,
     /// Any meta-intent PDA (for approver verification)
-    pub meta_intent: solana_pubkey::Pubkey,
+    pub meta_intent: solana_address::Address,
     /// Approver
-    pub authority: solana_pubkey::Pubkey,
+    pub authority: solana_address::Address,
 }
 
 impl FreezeWallet {
@@ -53,7 +53,6 @@ impl FreezeWallet {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FreezeWalletInstructionData {
     discriminator: u8,
 }
@@ -83,9 +82,9 @@ impl Default for FreezeWalletInstructionData {
 ///   2. `[signer]` authority
 #[derive(Clone, Debug, Default)]
 pub struct FreezeWalletBuilder {
-    wallet: Option<solana_pubkey::Pubkey>,
-    meta_intent: Option<solana_pubkey::Pubkey>,
-    authority: Option<solana_pubkey::Pubkey>,
+    wallet: Option<solana_address::Address>,
+    meta_intent: Option<solana_address::Address>,
+    authority: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -95,19 +94,19 @@ impl FreezeWalletBuilder {
     }
     /// Wallet PDA
     #[inline(always)]
-    pub fn wallet(&mut self, wallet: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn wallet(&mut self, wallet: solana_address::Address) -> &mut Self {
         self.wallet = Some(wallet);
         self
     }
     /// Any meta-intent PDA (for approver verification)
     #[inline(always)]
-    pub fn meta_intent(&mut self, meta_intent: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn meta_intent(&mut self, meta_intent: solana_address::Address) -> &mut Self {
         self.meta_intent = Some(meta_intent);
         self
     }
     /// Approver
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_address::Address) -> &mut Self {
         self.authority = Some(authority);
         self
     }

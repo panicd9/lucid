@@ -8,10 +8,10 @@
     "generate:clients": "zx ./scripts/generate-clients.mjs"
   },
   "devDependencies": {
-    "@codama/renderers-js": "^1.0.0",
-    "@codama/renderers-rust": "^1.0.0",
-    "@codama/nodes-from-anchor": "^1.1.6",
-    "codama": "^1.2.6",
+    "@codama/renderers-js": "^2.1.0",
+    "@codama/renderers-rust": "^3.0.0",
+    "@codama/nodes-from-anchor": "^1.4.0",
+    "codama": "^1.5.1",
     "zx": "^8.3.2"
   },
   "engines": {

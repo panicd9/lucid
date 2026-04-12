@@ -217,7 +217,7 @@
       "accounts": [
         {
           "name": "wallet",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false,
           "docs": [
             "Wallet PDA"

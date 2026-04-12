@@ -11,11 +11,11 @@ fn test_create_wallet_basic() {
     let mut svm = setup::new_svm();
     let ws = setup::create_test_wallet(&mut svm, b"test-wallet", 1, 2, 1, 1, 0);
 
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.proposal_index, 0);
-    assert_eq!(state.intent_count, 3);
-    assert_eq!(state.frozen, 0);
-    assert_eq!(state.name_len, 11);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.proposal_index, 0);
+    assert_eq!(wallet.intent_count, 3);
+    assert_eq!(wallet.frozen, 0);
+    assert_eq!(wallet.name_len, 11);
 }
 
 #[test]
@@ -24,8 +24,8 @@ fn test_create_wallet_with_max_name() {
     let name = b"abcdefghijklmnopqrstuvwxyz012345"; // 32 bytes
     let ws = setup::create_test_wallet(&mut svm, name, 1, 1, 1, 1, 3600);
 
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.name_len, 32);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.name_len, 32);
 }
 
 #[test]
@@ -33,9 +33,9 @@ fn test_create_wallet_multiple_signers() {
     let mut svm = setup::new_svm();
     let ws = setup::create_test_wallet(&mut svm, b"multi", 3, 5, 3, 2, 86400);
 
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.intent_count, 3);
-    assert_eq!(state.frozen, 0);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.intent_count, 3);
+    assert_eq!(wallet.frozen, 0);
 
     // Verify meta-intents exist
     for i in 0..3 {
@@ -86,8 +86,8 @@ fn test_add_intent_during_setup() {
     let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
     assert!(result.is_ok(), "AddIntent failed: {:?}", result.err());
 
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.intent_count, 4);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.intent_count, 4);
 
     let pid = helpers::program_id();
     let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 3, &pid);
@@ -119,8 +119,8 @@ fn test_add_intents_batch() {
     let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
     assert!(result.is_ok(), "AddIntentsBatch failed: {:?}", result.err());
 
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.intent_count, 6);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.intent_count, 6);
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ fn test_deactivate_intent() {
     );
     assert!(result.is_ok(), "DeactivateIntent failed: {:?}", result.err());
 
-    assert_eq!(setup::read_intent_approved(&svm, &intent_pda), 0);
+    assert_eq!(setup::read_intent_header(&svm, &intent_pda).approved, 0);
 }
 
 // ──────────────────────────────────────────��─────────────────────────────
@@ -181,6 +181,6 @@ fn test_freeze_wallet() {
     );
     assert!(result.is_ok(), "FreezeWallet failed: {:?}", result.err());
 
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.frozen, 1);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.frozen, 1);
 }

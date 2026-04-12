@@ -7,7 +7,7 @@ pub mod setup;
 use solana_address::Address;
 
 pub fn program_id() -> Address {
-    Address::from_str_const("FSZ9BxqjyoMFLMoWFriDXtyh7ax8JCsd3uk8HwLmifGB")
+    lucid_client::programs::LUCID_ID
 }
 
 /// Account discriminators (must match on-chain constants)

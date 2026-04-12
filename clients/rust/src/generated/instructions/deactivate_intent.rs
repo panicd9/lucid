@@ -14,11 +14,11 @@ pub const DEACTIVATE_INTENT_DISCRIMINATOR: u8 = 3;
 #[derive(Debug)]
 pub struct DeactivateIntent {
     /// Wallet PDA
-    pub wallet: solana_pubkey::Pubkey,
+    pub wallet: solana_address::Address,
     /// Intent PDA to deactivate
-    pub intent: solana_pubkey::Pubkey,
+    pub intent: solana_address::Address,
     /// Approver of the intent
-    pub authority: solana_pubkey::Pubkey,
+    pub authority: solana_address::Address,
 }
 
 impl DeactivateIntent {
@@ -53,7 +53,6 @@ impl DeactivateIntent {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeactivateIntentInstructionData {
     discriminator: u8,
 }
@@ -83,9 +82,9 @@ impl Default for DeactivateIntentInstructionData {
 ///   2. `[signer]` authority
 #[derive(Clone, Debug, Default)]
 pub struct DeactivateIntentBuilder {
-    wallet: Option<solana_pubkey::Pubkey>,
-    intent: Option<solana_pubkey::Pubkey>,
-    authority: Option<solana_pubkey::Pubkey>,
+    wallet: Option<solana_address::Address>,
+    intent: Option<solana_address::Address>,
+    authority: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -95,19 +94,19 @@ impl DeactivateIntentBuilder {
     }
     /// Wallet PDA
     #[inline(always)]
-    pub fn wallet(&mut self, wallet: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn wallet(&mut self, wallet: solana_address::Address) -> &mut Self {
         self.wallet = Some(wallet);
         self
     }
     /// Intent PDA to deactivate
     #[inline(always)]
-    pub fn intent(&mut self, intent: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn intent(&mut self, intent: solana_address::Address) -> &mut Self {
         self.intent = Some(intent);
         self
     }
     /// Approver of the intent
     #[inline(always)]
-    pub fn authority(&mut self, authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn authority(&mut self, authority: solana_address::Address) -> &mut Self {
         self.authority = Some(authority);
         self
     }

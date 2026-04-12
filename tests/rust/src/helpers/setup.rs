@@ -6,6 +6,8 @@ use solana_message::Message;
 use solana_signer::Signer;
 use solana_transaction::Transaction;
 
+use lucid_client::accounts::{IntentHeader, Proposal, Wallet};
+
 use super::{instructions, pda, program_id};
 use super::{DISC_WALLET, DISC_INTENT, ACCOUNT_VERSION, PREFIX_LEN};
 
@@ -113,46 +115,20 @@ pub fn create_test_wallet(
     }
 }
 
-pub struct WalletState {
-    pub proposal_index: u64,
-    pub intent_count: u8,
-    pub frozen: u8,
-    pub bump: u8,
-    pub name_len: u8,
-}
-
-pub fn read_wallet_state(svm: &LiteSVM, wallet: &Address) -> WalletState {
+pub fn read_wallet_state(svm: &LiteSVM, wallet: &Address) -> Wallet {
     let data = get_account_data(svm, wallet).expect("wallet account not found");
     assert_eq!(data[0], DISC_WALLET);
     assert_eq!(data[1], ACCOUNT_VERSION);
-
-    let d = &data[PREFIX_LEN..];
-    WalletState {
-        proposal_index: u64::from_le_bytes(d[0..8].try_into().unwrap()),
-        intent_count: d[8],
-        frozen: d[9],
-        bump: d[10],
-        name_len: d[11],
-    }
+    Wallet::from_bytes(&data[PREFIX_LEN..]).expect("failed to deserialize Wallet")
 }
 
-pub fn read_proposal_status(svm: &LiteSVM, proposal: &Address) -> u8 {
+pub fn read_proposal(svm: &LiteSVM, proposal: &Address) -> Proposal {
     let data = get_account_data(svm, proposal).expect("proposal account not found");
-    let status_offset = PREFIX_LEN + 32 + 32 + 8 + 32 + 2 + 2;
-    data[status_offset]
+    Proposal::from_bytes(&data[PREFIX_LEN..]).expect("failed to deserialize Proposal")
 }
 
-pub fn read_proposal_bitmaps(svm: &LiteSVM, proposal: &Address) -> (u16, u16) {
-    let data = get_account_data(svm, proposal).expect("proposal account not found");
-    let bitmap_offset = PREFIX_LEN + 32 + 32 + 8 + 32;
-    let approval = u16::from_le_bytes([data[bitmap_offset], data[bitmap_offset + 1]]);
-    let cancel = u16::from_le_bytes([data[bitmap_offset + 2], data[bitmap_offset + 3]]);
-    (approval, cancel)
-}
-
-pub fn read_intent_approved(svm: &LiteSVM, intent: &Address) -> u8 {
+pub fn read_intent_header(svm: &LiteSVM, intent: &Address) -> IntentHeader {
     let data = get_account_data(svm, intent).expect("intent account not found");
     assert_eq!(data[0], DISC_INTENT);
-    let approved_offset = PREFIX_LEN + 32 + 4 + 2 + 2 + 1 + 1 + 1;
-    data[approved_offset]
+    IntentHeader::from_bytes(&data[PREFIX_LEN..]).expect("failed to deserialize IntentHeader")
 }

@@ -1,15 +1,9 @@
 use solana_address::Address;
 use solana_instruction::{AccountMeta, Instruction};
 
+use lucid_client::instructions::*;
+
 use super::{pda, program_id};
-
-fn system_program_id() -> Address {
-    Address::from_str_const("11111111111111111111111111111111")
-}
-
-fn instructions_sysvar_id() -> Address {
-    Address::from_str_const("Sysvar1nstructions1111111111111111111111111")
-}
 
 /// Build a CreateWallet instruction
 pub fn create_wallet(
@@ -28,7 +22,17 @@ pub fn create_wallet(
     let (intent1, _) = pda::find_intent_pda(&wallet_pda, 1, &pid);
     let (intent2, _) = pda::find_intent_pda(&wallet_pda, 2, &pid);
 
-    let mut data = vec![0u8]; // discriminator
+    let mut ix = CreateWalletBuilder::new()
+        .wallet(wallet_pda)
+        .vault(vault_pda)
+        .meta_intent_add(intent0)
+        .meta_intent_remove(intent1)
+        .meta_intent_update(intent2)
+        .payer(*payer)
+        .instruction();
+
+    // Append instruction args (not captured by Shank IDL)
+    let mut data = vec![CREATE_WALLET_DISCRIMINATOR];
     data.push(name.len() as u8);
     data.extend_from_slice(name);
     data.push(proposers.len() as u8);
@@ -42,20 +46,8 @@ pub fn create_wallet(
     data.push(approval_threshold);
     data.push(cancellation_threshold);
     data.extend_from_slice(&timelock_seconds.to_le_bytes());
-
-    Instruction {
-        program_id: pid,
-        accounts: vec![
-            AccountMeta::new(wallet_pda, false),
-            AccountMeta::new(vault_pda, false),
-            AccountMeta::new(intent0, false),
-            AccountMeta::new(intent1, false),
-            AccountMeta::new(intent2, false),
-            AccountMeta::new(*payer, true),
-            AccountMeta::new_readonly(system_program_id(), false),
-        ],
-        data,
-    }
+    ix.data = data;
+    ix
 }
 
 /// Build an AddIntent instruction
@@ -68,19 +60,16 @@ pub fn add_intent(
     let pid = program_id();
     let (intent_pda, _) = pda::find_intent_pda(wallet, intent_index, &pid);
 
-    let mut data = vec![1u8]; // discriminator
-    data.extend_from_slice(intent_data_raw);
+    let mut ix = AddIntentBuilder::new()
+        .wallet(*wallet)
+        .intent(intent_pda)
+        .payer(*payer)
+        .instruction();
 
-    Instruction {
-        program_id: pid,
-        accounts: vec![
-            AccountMeta::new(*wallet, false),
-            AccountMeta::new(intent_pda, false),
-            AccountMeta::new(*payer, true),
-            AccountMeta::new_readonly(system_program_id(), false),
-        ],
-        data,
-    }
+    let mut data = vec![ADD_INTENT_DISCRIMINATOR];
+    data.extend_from_slice(intent_data_raw);
+    ix.data = data;
+    ix
 }
 
 /// Build an AddIntentsBatch instruction
@@ -92,28 +81,24 @@ pub fn add_intents_batch(
 ) -> Instruction {
     let pid = program_id();
 
-    let mut data = vec![2u8]; // discriminator
+    let mut builder = AddIntentsBatchBuilder::new();
+    builder.wallet(*wallet).payer(*payer);
+
+    for i in 0..intents.len() {
+        let (intent_pda, _) = pda::find_intent_pda(wallet, start_index + i as u8, &pid);
+        builder.add_remaining_account(AccountMeta::new(intent_pda, false));
+    }
+
+    let mut ix = builder.instruction();
+
+    let mut data = vec![ADD_INTENTS_BATCH_DISCRIMINATOR];
     data.push(intents.len() as u8);
     for intent_data in intents {
         data.extend_from_slice(&(intent_data.len() as u16).to_le_bytes());
         data.extend_from_slice(intent_data);
     }
-
-    let mut accounts = vec![
-        AccountMeta::new(*wallet, false),
-        AccountMeta::new(*payer, true),
-        AccountMeta::new_readonly(system_program_id(), false),
-    ];
-    for i in 0..intents.len() {
-        let (intent_pda, _) = pda::find_intent_pda(wallet, start_index + i as u8, &pid);
-        accounts.push(AccountMeta::new(intent_pda, false));
-    }
-
-    Instruction {
-        program_id: pid,
-        accounts,
-        data,
-    }
+    ix.data = data;
+    ix
 }
 
 /// Build a DeactivateIntent instruction
@@ -123,18 +108,16 @@ pub fn deactivate_intent(
     signer: &Address,
     intent_index: u8,
 ) -> Instruction {
-    let mut data = vec![3u8];
-    data.push(intent_index);
+    let mut ix = DeactivateIntentBuilder::new()
+        .wallet(*wallet)
+        .intent(*intent)
+        .authority(*signer)
+        .instruction();
 
-    Instruction {
-        program_id: program_id(),
-        accounts: vec![
-            AccountMeta::new_readonly(*wallet, false),
-            AccountMeta::new(*intent, false),
-            AccountMeta::new_readonly(*signer, true),
-        ],
-        data,
-    }
+    let mut data = vec![DEACTIVATE_INTENT_DISCRIMINATOR];
+    data.push(intent_index);
+    ix.data = data;
+    ix
 }
 
 /// Build a FreezeWallet instruction
@@ -143,15 +126,11 @@ pub fn freeze_wallet(
     meta_intent: &Address,
     signer: &Address,
 ) -> Instruction {
-    Instruction {
-        program_id: program_id(),
-        accounts: vec![
-            AccountMeta::new(*wallet, false),
-            AccountMeta::new_readonly(*meta_intent, false),
-            AccountMeta::new_readonly(*signer, true),
-        ],
-        data: vec![4u8],
-    }
+    FreezeWalletBuilder::new()
+        .wallet(*wallet)
+        .meta_intent(*meta_intent)
+        .authority(*signer)
+        .instruction()
 }
 
 /// Build a Propose instruction
@@ -165,22 +144,18 @@ pub fn propose(
     let pid = program_id();
     let (proposal_pda, _) = pda::find_proposal_pda(intent, proposal_index, &pid);
 
-    let mut data = vec![10u8];
+    let mut ix = ProposeBuilder::new()
+        .wallet(*wallet)
+        .intent(*intent)
+        .proposal(proposal_pda)
+        .payer(*payer)
+        .instruction();
+
+    let mut data = vec![PROPOSE_DISCRIMINATOR];
     data.extend_from_slice(&proposal_index.to_le_bytes());
     data.extend_from_slice(params_data);
-
-    Instruction {
-        program_id: pid,
-        accounts: vec![
-            AccountMeta::new(*wallet, false),
-            AccountMeta::new(*intent, false),
-            AccountMeta::new(proposal_pda, false),
-            AccountMeta::new_readonly(instructions_sysvar_id(), false),
-            AccountMeta::new(*payer, true),
-            AccountMeta::new_readonly(system_program_id(), false),
-        ],
-        data,
-    }
+    ix.data = data;
+    ix
 }
 
 /// Build an Approve instruction
@@ -189,16 +164,14 @@ pub fn approve(
     intent: &Address,
     proposal: &Address,
 ) -> Instruction {
-    Instruction {
-        program_id: program_id(),
-        accounts: vec![
-            AccountMeta::new_readonly(*wallet, false),
-            AccountMeta::new_readonly(*intent, false),
-            AccountMeta::new(*proposal, false),
-            AccountMeta::new_readonly(instructions_sysvar_id(), false),
-        ],
-        data: vec![11u8, 0],
-    }
+    let mut ix = ApproveBuilder::new()
+        .wallet(*wallet)
+        .intent(*intent)
+        .proposal(*proposal)
+        .instruction();
+
+    ix.data = vec![APPROVE_DISCRIMINATOR, 0];
+    ix
 }
 
 /// Build a Cancel instruction
@@ -207,16 +180,14 @@ pub fn cancel(
     intent: &Address,
     proposal: &Address,
 ) -> Instruction {
-    Instruction {
-        program_id: program_id(),
-        accounts: vec![
-            AccountMeta::new_readonly(*wallet, false),
-            AccountMeta::new_readonly(*intent, false),
-            AccountMeta::new(*proposal, false),
-            AccountMeta::new_readonly(instructions_sysvar_id(), false),
-        ],
-        data: vec![12u8, 0],
-    }
+    let mut ix = CancelBuilder::new()
+        .wallet(*wallet)
+        .intent(*intent)
+        .proposal(*proposal)
+        .instruction();
+
+    ix.data = vec![CANCEL_DISCRIMINATOR, 0];
+    ix
 }
 
 /// Build an Execute instruction
@@ -230,21 +201,20 @@ pub fn execute(
     let pid = program_id();
     let (event_authority, _) = pda::find_event_authority_pda(&pid);
 
-    let mut accounts = vec![
-        AccountMeta::new_readonly(*wallet, false),
-        AccountMeta::new_readonly(*vault, false),
-        AccountMeta::new(*intent, false),
-        AccountMeta::new(*proposal, false),
-        AccountMeta::new_readonly(event_authority, false),
-        AccountMeta::new_readonly(pid, false),
-    ];
-    accounts.extend_from_slice(remaining_accounts);
+    let mut builder = ExecuteBuilder::new();
+    builder
+        .wallet(*wallet)
+        .vault(*vault)
+        .intent(*intent)
+        .proposal(*proposal)
+        .event_authority(event_authority)
+        .program(pid);
 
-    Instruction {
-        program_id: pid,
-        accounts,
-        data: vec![20u8],
+    if !remaining_accounts.is_empty() {
+        builder.add_remaining_accounts(remaining_accounts);
     }
+
+    builder.instruction()
 }
 
 /// Build a Cleanup instruction
@@ -253,13 +223,9 @@ pub fn cleanup(
     intent: &Address,
     rent_refund: &Address,
 ) -> Instruction {
-    Instruction {
-        program_id: program_id(),
-        accounts: vec![
-            AccountMeta::new(*proposal, false),
-            AccountMeta::new(*intent, false),
-            AccountMeta::new(*rent_refund, false),
-        ],
-        data: vec![30u8],
-    }
+    CleanupBuilder::new()
+        .proposal(*proposal)
+        .intent(*intent)
+        .rent_refund(*rent_refund)
+        .instruction()
 }

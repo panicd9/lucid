@@ -14,13 +14,13 @@ pub const CANCEL_DISCRIMINATOR: u8 = 12;
 #[derive(Debug)]
 pub struct Cancel {
     /// Wallet PDA
-    pub wallet: solana_pubkey::Pubkey,
+    pub wallet: solana_address::Address,
     /// Intent PDA
-    pub intent: solana_pubkey::Pubkey,
+    pub intent: solana_address::Address,
     /// Proposal PDA
-    pub proposal: solana_pubkey::Pubkey,
+    pub proposal: solana_address::Address,
     /// Instructions sysvar (for Ed25519 verification)
-    pub instructions_sysvar: solana_pubkey::Pubkey,
+    pub instructions_sysvar: solana_address::Address,
 }
 
 impl Cancel {
@@ -59,7 +59,6 @@ impl Cancel {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CancelInstructionData {
     discriminator: u8,
 }
@@ -90,10 +89,10 @@ impl Default for CancelInstructionData {
 ///   3. `[optional]` instructions_sysvar (default to `Sysvar1nstructions1111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct CancelBuilder {
-    wallet: Option<solana_pubkey::Pubkey>,
-    intent: Option<solana_pubkey::Pubkey>,
-    proposal: Option<solana_pubkey::Pubkey>,
-    instructions_sysvar: Option<solana_pubkey::Pubkey>,
+    wallet: Option<solana_address::Address>,
+    intent: Option<solana_address::Address>,
+    proposal: Option<solana_address::Address>,
+    instructions_sysvar: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -103,26 +102,29 @@ impl CancelBuilder {
     }
     /// Wallet PDA
     #[inline(always)]
-    pub fn wallet(&mut self, wallet: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn wallet(&mut self, wallet: solana_address::Address) -> &mut Self {
         self.wallet = Some(wallet);
         self
     }
     /// Intent PDA
     #[inline(always)]
-    pub fn intent(&mut self, intent: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn intent(&mut self, intent: solana_address::Address) -> &mut Self {
         self.intent = Some(intent);
         self
     }
     /// Proposal PDA
     #[inline(always)]
-    pub fn proposal(&mut self, proposal: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn proposal(&mut self, proposal: solana_address::Address) -> &mut Self {
         self.proposal = Some(proposal);
         self
     }
     /// `[optional account, default to 'Sysvar1nstructions1111111111111111111111111']`
     /// Instructions sysvar (for Ed25519 verification)
     #[inline(always)]
-    pub fn instructions_sysvar(&mut self, instructions_sysvar: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn instructions_sysvar(
+        &mut self,
+        instructions_sysvar: solana_address::Address,
+    ) -> &mut Self {
         self.instructions_sysvar = Some(instructions_sysvar);
         self
     }
@@ -147,7 +149,7 @@ impl CancelBuilder {
             wallet: self.wallet.expect("wallet is not set"),
             intent: self.intent.expect("intent is not set"),
             proposal: self.proposal.expect("proposal is not set"),
-            instructions_sysvar: self.instructions_sysvar.unwrap_or(solana_pubkey::pubkey!(
+            instructions_sysvar: self.instructions_sysvar.unwrap_or(solana_address::address!(
                 "Sysvar1nstructions1111111111111111111111111"
             )),
         };

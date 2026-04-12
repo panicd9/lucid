@@ -24,9 +24,18 @@ codama.accept(
 // Render Rust client.
 const rustClient = path.join(__dirname, '..', 'clients', 'rust');
 codama.accept(
-  renderRustVisitor(path.join(rustClient, 'src', 'generated'), {
+  renderRustVisitor(rustClient, {
     formatCode: true,
-    crateFolder: rustClient,
     deleteFolderBeforeRendering: true,
+    syncCargoToml: false,
+    dependencyVersions: {
+      'solana-address': { version: '^2.6', features: ['borsh', 'copy', 'curve25519', 'decode'] },
+      'solana-instruction': '^3.0',
+      'solana-account-info': '^3.0',
+      'solana-cpi': '^3.0',
+      'solana-program-error': '^3.0',
+      'solana-account': '^3.0',
+      'solana-pubkey': '^3.0',
+    },
   })
 );

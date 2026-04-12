@@ -9,7 +9,6 @@ use borsh::BorshDeserialize;
 use borsh::BorshSerialize;
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct IntentHeader {
     pub wallet: [u8; 32],
     pub timelock_seconds: u32,
@@ -53,7 +52,7 @@ impl<'a> TryFrom<&solana_account_info::AccountInfo<'a>> for IntentHeader {
 #[cfg(feature = "fetch")]
 pub fn fetch_intent_header(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_pubkey::Pubkey,
+    address: &solana_address::Address,
 ) -> Result<crate::shared::DecodedAccount<IntentHeader>, std::io::Error> {
     let accounts = fetch_all_intent_header(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -62,18 +61,17 @@ pub fn fetch_intent_header(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_intent_header(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_pubkey::Pubkey],
+    addresses: &[solana_address::Address],
 ) -> Result<Vec<crate::shared::DecodedAccount<IntentHeader>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+        .map_err(|e| std::io::Error::other(e.to_string()))?;
     let mut decoded_accounts: Vec<crate::shared::DecodedAccount<IntentHeader>> = Vec::new();
     for i in 0..addresses.len() {
         let address = addresses[i];
-        let account = accounts[i].as_ref().ok_or(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            format!("Account not found: {}", address),
-        ))?;
+        let account = accounts[i].as_ref().ok_or(std::io::Error::other(format!(
+            "Account not found: {address}"
+        )))?;
         let data = IntentHeader::from_bytes(&account.data)?;
         decoded_accounts.push(crate::shared::DecodedAccount {
             address,
@@ -87,7 +85,7 @@ pub fn fetch_all_intent_header(
 #[cfg(feature = "fetch")]
 pub fn fetch_maybe_intent_header(
     rpc: &solana_client::rpc_client::RpcClient,
-    address: &solana_pubkey::Pubkey,
+    address: &solana_address::Address,
 ) -> Result<crate::shared::MaybeAccount<IntentHeader>, std::io::Error> {
     let accounts = fetch_all_maybe_intent_header(rpc, &[*address])?;
     Ok(accounts[0].clone())
@@ -96,11 +94,11 @@ pub fn fetch_maybe_intent_header(
 #[cfg(feature = "fetch")]
 pub fn fetch_all_maybe_intent_header(
     rpc: &solana_client::rpc_client::RpcClient,
-    addresses: &[solana_pubkey::Pubkey],
+    addresses: &[solana_address::Address],
 ) -> Result<Vec<crate::shared::MaybeAccount<IntentHeader>>, std::io::Error> {
     let accounts = rpc
         .get_multiple_accounts(addresses)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))?;
+        .map_err(|e| std::io::Error::other(e.to_string()))?;
     let mut decoded_accounts: Vec<crate::shared::MaybeAccount<IntentHeader>> = Vec::new();
     for i in 0..addresses.len() {
         let address = addresses[i];
@@ -132,8 +130,8 @@ impl anchor_lang::AccountSerialize for IntentHeader {}
 
 #[cfg(feature = "anchor")]
 impl anchor_lang::Owner for IntentHeader {
-    fn owner() -> Pubkey {
-        crate::LUCID_ID
+    fn owner() -> anchor_lang::solana_program::pubkey::Pubkey {
+        anchor_lang::solana_program::pubkey::Pubkey::from(crate::LUCID_ID.to_bytes())
     }
 }
 

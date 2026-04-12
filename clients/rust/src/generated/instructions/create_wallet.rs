@@ -14,19 +14,19 @@ pub const CREATE_WALLET_DISCRIMINATOR: u8 = 0;
 #[derive(Debug)]
 pub struct CreateWallet {
     /// Wallet PDA to create
-    pub wallet: solana_pubkey::Pubkey,
+    pub wallet: solana_address::Address,
     /// Vault PDA to create
-    pub vault: solana_pubkey::Pubkey,
+    pub vault: solana_address::Address,
     /// Meta-intent for ADD operations
-    pub meta_intent_add: solana_pubkey::Pubkey,
+    pub meta_intent_add: solana_address::Address,
     /// Meta-intent for REMOVE operations
-    pub meta_intent_remove: solana_pubkey::Pubkey,
+    pub meta_intent_remove: solana_address::Address,
     /// Meta-intent for UPDATE operations
-    pub meta_intent_update: solana_pubkey::Pubkey,
+    pub meta_intent_update: solana_address::Address,
     /// Rent payer
-    pub payer: solana_pubkey::Pubkey,
+    pub payer: solana_address::Address,
     /// System program
-    pub system_program: solana_pubkey::Pubkey,
+    pub system_program: solana_address::Address,
 }
 
 impl CreateWallet {
@@ -71,7 +71,6 @@ impl CreateWallet {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CreateWalletInstructionData {
     discriminator: u8,
 }
@@ -105,13 +104,13 @@ impl Default for CreateWalletInstructionData {
 ///   6. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct CreateWalletBuilder {
-    wallet: Option<solana_pubkey::Pubkey>,
-    vault: Option<solana_pubkey::Pubkey>,
-    meta_intent_add: Option<solana_pubkey::Pubkey>,
-    meta_intent_remove: Option<solana_pubkey::Pubkey>,
-    meta_intent_update: Option<solana_pubkey::Pubkey>,
-    payer: Option<solana_pubkey::Pubkey>,
-    system_program: Option<solana_pubkey::Pubkey>,
+    wallet: Option<solana_address::Address>,
+    vault: Option<solana_address::Address>,
+    meta_intent_add: Option<solana_address::Address>,
+    meta_intent_remove: Option<solana_address::Address>,
+    meta_intent_update: Option<solana_address::Address>,
+    payer: Option<solana_address::Address>,
+    system_program: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -121,44 +120,44 @@ impl CreateWalletBuilder {
     }
     /// Wallet PDA to create
     #[inline(always)]
-    pub fn wallet(&mut self, wallet: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn wallet(&mut self, wallet: solana_address::Address) -> &mut Self {
         self.wallet = Some(wallet);
         self
     }
     /// Vault PDA to create
     #[inline(always)]
-    pub fn vault(&mut self, vault: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn vault(&mut self, vault: solana_address::Address) -> &mut Self {
         self.vault = Some(vault);
         self
     }
     /// Meta-intent for ADD operations
     #[inline(always)]
-    pub fn meta_intent_add(&mut self, meta_intent_add: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn meta_intent_add(&mut self, meta_intent_add: solana_address::Address) -> &mut Self {
         self.meta_intent_add = Some(meta_intent_add);
         self
     }
     /// Meta-intent for REMOVE operations
     #[inline(always)]
-    pub fn meta_intent_remove(&mut self, meta_intent_remove: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn meta_intent_remove(&mut self, meta_intent_remove: solana_address::Address) -> &mut Self {
         self.meta_intent_remove = Some(meta_intent_remove);
         self
     }
     /// Meta-intent for UPDATE operations
     #[inline(always)]
-    pub fn meta_intent_update(&mut self, meta_intent_update: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn meta_intent_update(&mut self, meta_intent_update: solana_address::Address) -> &mut Self {
         self.meta_intent_update = Some(meta_intent_update);
         self
     }
     /// Rent payer
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_address::Address) -> &mut Self {
         self.payer = Some(payer);
         self
     }
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_address::Address) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -192,7 +191,7 @@ impl CreateWalletBuilder {
             payer: self.payer.expect("payer is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_address::address!("11111111111111111111111111111111")),
         };
 
         accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)

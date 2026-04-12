@@ -126,13 +126,13 @@ fn test_propose() {
     assert!(result.is_ok(), "Propose failed: {:?}", result.err());
 
     // Verify wallet proposal_index incremented
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.proposal_index, 1);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.proposal_index, 1);
 
     // Verify proposal exists and is active
     let pid = helpers::program_id();
     let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
-    assert_eq!(setup::read_proposal_status(&svm, &proposal_pda), helpers::STATUS_ACTIVE);
+    assert_eq!(setup::read_proposal(&svm, &proposal_pda).status, helpers::STATUS_ACTIVE);
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -182,9 +182,9 @@ fn test_approve_reaches_threshold() {
     assert!(result.is_ok(), "Approve 0 failed: {:?}", result.err());
 
     // Still active (threshold is 2)
-    assert_eq!(setup::read_proposal_status(&svm, &proposal_pda), helpers::STATUS_ACTIVE);
-    let (approval_bm, _) = setup::read_proposal_bitmaps(&svm, &proposal_pda);
-    assert_eq!(approval_bm, 1); // bit 0 set
+    let prop = setup::read_proposal(&svm, &proposal_pda);
+    assert_eq!(prop.status, helpers::STATUS_ACTIVE);
+    assert_eq!(prop.approval_bitmap, 1); // bit 0 set
 
     // Approve with approver 1
     let sk1 = ed25519::keypair_to_signing_key(&ws.approvers[1]);
@@ -200,9 +200,9 @@ fn test_approve_reaches_threshold() {
     assert!(result.is_ok(), "Approve 1 failed: {:?}", result.err());
 
     // Now approved (threshold reached)
-    assert_eq!(setup::read_proposal_status(&svm, &proposal_pda), helpers::STATUS_APPROVED);
-    let (approval_bm, _) = setup::read_proposal_bitmaps(&svm, &proposal_pda);
-    assert_eq!(approval_bm, 3); // bits 0,1 set
+    let prop = setup::read_proposal(&svm, &proposal_pda);
+    assert_eq!(prop.status, helpers::STATUS_APPROVED);
+    assert_eq!(prop.approval_bitmap, 3); // bits 0,1 set
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -252,5 +252,5 @@ fn test_cancel_proposal() {
     );
     assert!(result.is_ok(), "Cancel failed: {:?}", result.err());
 
-    assert_eq!(setup::read_proposal_status(&svm, &proposal_pda), helpers::STATUS_CANCELLED);
+    assert_eq!(setup::read_proposal(&svm, &proposal_pda).status, helpers::STATUS_CANCELLED);
 }

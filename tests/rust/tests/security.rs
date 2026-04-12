@@ -1,6 +1,7 @@
 use solana_keypair::Keypair;
 use solana_signer::Signer;
 
+use lucid_client::instructions::CreateWalletBuilder;
 use lucid_tests::helpers::{self, ed25519, instructions, pda, setup};
 
 // ────────────────────────────────────────────────────────────────────────
@@ -47,8 +48,8 @@ fn test_add_intent_rejected_after_first_proposal() {
     assert!(result.is_ok(), "Propose failed: {:?}", result.err());
 
     // Now wallet.proposal_index == 1, setup phase is over
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.proposal_index, 1);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.proposal_index, 1);
 
     // Try to add another intent — should fail
     let mut builder2 = helpers::intent::IntentDataBuilder::new();
@@ -160,7 +161,7 @@ fn test_deactivate_by_non_approver_rejected() {
     assert!(result.is_err(), "Non-approver should not be able to deactivate");
 
     // Verify intent is still active
-    assert_eq!(setup::read_intent_approved(&svm, &intent_pda), 1);
+    assert_eq!(setup::read_intent_header(&svm, &intent_pda).approved, 1);
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -183,8 +184,8 @@ fn test_freeze_by_non_approver_rejected() {
     );
     assert!(result.is_err(), "Non-approver should not be able to freeze");
 
-    let state = setup::read_wallet_state(&svm, &ws.wallet);
-    assert_eq!(state.frozen, 0);
+    let wallet = setup::read_wallet_state(&svm, &ws.wallet);
+    assert_eq!(wallet.frozen, 0);
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -210,6 +211,16 @@ fn test_create_wallet_name_too_long() {
     let (intent1, _) = pda::find_intent_pda(&wallet_pda, 1, &pid);
     let (intent2, _) = pda::find_intent_pda(&wallet_pda, 2, &pid);
 
+    // Use generated builder for accounts, then override data with malicious payload
+    let mut ix = CreateWalletBuilder::new()
+        .wallet(wallet_pda)
+        .vault(vault_pda)
+        .meta_intent_add(intent0)
+        .meta_intent_remove(intent1)
+        .meta_intent_update(intent2)
+        .payer(payer.pubkey())
+        .instruction();
+
     // Build instruction data with the 33-byte name
     let mut data = vec![0u8]; // discriminator
     data.push(bad_name.len() as u8);
@@ -221,23 +232,7 @@ fn test_create_wallet_name_too_long() {
     data.push(1u8); // approval_threshold
     data.push(1u8); // cancellation_threshold
     data.extend_from_slice(&0u32.to_le_bytes()); // timelock
-
-    let ix = solana_instruction::Instruction {
-        program_id: pid,
-        accounts: vec![
-            solana_instruction::AccountMeta::new(wallet_pda, false),
-            solana_instruction::AccountMeta::new(vault_pda, false),
-            solana_instruction::AccountMeta::new(intent0, false),
-            solana_instruction::AccountMeta::new(intent1, false),
-            solana_instruction::AccountMeta::new(intent2, false),
-            solana_instruction::AccountMeta::new(payer.pubkey(), true),
-            solana_instruction::AccountMeta::new_readonly(
-                solana_address::Address::from_str_const("11111111111111111111111111111111"),
-                false,
-            ),
-        ],
-        data,
-    };
+    ix.data = data;
     let result = setup::send_tx(&mut svm, &[ix], &payer, &[&payer]);
     assert!(result.is_err(), "Name > 32 bytes should fail");
 }

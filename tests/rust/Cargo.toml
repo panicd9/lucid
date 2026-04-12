@@ -5,6 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
+lucid-client = { path = "../../clients/rust" }
 litesvm = { version = "0.11", features = ["precompiles"] }
 solana-address = "2.0"
 solana-account = "3.2"

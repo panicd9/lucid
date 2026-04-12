@@ -14,7 +14,7 @@ pub const EMIT_EVENT_DISCRIMINATOR: u8 = 228;
 #[derive(Debug)]
 pub struct EmitEvent {
     /// Event authority PDA (must be signer)
-    pub event_authority: solana_pubkey::Pubkey,
+    pub event_authority: solana_address::Address,
 }
 
 impl EmitEvent {
@@ -44,7 +44,6 @@ impl EmitEvent {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct EmitEventInstructionData {
     discriminator: u8,
 }
@@ -72,7 +71,7 @@ impl Default for EmitEventInstructionData {
 ///   0. `[signer]` event_authority
 #[derive(Clone, Debug, Default)]
 pub struct EmitEventBuilder {
-    event_authority: Option<solana_pubkey::Pubkey>,
+    event_authority: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -82,7 +81,7 @@ impl EmitEventBuilder {
     }
     /// Event authority PDA (must be signer)
     #[inline(always)]
-    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_address::Address) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }

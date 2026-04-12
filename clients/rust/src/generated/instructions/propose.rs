@@ -14,17 +14,17 @@ pub const PROPOSE_DISCRIMINATOR: u8 = 10;
 #[derive(Debug)]
 pub struct Propose {
     /// Wallet PDA
-    pub wallet: solana_pubkey::Pubkey,
+    pub wallet: solana_address::Address,
     /// Intent PDA
-    pub intent: solana_pubkey::Pubkey,
+    pub intent: solana_address::Address,
     /// Proposal PDA to create
-    pub proposal: solana_pubkey::Pubkey,
+    pub proposal: solana_address::Address,
     /// Instructions sysvar (for Ed25519 verification)
-    pub instructions_sysvar: solana_pubkey::Pubkey,
+    pub instructions_sysvar: solana_address::Address,
     /// Rent payer
-    pub payer: solana_pubkey::Pubkey,
+    pub payer: solana_address::Address,
     /// System program
-    pub system_program: solana_pubkey::Pubkey,
+    pub system_program: solana_address::Address,
 }
 
 impl Propose {
@@ -38,10 +38,7 @@ impl Propose {
         remaining_accounts: &[solana_instruction::AccountMeta],
     ) -> solana_instruction::Instruction {
         let mut accounts = Vec::with_capacity(6 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
-            self.wallet,
-            false,
-        ));
+        accounts.push(solana_instruction::AccountMeta::new(self.wallet, false));
         accounts.push(solana_instruction::AccountMeta::new(self.intent, false));
         accounts.push(solana_instruction::AccountMeta::new(self.proposal, false));
         accounts.push(solana_instruction::AccountMeta::new_readonly(
@@ -65,7 +62,6 @@ impl Propose {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ProposeInstructionData {
     discriminator: u8,
 }
@@ -90,7 +86,7 @@ impl Default for ProposeInstructionData {
 ///
 /// ### Accounts:
 ///
-///   0. `[]` wallet
+///   0. `[writable]` wallet
 ///   1. `[writable]` intent
 ///   2. `[writable]` proposal
 ///   3. `[optional]` instructions_sysvar (default to `Sysvar1nstructions1111111111111111111111111`)
@@ -98,12 +94,12 @@ impl Default for ProposeInstructionData {
 ///   5. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct ProposeBuilder {
-    wallet: Option<solana_pubkey::Pubkey>,
-    intent: Option<solana_pubkey::Pubkey>,
-    proposal: Option<solana_pubkey::Pubkey>,
-    instructions_sysvar: Option<solana_pubkey::Pubkey>,
-    payer: Option<solana_pubkey::Pubkey>,
-    system_program: Option<solana_pubkey::Pubkey>,
+    wallet: Option<solana_address::Address>,
+    intent: Option<solana_address::Address>,
+    proposal: Option<solana_address::Address>,
+    instructions_sysvar: Option<solana_address::Address>,
+    payer: Option<solana_address::Address>,
+    system_program: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -113,39 +109,42 @@ impl ProposeBuilder {
     }
     /// Wallet PDA
     #[inline(always)]
-    pub fn wallet(&mut self, wallet: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn wallet(&mut self, wallet: solana_address::Address) -> &mut Self {
         self.wallet = Some(wallet);
         self
     }
     /// Intent PDA
     #[inline(always)]
-    pub fn intent(&mut self, intent: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn intent(&mut self, intent: solana_address::Address) -> &mut Self {
         self.intent = Some(intent);
         self
     }
     /// Proposal PDA to create
     #[inline(always)]
-    pub fn proposal(&mut self, proposal: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn proposal(&mut self, proposal: solana_address::Address) -> &mut Self {
         self.proposal = Some(proposal);
         self
     }
     /// `[optional account, default to 'Sysvar1nstructions1111111111111111111111111']`
     /// Instructions sysvar (for Ed25519 verification)
     #[inline(always)]
-    pub fn instructions_sysvar(&mut self, instructions_sysvar: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn instructions_sysvar(
+        &mut self,
+        instructions_sysvar: solana_address::Address,
+    ) -> &mut Self {
         self.instructions_sysvar = Some(instructions_sysvar);
         self
     }
     /// Rent payer
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_address::Address) -> &mut Self {
         self.payer = Some(payer);
         self
     }
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_address::Address) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -170,13 +169,13 @@ impl ProposeBuilder {
             wallet: self.wallet.expect("wallet is not set"),
             intent: self.intent.expect("intent is not set"),
             proposal: self.proposal.expect("proposal is not set"),
-            instructions_sysvar: self.instructions_sysvar.unwrap_or(solana_pubkey::pubkey!(
+            instructions_sysvar: self.instructions_sysvar.unwrap_or(solana_address::address!(
                 "Sysvar1nstructions1111111111111111111111111"
             )),
             payer: self.payer.expect("payer is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_address::address!("11111111111111111111111111111111")),
         };
 
         accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)
@@ -256,7 +255,7 @@ impl<'a, 'b> ProposeCpi<'a, 'b> {
         remaining_accounts: &[(&'b solana_account_info::AccountInfo<'a>, bool, bool)],
     ) -> solana_program_error::ProgramResult {
         let mut accounts = Vec::with_capacity(6 + remaining_accounts.len());
-        accounts.push(solana_instruction::AccountMeta::new_readonly(
+        accounts.push(solana_instruction::AccountMeta::new(
             *self.wallet.key,
             false,
         ));
@@ -315,7 +314,7 @@ impl<'a, 'b> ProposeCpi<'a, 'b> {
 ///
 /// ### Accounts:
 ///
-///   0. `[]` wallet
+///   0. `[writable]` wallet
 ///   1. `[writable]` intent
 ///   2. `[writable]` proposal
 ///   3. `[]` instructions_sysvar

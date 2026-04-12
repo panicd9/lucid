@@ -14,11 +14,11 @@ pub const CLEANUP_DISCRIMINATOR: u8 = 30;
 #[derive(Debug)]
 pub struct Cleanup {
     /// Proposal PDA to close
-    pub proposal: solana_pubkey::Pubkey,
+    pub proposal: solana_address::Address,
     /// Intent PDA (decrement active count)
-    pub intent: solana_pubkey::Pubkey,
+    pub intent: solana_address::Address,
     /// Recipient of rent refund
-    pub rent_refund: solana_pubkey::Pubkey,
+    pub rent_refund: solana_address::Address,
 }
 
 impl Cleanup {
@@ -50,7 +50,6 @@ impl Cleanup {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CleanupInstructionData {
     discriminator: u8,
 }
@@ -80,9 +79,9 @@ impl Default for CleanupInstructionData {
 ///   2. `[writable]` rent_refund
 #[derive(Clone, Debug, Default)]
 pub struct CleanupBuilder {
-    proposal: Option<solana_pubkey::Pubkey>,
-    intent: Option<solana_pubkey::Pubkey>,
-    rent_refund: Option<solana_pubkey::Pubkey>,
+    proposal: Option<solana_address::Address>,
+    intent: Option<solana_address::Address>,
+    rent_refund: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -92,19 +91,19 @@ impl CleanupBuilder {
     }
     /// Proposal PDA to close
     #[inline(always)]
-    pub fn proposal(&mut self, proposal: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn proposal(&mut self, proposal: solana_address::Address) -> &mut Self {
         self.proposal = Some(proposal);
         self
     }
     /// Intent PDA (decrement active count)
     #[inline(always)]
-    pub fn intent(&mut self, intent: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn intent(&mut self, intent: solana_address::Address) -> &mut Self {
         self.intent = Some(intent);
         self
     }
     /// Recipient of rent refund
     #[inline(always)]
-    pub fn rent_refund(&mut self, rent_refund: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn rent_refund(&mut self, rent_refund: solana_address::Address) -> &mut Self {
         self.rent_refund = Some(rent_refund);
         self
     }

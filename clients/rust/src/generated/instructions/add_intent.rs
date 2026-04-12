@@ -14,13 +14,13 @@ pub const ADD_INTENT_DISCRIMINATOR: u8 = 1;
 #[derive(Debug)]
 pub struct AddIntent {
     /// Wallet PDA
-    pub wallet: solana_pubkey::Pubkey,
+    pub wallet: solana_address::Address,
     /// Intent PDA to create
-    pub intent: solana_pubkey::Pubkey,
+    pub intent: solana_address::Address,
     /// Rent payer
-    pub payer: solana_pubkey::Pubkey,
+    pub payer: solana_address::Address,
     /// System program
-    pub system_program: solana_pubkey::Pubkey,
+    pub system_program: solana_address::Address,
 }
 
 impl AddIntent {
@@ -53,7 +53,6 @@ impl AddIntent {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct AddIntentInstructionData {
     discriminator: u8,
 }
@@ -84,10 +83,10 @@ impl Default for AddIntentInstructionData {
 ///   3. `[optional]` system_program (default to `11111111111111111111111111111111`)
 #[derive(Clone, Debug, Default)]
 pub struct AddIntentBuilder {
-    wallet: Option<solana_pubkey::Pubkey>,
-    intent: Option<solana_pubkey::Pubkey>,
-    payer: Option<solana_pubkey::Pubkey>,
-    system_program: Option<solana_pubkey::Pubkey>,
+    wallet: Option<solana_address::Address>,
+    intent: Option<solana_address::Address>,
+    payer: Option<solana_address::Address>,
+    system_program: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -97,26 +96,26 @@ impl AddIntentBuilder {
     }
     /// Wallet PDA
     #[inline(always)]
-    pub fn wallet(&mut self, wallet: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn wallet(&mut self, wallet: solana_address::Address) -> &mut Self {
         self.wallet = Some(wallet);
         self
     }
     /// Intent PDA to create
     #[inline(always)]
-    pub fn intent(&mut self, intent: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn intent(&mut self, intent: solana_address::Address) -> &mut Self {
         self.intent = Some(intent);
         self
     }
     /// Rent payer
     #[inline(always)]
-    pub fn payer(&mut self, payer: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn payer(&mut self, payer: solana_address::Address) -> &mut Self {
         self.payer = Some(payer);
         self
     }
     /// `[optional account, default to '11111111111111111111111111111111']`
     /// System program
     #[inline(always)]
-    pub fn system_program(&mut self, system_program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn system_program(&mut self, system_program: solana_address::Address) -> &mut Self {
         self.system_program = Some(system_program);
         self
     }
@@ -143,7 +142,7 @@ impl AddIntentBuilder {
             payer: self.payer.expect("payer is not set"),
             system_program: self
                 .system_program
-                .unwrap_or(solana_pubkey::pubkey!("11111111111111111111111111111111")),
+                .unwrap_or(solana_address::address!("11111111111111111111111111111111")),
         };
 
         accounts.instruction_with_remaining_accounts(&self.__remaining_accounts)

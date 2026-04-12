@@ -14,17 +14,17 @@ pub const EXECUTE_DISCRIMINATOR: u8 = 20;
 #[derive(Debug)]
 pub struct Execute {
     /// Wallet PDA
-    pub wallet: solana_pubkey::Pubkey,
+    pub wallet: solana_address::Address,
     /// Vault PDA (CPI signer)
-    pub vault: solana_pubkey::Pubkey,
+    pub vault: solana_address::Address,
     /// Intent PDA
-    pub intent: solana_pubkey::Pubkey,
+    pub intent: solana_address::Address,
     /// Proposal PDA
-    pub proposal: solana_pubkey::Pubkey,
+    pub proposal: solana_address::Address,
     /// Event authority PDA
-    pub event_authority: solana_pubkey::Pubkey,
+    pub event_authority: solana_address::Address,
     /// Lucid program (self, for CPI)
-    pub program: solana_pubkey::Pubkey,
+    pub program: solana_address::Address,
 }
 
 impl Execute {
@@ -65,7 +65,6 @@ impl Execute {
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ExecuteInstructionData {
     discriminator: u8,
 }
@@ -98,12 +97,12 @@ impl Default for ExecuteInstructionData {
 ///   5. `[]` program
 #[derive(Clone, Debug, Default)]
 pub struct ExecuteBuilder {
-    wallet: Option<solana_pubkey::Pubkey>,
-    vault: Option<solana_pubkey::Pubkey>,
-    intent: Option<solana_pubkey::Pubkey>,
-    proposal: Option<solana_pubkey::Pubkey>,
-    event_authority: Option<solana_pubkey::Pubkey>,
-    program: Option<solana_pubkey::Pubkey>,
+    wallet: Option<solana_address::Address>,
+    vault: Option<solana_address::Address>,
+    intent: Option<solana_address::Address>,
+    proposal: Option<solana_address::Address>,
+    event_authority: Option<solana_address::Address>,
+    program: Option<solana_address::Address>,
     __remaining_accounts: Vec<solana_instruction::AccountMeta>,
 }
 
@@ -113,37 +112,37 @@ impl ExecuteBuilder {
     }
     /// Wallet PDA
     #[inline(always)]
-    pub fn wallet(&mut self, wallet: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn wallet(&mut self, wallet: solana_address::Address) -> &mut Self {
         self.wallet = Some(wallet);
         self
     }
     /// Vault PDA (CPI signer)
     #[inline(always)]
-    pub fn vault(&mut self, vault: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn vault(&mut self, vault: solana_address::Address) -> &mut Self {
         self.vault = Some(vault);
         self
     }
     /// Intent PDA
     #[inline(always)]
-    pub fn intent(&mut self, intent: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn intent(&mut self, intent: solana_address::Address) -> &mut Self {
         self.intent = Some(intent);
         self
     }
     /// Proposal PDA
     #[inline(always)]
-    pub fn proposal(&mut self, proposal: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn proposal(&mut self, proposal: solana_address::Address) -> &mut Self {
         self.proposal = Some(proposal);
         self
     }
     /// Event authority PDA
     #[inline(always)]
-    pub fn event_authority(&mut self, event_authority: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn event_authority(&mut self, event_authority: solana_address::Address) -> &mut Self {
         self.event_authority = Some(event_authority);
         self
     }
     /// Lucid program (self, for CPI)
     #[inline(always)]
-    pub fn program(&mut self, program: solana_pubkey::Pubkey) -> &mut Self {
+    pub fn program(&mut self, program: solana_address::Address) -> &mut Self {
         self.program = Some(program);
         self
     }

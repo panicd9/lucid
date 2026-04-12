@@ -128,7 +128,7 @@ pub enum LucidInstruction {
     // ── Proposal flow ────────────────────────────────────────────────
 
     /// Create a proposal against an intent with Ed25519 signature.
-    #[account(0, name = "wallet", desc = "Wallet PDA")]
+    #[account(0, writable, name = "wallet", desc = "Wallet PDA")]
     #[account(1, writable, name = "intent", desc = "Intent PDA")]
     #[account(2, writable, name = "proposal", desc = "Proposal PDA to create")]
     #[account(3, name = "instructions_sysvar", desc = "Instructions sysvar (for Ed25519 verification)")]
