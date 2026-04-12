@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "programId": "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH",
+  "instructionName": "Propose",
+  "discriminator": [
+    93,
+    253,
+    82,
+    168,
+    118,
+    33,
+    102,
+    90
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "wallet",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "intent",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "proposal",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "instructionsSysvar",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "payer",
+      "source": "vault",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "systemProgram",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        93,
+        253,
+        82,
+        168,
+        118,
+        33,
+        102,
+        90
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "propose",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

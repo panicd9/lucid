@@ -568,6 +568,8 @@ fn build_intent_bytes(def: &IntentDefinition) -> Result<Vec<u8>> {
 
     // wallet: 32 bytes (zeroed, filled by program)
     result.extend_from_slice(&[0u8; 32]);
+    // target_program: 32 bytes
+    result.extend_from_slice(&program_id_bytes);
     // timelock_seconds: u32
     result.extend_from_slice(&def.timelock_seconds.to_le_bytes());
     // active_proposal_count: u16 (zero)

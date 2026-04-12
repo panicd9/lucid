@@ -59,7 +59,7 @@ pub const WALLET_DATA_LEN: usize = 48;
 pub const WALLET_LEN: usize = PREFIX_LEN + WALLET_DATA_LEN;
 pub const VAULT_DATA_LEN: usize = 33;
 pub const VAULT_LEN: usize = PREFIX_LEN + VAULT_DATA_LEN;
-pub const INTENT_HEADER_LEN: usize = PREFIX_LEN + 56;
+pub const INTENT_HEADER_LEN: usize = PREFIX_LEN + 88;
 pub const PROPOSAL_HEADER_LEN: usize = PREFIX_LEN + 168;
 
 pub const PARAM_ENTRY_SIZE: usize = 16;

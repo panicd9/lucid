@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "programId": "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH",
+  "instructionName": "AddIntent",
+  "discriminator": [
+    36,
+    233,
+    23,
+    211,
+    11,
+    10,
+    155,
+    60
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "wallet",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "intent",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "payer",
+      "source": "vault",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "systemProgram",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        36,
+        233,
+        23,
+        211,
+        11,
+        10,
+        155,
+        60
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "add intent",
+  "riskLevel": "MEDIUM",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

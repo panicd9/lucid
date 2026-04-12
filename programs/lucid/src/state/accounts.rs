@@ -75,6 +75,7 @@ impl Vault {
 #[repr(C)]
 pub struct IntentHeader {
     pub wallet: [u8; 32],
+    pub target_program: [u8; 32],
     pub timelock_seconds: u32,         // 4-byte aligned
     pub active_proposal_count: u16,    // 2-byte aligned
     pub byte_pool_len: u16,            // 2-byte aligned
@@ -94,10 +95,10 @@ pub struct IntentHeader {
     pub _reserved: [u8; 3],
 }
 
-assert_no_padding!(IntentHeader, 56);
+assert_no_padding!(IntentHeader, 88);
 
 impl IntentHeader {
-    pub const DATA_LEN: usize = 56;
+    pub const DATA_LEN: usize = 88;
     pub const HEADER_LEN: usize = PREFIX_LEN + Self::DATA_LEN;
     pub const DISCRIMINATOR: u8 = DISC_INTENT;
 

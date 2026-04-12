@@ -94,6 +94,7 @@ export interface SeedEntry {
 
 export interface IntentAccount {
   wallet: PublicKey;
+  targetProgram: PublicKey;
   timelockSeconds: number;
   activeProposalCount: number;
   bytePoolLen: number;
@@ -121,7 +122,7 @@ export interface IntentAccount {
   template: string;
 }
 
-const INTENT_HEADER_MIN_LEN = PREFIX_LEN + 56;
+const INTENT_HEADER_MIN_LEN = PREFIX_LEN + 88;
 
 export function deserializeIntent(data: Buffer): IntentAccount {
   if (data.length < INTENT_HEADER_MIN_LEN) {
@@ -134,6 +135,9 @@ export function deserializeIntent(data: Buffer): IntentAccount {
   let offset = PREFIX_LEN;
 
   const wallet = new PublicKey(data.subarray(offset, offset + 32));
+  offset += 32;
+
+  const targetProgram = new PublicKey(data.subarray(offset, offset + 32));
   offset += 32;
 
   const timelockSeconds = data.readUInt32LE(offset);
@@ -290,6 +294,7 @@ export function deserializeIntent(data: Buffer): IntentAccount {
 
   return {
     wallet,
+    targetProgram,
     timelockSeconds,
     activeProposalCount,
     bytePoolLen,

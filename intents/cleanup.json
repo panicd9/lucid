@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "programId": "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH",
+  "instructionName": "Cleanup",
+  "discriminator": [
+    36,
+    158,
+    31,
+    187,
+    253,
+    37,
+    68,
+    210
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "proposal",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "intent",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "rentRefund",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        36,
+        158,
+        31,
+        187,
+        253,
+        37,
+        68,
+        210
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "cleanup",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

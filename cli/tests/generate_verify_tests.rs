@@ -22,6 +22,7 @@ fn lucid_bin() -> String {
 fn sample_idl_json() -> String {
     r#"{
   "name": "sample_protocol",
+  "address": "SampProtoco1111111111111111111111111111111111",
   "instructions": [
     {
       "name": "updateAdmin",

@@ -40,6 +40,7 @@ import {
 
 export type IntentHeader = {
   wallet: ReadonlyUint8Array;
+  targetProgram: ReadonlyUint8Array;
   timelockSeconds: number;
   activeProposalCount: number;
   bytePoolLen: number;
@@ -65,6 +66,7 @@ export type IntentHeaderArgs = IntentHeader;
 export function getIntentHeaderEncoder(): FixedSizeEncoder<IntentHeaderArgs> {
   return getStructEncoder([
     ["wallet", fixEncoderSize(getBytesEncoder(), 32)],
+    ["targetProgram", fixEncoderSize(getBytesEncoder(), 32)],
     ["timelockSeconds", getU32Encoder()],
     ["activeProposalCount", getU16Encoder()],
     ["bytePoolLen", getU16Encoder()],
@@ -89,6 +91,7 @@ export function getIntentHeaderEncoder(): FixedSizeEncoder<IntentHeaderArgs> {
 export function getIntentHeaderDecoder(): FixedSizeDecoder<IntentHeader> {
   return getStructDecoder([
     ["wallet", fixDecoderSize(getBytesDecoder(), 32)],
+    ["targetProgram", fixDecoderSize(getBytesDecoder(), 32)],
     ["timelockSeconds", getU32Decoder()],
     ["activeProposalCount", getU16Decoder()],
     ["bytePoolLen", getU16Decoder()],
@@ -171,5 +174,5 @@ export async function fetchAllMaybeIntentHeader(
 }
 
 export function getIntentHeaderSize(): number {
-  return 56;
+  return 88;
 }

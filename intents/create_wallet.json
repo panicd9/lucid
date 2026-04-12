@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "programId": "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH",
+  "instructionName": "CreateWallet",
+  "discriminator": [
+    82,
+    172,
+    128,
+    18,
+    161,
+    207,
+    88,
+    63
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "wallet",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "vault",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "metaIntentAdd",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "metaIntentRemove",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "metaIntentUpdate",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "payer",
+      "source": "vault",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "systemProgram",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        82,
+        172,
+        128,
+        18,
+        161,
+        207,
+        88,
+        63
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "create wallet",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

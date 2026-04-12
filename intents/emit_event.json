@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "programId": "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH",
+  "instructionName": "EmitEvent",
+  "discriminator": [
+    82,
+    133,
+    188,
+    136,
+    167,
+    139,
+    209,
+    52
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "eventAuthority",
+      "source": "vault",
+      "writable": false,
+      "isSigner": true,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        82,
+        133,
+        188,
+        136,
+        167,
+        139,
+        209,
+        52
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "emit event",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

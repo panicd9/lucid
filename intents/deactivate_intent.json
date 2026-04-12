@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "programId": "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH",
+  "instructionName": "DeactivateIntent",
+  "discriminator": [
+    221,
+    151,
+    127,
+    45,
+    41,
+    132,
+    237,
+    18
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "wallet",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "intent",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "authority",
+      "source": "vault",
+      "writable": false,
+      "isSigner": true,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        221,
+        151,
+        127,
+        45,
+        41,
+        132,
+        237,
+        18
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "deactivate intent",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}

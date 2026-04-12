@@ -21,7 +21,7 @@ export const PREFIX_LEN = 2;
 // Struct sizes
 export const WALLET_DATA_LEN = 48;
 export const WALLET_LEN = PREFIX_LEN + WALLET_DATA_LEN;
-export const INTENT_HEADER_LEN = PREFIX_LEN + 56;
+export const INTENT_HEADER_LEN = PREFIX_LEN + 88;
 export const PROPOSAL_HEADER_LEN = PREFIX_LEN + 168;
 
 // Entry sizes

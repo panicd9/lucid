@@ -8,6 +8,7 @@ use crate::types::*;
 #[derive(serde::Deserialize)]
 struct AnchorIdl {
     name: String,
+    address: String,
     instructions: Vec<AnchorInstruction>,
 }
 
@@ -51,7 +52,7 @@ pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
     println!("Generating intents from IDL: {}", idl.name);
 
     for ix in &idl.instructions {
-        let intent = generate_intent_from_instruction(ix, &idl.name)?;
+        let intent = generate_intent_from_instruction(ix, &idl.address)?;
         let filename = format!("{}.json", snake_case(&ix.name));
         let filepath = Path::new(output_dir).join(&filename);
         let json = serde_json::to_string_pretty(&intent)?;
@@ -72,7 +73,7 @@ pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
 
 fn generate_intent_from_instruction(
     ix: &AnchorInstruction,
-    _program_name: &str,
+    program_id: &str,
 ) -> Result<IntentDefinition> {
     // Compute discriminator: SHA-256("global:{snake_case_name}")[..8]
     let disc_input = format!("global:{}", snake_case(&ix.name));
@@ -135,7 +136,7 @@ fn generate_intent_from_instruction(
 
     Ok(IntentDefinition {
         version: 1,
-        program_id: String::new(), // User must fill in program_id
+        program_id: program_id.to_string(),
         instruction_name: ix.name.clone(),
         discriminator,
         params,

@@ -167,9 +167,12 @@ fn execute_custom_cpi(
 
         let ix_entry = read_instruction_entry(&idata, intent, 0)?;
 
-        // Resolve program ID
+        // Resolve program ID and verify it matches the declared target_program
         let prog_entry = read_account_entry(&idata, intent, ix_entry.program_account_index)?;
         prog_addr = resolve_address(&idata, intent, prog_entry, params_data, &accounts[6..], &vault_address)?;
+        if intent.target_program != prog_addr {
+            return Err(ProgramError::Custom(ERR_PROGRAM_MISMATCH));
+        }
 
         // Build account list
         acct_count = ix_entry.account_count as usize;

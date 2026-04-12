@@ -43,6 +43,7 @@ function buildWalletBuffer(opts: {
 
 function buildIntentBuffer(opts: {
   wallet?: Buffer;
+  targetProgram?: Buffer;
   timelockSeconds?: number;
   activeProposalCount?: number;
   bump?: number;
@@ -86,7 +87,7 @@ function buildIntentBuffer(opts: {
     seedCount * SEED_ENTRY_SIZE +
     bytePool.length;
 
-  const totalLen = PREFIX_LEN + 56 + variableLen;
+  const totalLen = PREFIX_LEN + 88 + variableLen;
   const buf = Buffer.alloc(totalLen, 0);
 
   let offset = 0;
@@ -96,6 +97,11 @@ function buildIntentBuffer(opts: {
   // wallet (32 bytes)
   const walletBuf = opts.wallet ?? Buffer.alloc(32, 0);
   walletBuf.copy(buf, offset);
+  offset += 32;
+
+  // targetProgram (32 bytes)
+  const targetProgramBuf = opts.targetProgram ?? Buffer.alloc(32, 0);
+  targetProgramBuf.copy(buf, offset);
   offset += 32;
 
   // timelockSeconds (u32 LE)
@@ -126,7 +132,7 @@ function buildIntentBuffer(opts: {
 
   offset += 3; // reserved
 
-  // We should now be at PREFIX_LEN + 56 = 58
+  // We should now be at PREFIX_LEN + 88 = 90
   // Proposers
   for (const p of opts.proposers ?? []) {
     p.copy(buf, offset);
@@ -412,23 +418,23 @@ describe('deserializeIntent', () => {
   it('throws when proposer_count > 16', () => {
     // Build a buffer with proposerCount=17 in the header but don't bother adding actual proposer data
     // The validation for MAX_SIGNERS happens before the length check
-    const buf = Buffer.alloc(PREFIX_LEN + 56, 0);
+    const buf = Buffer.alloc(PREFIX_LEN + 88, 0);
     buf[0] = DISC_INTENT;
     buf[1] = 1;
-    // proposerCount is at offset PREFIX_LEN + 32 + 4 + 2 + 2 + 1 + 1 + 1 + 1 + 1 + 1 = PREFIX_LEN + 46
-    buf[PREFIX_LEN + 46] = 17; // proposerCount = 17
-    buf[PREFIX_LEN + 47] = 0;  // approverCount = 0
+    // proposerCount is at offset PREFIX_LEN + 32 + 32 + 4 + 2 + 2 + 1 + 1 + 1 + 1 + 1 + 1 = PREFIX_LEN + 78
+    buf[PREFIX_LEN + 78] = 17; // proposerCount = 17
+    buf[PREFIX_LEN + 79] = 0;  // approverCount = 0
     expect(() => deserializeIntent(buf)).toThrow('Invalid signer counts');
   });
 
   it('throws when data is truncated for declared arrays', () => {
     // Create header that claims 2 proposers but buffer is too short
-    const buf = Buffer.alloc(PREFIX_LEN + 56, 0);
+    const buf = Buffer.alloc(PREFIX_LEN + 88, 0);
     buf[0] = DISC_INTENT;
     buf[1] = 1;
-    // proposerCount at offset PREFIX_LEN + 46
-    buf[PREFIX_LEN + 46] = 2; // 2 proposers = 64 bytes needed after header
-    buf[PREFIX_LEN + 47] = 0; // 0 approvers
+    // proposerCount at offset PREFIX_LEN + 78
+    buf[PREFIX_LEN + 78] = 2; // 2 proposers = 64 bytes needed after header
+    buf[PREFIX_LEN + 79] = 0; // 0 approvers
     expect(() => deserializeIntent(buf)).toThrow('truncated');
   });
 });

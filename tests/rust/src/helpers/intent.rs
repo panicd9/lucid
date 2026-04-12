@@ -11,6 +11,7 @@ use super::{
 pub struct IntentDataBuilder {
     // IntentHeader fields
     pub wallet: [u8; 32],
+    pub target_program: [u8; 32],
     pub timelock_seconds: u32,
     pub intent_type: u8,
     pub approval_threshold: u8,
@@ -62,6 +63,7 @@ impl IntentDataBuilder {
     pub fn new() -> Self {
         Self {
             wallet: [0; 32],
+            target_program: [0; 32],
             timelock_seconds: 0,
             intent_type: INTENT_TYPE_CUSTOM,
             approval_threshold: 1,
@@ -109,11 +111,13 @@ impl IntentDataBuilder {
 
         let byte_pool_len = byte_pool.len() as u16;
 
-        // Build the IntentHeader (56 bytes)
+        // Build the IntentHeader (88 bytes)
         let mut data = Vec::new();
 
         // wallet: [u8; 32]
         data.extend_from_slice(&self.wallet);
+        // target_program: [u8; 32]
+        data.extend_from_slice(&self.target_program);
         // timelock_seconds: u32
         data.extend_from_slice(&self.timelock_seconds.to_le_bytes());
         // active_proposal_count: u16
@@ -149,7 +153,7 @@ impl IntentDataBuilder {
         // _reserved: [u8; 3]
         data.extend_from_slice(&[0u8; 3]);
 
-        assert_eq!(data.len(), 56, "IntentHeader must be 56 bytes");
+        assert_eq!(data.len(), 88, "IntentHeader must be 88 bytes");
 
         // Proposers (N * 32 bytes)
         for p in &self.proposers {
@@ -240,9 +244,10 @@ impl IntentDataBuilder {
 pub fn build_test_transfer_intent(
     proposers: &[[u8; 32]],
     approvers: &[[u8; 32]],
-    _target_program: &[u8; 32],
+    target_program: &[u8; 32],
 ) -> IntentDataBuilder {
     let mut builder = IntentDataBuilder::new();
+    builder.target_program = *target_program;
     builder.intent_type = INTENT_TYPE_CUSTOM;
     builder.approval_threshold = 1;
     builder.cancellation_threshold = 1;

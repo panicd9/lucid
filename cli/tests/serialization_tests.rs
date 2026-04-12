@@ -215,61 +215,62 @@ fn proposal_approved_at_offset_120() {
 // =========================================================================
 // IntentHeader layout tests
 // =========================================================================
-// IntentHeader on-chain layout (PREFIX_LEN = 2, DATA_LEN = 56):
+// IntentHeader on-chain layout (PREFIX_LEN = 2, DATA_LEN = 88):
 //   [disc:1, version:1] -- prefix (2)
 //   pd[0..32]:  wallet (Pubkey)
-//   pd[32..36]: timelock_seconds (u32)
-//   pd[36..38]: active_proposal_count (u16)
-//   pd[38..40]: byte_pool_len (u16)
-//   pd[40]:     bump (u8)
-//   pd[41]:     intent_index (u8)
-//   pd[42]:     intent_type (u8)
-//   pd[43]:     approved (u8)
-//   pd[44]:     approval_threshold (u8)
-//   pd[45]:     cancellation_threshold (u8)
-//   pd[46]:     proposer_count (u8)
-//   pd[47]:     approver_count (u8)
-//   pd[48]:     param_count (u8)
-//   pd[49]:     account_count (u8)
-//   pd[50]:     instruction_count (u8)
-//   pd[51]:     data_segment_count (u8)
-//   pd[52]:     seed_count (u8)
-//   pd[53..56]: reserved (3 bytes)
+//   pd[32..64]: target_program (Pubkey)
+//   pd[64..68]: timelock_seconds (u32)
+//   pd[68..70]: active_proposal_count (u16)
+//   pd[70..72]: byte_pool_len (u16)
+//   pd[72]:     bump (u8)
+//   pd[73]:     intent_index (u8)
+//   pd[74]:     intent_type (u8)
+//   pd[75]:     approved (u8)
+//   pd[76]:     approval_threshold (u8)
+//   pd[77]:     cancellation_threshold (u8)
+//   pd[78]:     proposer_count (u8)
+//   pd[79]:     approver_count (u8)
+//   pd[80]:     param_count (u8)
+//   pd[81]:     account_count (u8)
+//   pd[82]:     instruction_count (u8)
+//   pd[83]:     data_segment_count (u8)
+//   pd[84]:     seed_count (u8)
+//   pd[85..88]: reserved (3 bytes)
 
 #[test]
-fn intent_header_intent_type_at_offset_42() {
+fn intent_header_intent_type_at_offset_74() {
     let mut buf = vec![0u8; PREFIX_LEN + INTENT_HEADER_LEN];
     buf[0] = DISC_INTENT;
     buf[1] = 1;
 
-    buf[PREFIX_LEN + 42] = INTENT_TYPE_CUSTOM; // 3
+    buf[PREFIX_LEN + 74] = INTENT_TYPE_CUSTOM; // 3
 
     let pd = &buf[PREFIX_LEN..];
-    assert_eq!(pd[42], INTENT_TYPE_CUSTOM, "intent_type at pd[42]");
+    assert_eq!(pd[74], INTENT_TYPE_CUSTOM, "intent_type at pd[74]");
 }
 
 #[test]
-fn intent_header_proposer_count_at_offset_46() {
+fn intent_header_proposer_count_at_offset_78() {
     let mut buf = vec![0u8; PREFIX_LEN + INTENT_HEADER_LEN];
     buf[0] = DISC_INTENT;
     buf[1] = 1;
 
-    buf[PREFIX_LEN + 46] = 5;
+    buf[PREFIX_LEN + 78] = 5;
 
     let pd = &buf[PREFIX_LEN..];
-    assert_eq!(pd[46], 5, "proposer_count at pd[46]");
+    assert_eq!(pd[78], 5, "proposer_count at pd[78]");
 }
 
 #[test]
-fn intent_header_approver_count_at_offset_47() {
+fn intent_header_approver_count_at_offset_79() {
     let mut buf = vec![0u8; PREFIX_LEN + INTENT_HEADER_LEN];
     buf[0] = DISC_INTENT;
     buf[1] = 1;
 
-    buf[PREFIX_LEN + 47] = 3;
+    buf[PREFIX_LEN + 79] = 3;
 
     let pd = &buf[PREFIX_LEN..];
-    assert_eq!(pd[47], 3, "approver_count at pd[47]");
+    assert_eq!(pd[79], 3, "approver_count at pd[79]");
 }
 
 #[test]
@@ -303,10 +304,10 @@ fn intent_header_byte_pool_offset_calculation() {
         + seed_count * SEED_ENTRY_SIZE;
 
     // Manual calculation:
-    //   56 + 64 + 96 + 16 + 16 + 8 + 12 + 6 = 274
-    let manual = 56 + (2 * 32) + (3 * 32) + (1 * 16) + (2 * 8) + (1 * 8) + (2 * 6) + (1 * 6);
+    //   88 + 64 + 96 + 16 + 16 + 8 + 12 + 6 = 306
+    let manual = 88 + (2 * 32) + (3 * 32) + (1 * 16) + (2 * 8) + (1 * 8) + (2 * 6) + (1 * 6);
     assert_eq!(expected_offset, manual, "byte_pool_offset formula must match manual calc");
-    assert_eq!(expected_offset, 274);
+    assert_eq!(expected_offset, 306);
 
     // Build a buffer large enough and verify we can write/read the byte pool
     // at the computed offset (relative to data start, i.e. after PREFIX_LEN).
@@ -317,13 +318,13 @@ fn intent_header_byte_pool_offset_calculation() {
 
     // Set counts in the header
     let pd_start = PREFIX_LEN;
-    buf[pd_start + 46] = proposer_count as u8;
-    buf[pd_start + 47] = approver_count as u8;
-    buf[pd_start + 48] = param_count as u8;
-    buf[pd_start + 49] = account_count as u8;
-    buf[pd_start + 50] = instruction_count as u8;
-    buf[pd_start + 51] = data_segment_count as u8;
-    buf[pd_start + 52] = seed_count as u8;
+    buf[pd_start + 78] = proposer_count as u8;
+    buf[pd_start + 79] = approver_count as u8;
+    buf[pd_start + 80] = param_count as u8;
+    buf[pd_start + 81] = account_count as u8;
+    buf[pd_start + 82] = instruction_count as u8;
+    buf[pd_start + 83] = data_segment_count as u8;
+    buf[pd_start + 84] = seed_count as u8;
 
     // Write a marker at the byte pool offset
     let marker: u32 = 0xCAFE_BABE;

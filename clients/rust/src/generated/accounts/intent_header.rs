@@ -11,6 +11,7 @@ use borsh::BorshSerialize;
 #[derive(BorshSerialize, BorshDeserialize, Clone, Debug, Eq, PartialEq)]
 pub struct IntentHeader {
     pub wallet: [u8; 32],
+    pub target_program: [u8; 32],
     pub timelock_seconds: u32,
     pub active_proposal_count: u16,
     pub byte_pool_len: u16,
@@ -31,7 +32,7 @@ pub struct IntentHeader {
 }
 
 impl IntentHeader {
-    pub const LEN: usize = 56;
+    pub const LEN: usize = 88;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

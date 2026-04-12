@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "programId": "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH",
+  "instructionName": "FreezeWallet",
+  "discriminator": [
+    93,
+    202,
+    159,
+    167,
+    22,
+    246,
+    255,
+    211
+  ],
+  "params": [],
+  "accounts": [
+    {
+      "name": "wallet",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "metaIntent",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "authority",
+      "source": "vault",
+      "writable": false,
+      "isSigner": true,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [
+        93,
+        202,
+        159,
+        167,
+        22,
+        246,
+        255,
+        211
+      ],
+      "paramIndex": null
+    }
+  ],
+  "seeds": [],
+  "template": "freeze wallet",
+  "riskLevel": "LOW",
+  "timelockSeconds": 0,
+  "verification": {
+    "tier": 2,
+    "programName": null,
+    "verified": null
+  }
+}
