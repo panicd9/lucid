@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "programId": "11111111111111111111111111111111",
+  "instructionName": "Transfer",
+  "discriminator": [2, 0, 0, 0],
+  "params": [
+    {
+      "name": "amount",
+      "paramType": "u64",
+      "constraintType": "none",
+      "constraintValue": 0
+    }
+  ],
+  "accounts": [
+    {
+      "name": "from",
+      "source": "vault",
+      "writable": true,
+      "isSigner": true,
+      "sourceData": null
+    },
+    {
+      "name": "to",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [2, 0, 0, 0],
+      "paramIndex": null
+    },
+    {
+      "segmentType": "param",
+      "data": null,
+      "paramIndex": 0
+    }
+  ],
+  "seeds": [],
+  "template": "transfer {amount} lamports to {to}",
+  "riskLevel": "HIGH",
+  "timelockSeconds": 3600,
+  "verification": {
+    "tier": 1,
+    "programName": "System Program",
+    "verified": true
+  }
+}

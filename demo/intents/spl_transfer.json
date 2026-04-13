@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+  "instructionName": "TransferChecked",
+  "discriminator": [12],
+  "params": [
+    {
+      "name": "amount",
+      "paramType": "u64",
+      "constraintType": "none",
+      "constraintValue": 0
+    },
+    {
+      "name": "decimals",
+      "paramType": "u8",
+      "constraintType": "none",
+      "constraintValue": 0
+    }
+  ],
+  "accounts": [
+    {
+      "name": "source",
+      "source": "pda",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": {
+        "program": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+        "seedCount": 3,
+        "seedStart": 0
+      }
+    },
+    {
+      "name": "mint",
+      "source": "param",
+      "writable": false,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "destination",
+      "source": "param",
+      "writable": true,
+      "isSigner": false,
+      "sourceData": null
+    },
+    {
+      "name": "authority",
+      "source": "vault",
+      "writable": false,
+      "isSigner": true,
+      "sourceData": null
+    }
+  ],
+  "dataSegments": [
+    {
+      "segmentType": "literal",
+      "data": [12],
+      "paramIndex": null
+    },
+    {
+      "segmentType": "param",
+      "data": null,
+      "paramIndex": 0
+    },
+    {
+      "segmentType": "param",
+      "data": null,
+      "paramIndex": 1
+    }
+  ],
+  "seeds": [
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 3
+    },
+    {
+      "seedType": "literal",
+      "value": [6],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 1
+    }
+  ],
+  "template": "transfer {amount} tokens (decimals: {decimals}) to {destination}",
+  "riskLevel": "HIGH",
+  "timelockSeconds": 3600,
+  "verification": {
+    "tier": 1,
+    "programName": "SPL Token",
+    "verified": true
+  }
+}

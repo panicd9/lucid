@@ -2,7 +2,11 @@
 set -euo pipefail
 
 # Lucid Demo Script — runs on Surfpool (localhost:8899)
-# Prerequisites: surfpool installed, lucid.so built (cargo build-sbf)
+#
+# Prerequisites:
+#   1. cargo build-sbf --manifest-path programs/lucid/Cargo.toml
+#   2. cd programs/lucid && surfpool start   (keep running in another terminal)
+#   3. npm run dev --prefix dashboard        (keep running in another terminal)
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEMO="$ROOT/demo"
@@ -23,10 +27,6 @@ echo "── Step 1: Generate intents from Campfire crowdfunding IDL"
 cargo run -p lucid-cli -- generate \
   --idl "$DEMO/crowdfunding.json" \
   --output "$DEMO/intents"
-
-# Copy Tier 1 known-program intents
-cp "$ROOT/demo-intents/sol_transfer.json" "$DEMO/intents/" 2>/dev/null || true
-cp "$ROOT/demo-intents/spl_transfer.json" "$DEMO/intents/" 2>/dev/null || true
 echo ""
 
 # ── Step 2: Verify intents (Tier 1 + Tier 2) ───────────────

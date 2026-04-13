@@ -310,7 +310,12 @@ pub fn add_intents(
     let payer = rpc::load_keypair(keypair_path)?;
     let program_id = pda::PROGRAM_ID;
 
-    let wallet_pubkey = Pubkey::from_str(wallet_str).context("Invalid wallet address")?;
+    let wallet_pubkey = if let Ok(pk) = Pubkey::from_str(wallet_str) {
+        pk
+    } else {
+        let (pk, _) = pda::find_wallet_pda(wallet_str.as_bytes(), &program_id);
+        pk
+    };
 
     // Read all intent JSON files from directory
     let mut entries: Vec<_> = std::fs::read_dir(intents_dir)?
