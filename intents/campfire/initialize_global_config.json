@@ -26,7 +26,10 @@
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 1,
+        "seedStart": 0
+      }
     },
     {
       "name": "system_program",
@@ -52,7 +55,28 @@
       "paramIndex": null
     }
   ],
-  "seeds": [],
+  "seeds": [
+    {
+      "seedType": "literal",
+      "value": [
+        103,
+        108,
+        111,
+        98,
+        97,
+        108,
+        45,
+        99,
+        111,
+        110,
+        102,
+        105,
+        103
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    }
+  ],
   "template": "initialize global config",
   "riskLevel": "MEDIUM",
   "timelockSeconds": 0,

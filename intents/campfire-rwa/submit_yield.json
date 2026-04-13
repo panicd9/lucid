@@ -40,7 +40,10 @@
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 2,
+        "seedStart": 0
+      }
     },
     {
       "name": "authority_usdc_token_account",
@@ -61,7 +64,10 @@
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 2,
+        "seedStart": 2
+      }
     },
     {
       "name": "token_program",
@@ -106,7 +112,44 @@
       "paramIndex": 0
     }
   ],
-  "seeds": [],
+  "seeds": [
+    {
+      "seedType": "literal",
+      "value": [
+        115,
+        116,
+        97,
+        116,
+        101
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 1
+    },
+    {
+      "seedType": "literal",
+      "value": [
+        118,
+        97,
+        117,
+        108,
+        116
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 1
+    }
+  ],
   "template": "submit yield: {yield_amount}",
   "riskLevel": "HIGH",
   "timelockSeconds": 3600,

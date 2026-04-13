@@ -92,10 +92,25 @@ struct AnchorInstruction {
 #[derive(serde::Deserialize)]
 struct AnchorAccount {
     name: String,
-    #[serde(rename = "isMut")]
-    is_mut: bool,
-    #[serde(rename = "isSigner")]
-    is_signer: bool,
+    // Old Anchor IDL format (pre-0.30)
+    #[serde(rename = "isMut", default)]
+    is_mut_legacy: Option<bool>,
+    #[serde(rename = "isSigner", default)]
+    is_signer_legacy: Option<bool>,
+    // New Anchor IDL format (0.30+)
+    #[serde(default)]
+    writable: Option<bool>,
+    #[serde(default)]
+    signer: Option<bool>,
+}
+
+impl AnchorAccount {
+    fn is_mut(&self) -> bool {
+        self.writable.or(self.is_mut_legacy).unwrap_or(false)
+    }
+    fn is_signer(&self) -> bool {
+        self.signer.or(self.is_signer_legacy).unwrap_or(false)
+    }
 }
 
 #[derive(serde::Deserialize)]
@@ -370,16 +385,16 @@ fn verify_against_idl(
         let intent_acct = &intent.accounts[i];
         let idl_acct = &ix.accounts[i];
 
-        if intent_acct.writable != idl_acct.is_mut {
+        if intent_acct.writable != idl_acct.is_mut() {
             warnings.push(format!(
                 "Account '{}' writable mismatch: intent={}, IDL={}",
-                idl_acct.name, intent_acct.writable, idl_acct.is_mut
+                idl_acct.name, intent_acct.writable, idl_acct.is_mut()
             ));
         }
-        if intent_acct.is_signer != idl_acct.is_signer {
+        if intent_acct.is_signer != idl_acct.is_signer() {
             warnings.push(format!(
                 "Account '{}' signer mismatch: intent={}, IDL={}",
-                idl_acct.name, intent_acct.is_signer, idl_acct.is_signer
+                idl_acct.name, intent_acct.is_signer, idl_acct.is_signer()
             ));
         }
     }

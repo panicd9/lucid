@@ -33,7 +33,10 @@
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 2,
+        "seedStart": 0
+      }
     },
     {
       "name": "system_program",
@@ -59,7 +62,26 @@
       "paramIndex": null
     }
   ],
-  "seeds": [],
+  "seeds": [
+    {
+      "seedType": "literal",
+      "value": [
+        115,
+        116,
+        97,
+        116,
+        101
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 1
+    }
+  ],
   "template": "init mint state",
   "riskLevel": "HIGH",
   "timelockSeconds": 3600,

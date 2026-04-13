@@ -40,7 +40,10 @@
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 3,
+        "seedStart": 0
+      }
     },
     {
       "name": "system_program",
@@ -66,7 +69,33 @@
       "paramIndex": null
     }
   ],
-  "seeds": [],
+  "seeds": [
+    {
+      "seedType": "literal",
+      "value": [
+        108,
+        101,
+        100,
+        103,
+        101,
+        114
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 1
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 2
+    }
+  ],
   "template": "init ledger",
   "riskLevel": "LOW",
   "timelockSeconds": 0,

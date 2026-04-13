@@ -19,7 +19,10 @@
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 2,
+        "seedStart": 0
+      }
     },
     {
       "name": "mint",
@@ -59,7 +62,40 @@
       "paramIndex": null
     }
   ],
-  "seeds": [],
+  "seeds": [
+    {
+      "seedType": "literal",
+      "value": [
+        101,
+        120,
+        116,
+        114,
+        97,
+        45,
+        97,
+        99,
+        99,
+        111,
+        117,
+        110,
+        116,
+        45,
+        109,
+        101,
+        116,
+        97,
+        115
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 1
+    }
+  ],
   "template": "initialize",
   "riskLevel": "LOW",
   "timelockSeconds": 0,

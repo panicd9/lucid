@@ -33,21 +33,31 @@
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 2,
+        "seedStart": 0
+      }
     },
     {
       "name": "pool_authority",
       "source": "pda",
       "writable": false,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 2,
+        "seedStart": 2
+      }
     },
     {
       "name": "deposit_vault",
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "program": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+        "seedCount": 3,
+        "seedStart": 4
+      }
     },
     {
       "name": "deposit_mint",
@@ -94,7 +104,70 @@
       "paramIndex": null
     }
   ],
-  "seeds": [],
+  "seeds": [
+    {
+      "seedType": "literal",
+      "value": [
+        112,
+        111,
+        111,
+        108
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": "global_config.next_pool_id",
+      "paramIndex": null,
+      "accountIndex": 1
+    },
+    {
+      "seedType": "literal",
+      "value": [
+        112,
+        111,
+        111,
+        108,
+        45,
+        97,
+        117,
+        116,
+        104,
+        111,
+        114,
+        105,
+        116,
+        121
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": "global_config.next_pool_id",
+      "paramIndex": null,
+      "accountIndex": 1
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 3
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 7
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 5
+    }
+  ],
   "template": "create pool",
   "riskLevel": "LOW",
   "timelockSeconds": 0,

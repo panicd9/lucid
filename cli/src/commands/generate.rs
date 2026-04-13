@@ -160,16 +160,40 @@ fn generate_intent_from_instruction(
         });
     }
 
-    // Map accounts
+    // Map accounts and extract PDA seeds
     let mut accounts: Vec<AccountDef> = Vec::new();
+    let mut all_seeds: Vec<SeedDef> = Vec::new();
+
     for acct in &ix.accounts {
         let (source, source_data) = infer_account_source(acct, &params);
+
+        // Extract seeds for PDA accounts
+        let final_source_data = if source == "pda" {
+            if let Some(pda_seeds) = extract_pda_seeds(acct, &ix.accounts, &ix.args) {
+                let seed_start = all_seeds.len();
+                let seed_count = pda_seeds.seeds.len();
+                all_seeds.extend(pda_seeds.seeds);
+
+                let mut sd = serde_json::Map::new();
+                sd.insert("seedStart".to_string(), serde_json::Value::Number(seed_start.into()));
+                sd.insert("seedCount".to_string(), serde_json::Value::Number(seed_count.into()));
+                if let Some(prog) = pda_seeds.program {
+                    sd.insert("program".to_string(), serde_json::Value::String(prog));
+                }
+                Some(serde_json::Value::Object(sd))
+            } else {
+                source_data
+            }
+        } else {
+            source_data
+        };
+
         accounts.push(AccountDef {
             name: acct.name.clone(),
             source,
             writable: acct.is_mut,
             is_signer: acct.is_signer,
-            source_data,
+            source_data: final_source_data,
         });
     }
 
@@ -208,7 +232,7 @@ fn generate_intent_from_instruction(
         params,
         accounts,
         data_segments,
-        seeds: Vec::new(),
+        seeds: all_seeds,
         template,
         risk_level,
         timelock_seconds: timelock,
@@ -218,6 +242,105 @@ fn generate_intent_from_instruction(
             verified: None,
         }),
     })
+}
+
+struct ExtractedSeeds {
+    seeds: Vec<SeedDef>,
+    program: Option<String>,
+}
+
+/// Extract PDA seeds from an account's IDL pda definition.
+/// Returns None if the account has no pda field or no seeds.
+fn extract_pda_seeds(
+    acct: &NormalizedAccount,
+    all_accounts: &[NormalizedAccount],
+    args: &[NormalizedArg],
+) -> Option<ExtractedSeeds> {
+    let pda = acct.pda.as_ref()?;
+    let pda_obj = pda.as_object()?;
+    let seeds_arr = pda_obj.get("seeds")?.as_array()?;
+
+    let mut seeds = Vec::new();
+
+    for seed in seeds_arr {
+        let kind = seed.get("kind")?.as_str()?;
+        match kind {
+            "const" => {
+                // Literal bytes
+                if let Some(val_arr) = seed.get("value").and_then(|v| v.as_array()) {
+                    let bytes: Vec<u8> = val_arr.iter()
+                        .filter_map(|v| v.as_u64().map(|n| n as u8))
+                        .collect();
+                    seeds.push(SeedDef {
+                        seed_type: "literal".to_string(),
+                        value: Some(serde_json::Value::Array(
+                            bytes.iter().map(|&b| serde_json::Value::Number(b.into())).collect(),
+                        )),
+                        param_index: None,
+                        account_index: None,
+                    });
+                }
+            }
+            "arg" => {
+                // Instruction argument — find matching param index
+                let path = seed.get("path").and_then(|p| p.as_str()).unwrap_or("");
+                let param_idx = args.iter().position(|a| a.name == path);
+                seeds.push(SeedDef {
+                    seed_type: "param".to_string(),
+                    value: None,
+                    param_index: param_idx.map(|i| i as u8),
+                    account_index: None,
+                });
+            }
+            "account" => {
+                // Account reference — find matching account index
+                let path = seed.get("path").and_then(|p| p.as_str()).unwrap_or("");
+                // For nested paths like "pool.deposit_mint", use the root account name
+                let root_name = path.split('.').next().unwrap_or(path);
+                let acct_idx = all_accounts.iter().position(|a| a.name == root_name);
+
+                // If it's a nested path, store the full path in value for reference
+                let value = if path.contains('.') {
+                    Some(serde_json::Value::String(path.to_string()))
+                } else {
+                    None
+                };
+
+                seeds.push(SeedDef {
+                    seed_type: "account".to_string(),
+                    value,
+                    param_index: None,
+                    account_index: acct_idx.map(|i| i as u8),
+                });
+            }
+            _ => {}
+        }
+    }
+
+    // Extract PDA program override (e.g., Associated Token Program for ATAs)
+    let program = pda_obj.get("program").and_then(|prog| {
+        let prog_obj = prog.as_object()?;
+        let prog_kind = prog_obj.get("kind")?.as_str()?;
+        if prog_kind == "const" {
+            let val_arr = prog_obj.get("value")?.as_array()?;
+            let bytes: Vec<u8> = val_arr.iter()
+                .filter_map(|v| v.as_u64().map(|n| n as u8))
+                .collect();
+            if bytes.len() == 32 {
+                Some(bs58::encode(&bytes).into_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    });
+
+    if seeds.is_empty() {
+        None
+    } else {
+        Some(ExtractedSeeds { seeds, program })
+    }
 }
 
 fn map_idl_type(ty: &serde_json::Value) -> String {

@@ -47,7 +47,10 @@
       "source": "pda",
       "writable": false,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "seedCount": 2,
+        "seedStart": 0
+      }
     },
     {
       "name": "rwa_mint",
@@ -61,7 +64,11 @@
       "source": "pda",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": {
+        "program": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+        "seedCount": 3,
+        "seedStart": 2
+      }
     },
     {
       "name": "transfer_hook_program",
@@ -120,7 +127,53 @@
       "paramIndex": 0
     }
   ],
-  "seeds": [],
+  "seeds": [
+    {
+      "seedType": "literal",
+      "value": [
+        112,
+        111,
+        111,
+        108,
+        45,
+        97,
+        117,
+        116,
+        104,
+        111,
+        114,
+        105,
+        116,
+        121
+      ],
+      "paramIndex": null,
+      "accountIndex": null
+    },
+    {
+      "seedType": "param",
+      "value": null,
+      "paramIndex": 0,
+      "accountIndex": null
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 3
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 9
+    },
+    {
+      "seedType": "account",
+      "value": null,
+      "paramIndex": null,
+      "accountIndex": 4
+    }
+  ],
   "template": "issue rwa: {pool_id}",
   "riskLevel": "LOW",
   "timelockSeconds": 0,
