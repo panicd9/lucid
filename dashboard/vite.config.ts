@@ -5,11 +5,19 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      buffer: 'buffer',
+      buffer: 'buffer/',
     },
   },
   define: {
     'process.env': {},
     global: 'globalThis',
+  },
+  optimizeDeps: {
+    include: ['buffer', '@solana/web3.js'],
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
   },
 });
