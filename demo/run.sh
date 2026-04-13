@@ -38,20 +38,25 @@ echo ""
 
 # ── Step 3: Create a multisig wallet ────────────────────────
 echo "── Step 3: Create 'treasury' multisig wallet (2-of-3)"
-cargo run -p lucid-cli -- wallet create \
+CREATE_OUTPUT=$(cargo run -p lucid-cli -- wallet create \
   --name treasury \
   --proposers "$PAYER" \
   --approvers "$PAYER,$PAYER,$PAYER" \
   --approval-threshold 2 \
   --cancellation-threshold 1 \
   --keypair "$KEYPAIR" \
-  --url "$RPC"
+  --url "$RPC" 2>/dev/null)
+echo "$CREATE_OUTPUT"
+
+# Extract wallet address from create output
+WALLET_ADDR=$(echo "$CREATE_OUTPUT" | grep "Wallet:" | head -1 | awk '{print $2}')
+echo "  → Wallet address: $WALLET_ADDR"
 echo ""
 
 # ── Step 4: Add intents to the wallet ───────────────────────
-echo "── Step 4: Add intents to 'treasury' wallet"
+echo "── Step 4: Add intents to wallet $WALLET_ADDR"
 cargo run -p lucid-cli -- wallet add-intents \
-  --wallet treasury \
+  --wallet "$WALLET_ADDR" \
   --intents "$DEMO/intents" \
   --keypair "$KEYPAIR" \
   --url "$RPC"
@@ -60,12 +65,12 @@ echo ""
 # ── Step 5: Show wallet state ──────────────────────────────
 echo "── Step 5: Show wallet state"
 cargo run -p lucid-cli -- wallet show \
-  --wallet treasury \
+  --wallet "$WALLET_ADDR" \
   --url "$RPC"
 echo ""
 
 echo "============================================"
 echo "  Dashboard: http://localhost:5173"
-echo "  Select 'Localhost' network, search 'treasury'"
+echo "  Paste wallet address: $WALLET_ADDR"
 echo "  Surfpool Studio: http://localhost:18488"
 echo "============================================"

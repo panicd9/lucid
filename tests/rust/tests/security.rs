@@ -198,14 +198,13 @@ fn test_create_wallet_name_too_long() {
     let payer = Keypair::new();
     setup::airdrop(&mut svm, &payer.pubkey(), 100_000_000_000);
 
-    // Use a valid 32-byte name for PDA derivation, but send 33-byte name in instruction data
-    let valid_name = b"this-name-is-way-too-long-for-wa"; // 32 bytes (valid for PDA)
     let bad_name = b"this-name-is-way-too-long-for-wal"; // 33 bytes (too long)
     let proposer = Keypair::new().pubkey();
     let approver = Keypair::new().pubkey();
 
     let pid = helpers::program_id();
-    let (wallet_pda, _) = pda::find_wallet_pda(valid_name, &pid);
+    let create_key = Keypair::new().pubkey();
+    let (wallet_pda, _) = pda::find_wallet_pda(&create_key, &pid);
     let (vault_pda, _) = pda::find_vault_pda(&wallet_pda, &pid);
     let (intent0, _) = pda::find_intent_pda(&wallet_pda, 0, &pid);
     let (intent1, _) = pda::find_intent_pda(&wallet_pda, 1, &pid);
@@ -223,6 +222,7 @@ fn test_create_wallet_name_too_long() {
 
     // Build instruction data with the 33-byte name
     let mut data = vec![0u8]; // discriminator
+    data.extend_from_slice(create_key.as_ref()); // create_key
     data.push(bad_name.len() as u8);
     data.extend_from_slice(bad_name);
     data.push(1u8); // proposer count
@@ -247,7 +247,7 @@ fn test_create_wallet_empty_name() {
     let proposers = vec![Keypair::new().pubkey()];
     let approvers = vec![Keypair::new().pubkey()];
 
-    let ix = instructions::create_wallet(name, &proposers, &approvers, 1, 1, 0, &payer.pubkey());
+    let ix = instructions::create_wallet(&Keypair::new().pubkey(), name, &proposers, &approvers, 1, 1, 0, &payer.pubkey());
     let result = setup::send_tx(&mut svm, &[ix], &payer, &[&payer]);
     assert!(result.is_err(), "Empty name should fail");
 }
@@ -267,7 +267,7 @@ fn test_create_wallet_threshold_exceeds_approvers() {
 
     // Threshold 2 > 1 approver
     let ix = instructions::create_wallet(
-        b"bad-threshold", &proposers, &approvers, 2, 1, 0, &payer.pubkey(),
+        &Keypair::new().pubkey(), b"bad-threshold", &proposers, &approvers, 2, 1, 0, &payer.pubkey(),
     );
     let result = setup::send_tx(&mut svm, &[ix], &payer, &[&payer]);
     assert!(result.is_err(), "Threshold > approver count should fail");
@@ -283,7 +283,7 @@ fn test_create_wallet_zero_threshold() {
     let approvers = vec![Keypair::new().pubkey()];
 
     let ix = instructions::create_wallet(
-        b"zero-thresh", &proposers, &approvers, 0, 1, 0, &payer.pubkey(),
+        &Keypair::new().pubkey(), b"zero-thresh", &proposers, &approvers, 0, 1, 0, &payer.pubkey(),
     );
     let result = setup::send_tx(&mut svm, &[ix], &payer, &[&payer]);
     assert!(result.is_err(), "Zero threshold should fail");

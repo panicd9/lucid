@@ -83,7 +83,8 @@ pub fn create_test_wallet(
     let approver_addrs: Vec<Address> = approvers.iter().map(|k| k.pubkey()).collect();
 
     let pid = program_id();
-    let (wallet, _) = pda::find_wallet_pda(name, &pid);
+    let create_key = Keypair::new().pubkey();
+    let (wallet, _) = pda::find_wallet_pda(&create_key, &pid);
     let (vault, _) = pda::find_vault_pda(&wallet, &pid);
     let intents = [
         pda::find_intent_pda(&wallet, 0, &pid).0,
@@ -92,6 +93,7 @@ pub fn create_test_wallet(
     ];
 
     let ix = instructions::create_wallet(
+        &create_key,
         name,
         &proposer_addrs,
         &approver_addrs,

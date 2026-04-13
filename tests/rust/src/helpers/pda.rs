@@ -6,8 +6,8 @@ pub const INTENT_SEED: &[u8] = b"intent";
 pub const PROPOSAL_SEED: &[u8] = b"proposal";
 pub const EVENT_AUTHORITY_SEED: &[u8] = b"event_authority";
 
-pub fn find_wallet_pda(name: &[u8], program_id: &Address) -> (Address, u8) {
-    Address::find_program_address(&[WALLET_SEED, name], program_id)
+pub fn find_wallet_pda(create_key: &Address, program_id: &Address) -> (Address, u8) {
+    Address::find_program_address(&[WALLET_SEED, create_key.as_ref()], program_id)
 }
 
 pub fn find_vault_pda(wallet: &Address, program_id: &Address) -> (Address, u8) {

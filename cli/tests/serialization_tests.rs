@@ -54,8 +54,9 @@ fn read_i64(buf: &[u8], offset: usize) -> i64 {
 //   offset 12: bump            – u8
 //   offset 13: name_len        – u8
 //   offset 14: reserved        – 4 bytes
-//   offset 18: name            – 32 bytes
-//   total data after prefix: WALLET_DATA_LEN = 48, so total = 50
+//   offset 18: creator         – 32 bytes
+//   offset 50: name            – 32 bytes
+//   total data after prefix: WALLET_DATA_LEN = 80, so total = 82
 
 #[test]
 fn wallet_proposal_index_at_offset_2() {

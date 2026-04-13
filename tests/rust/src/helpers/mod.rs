@@ -55,7 +55,7 @@ pub const OFFCHAIN_HEADER_PREFIX: &[u8] = b"\xffsolana offchain";
 pub const OFFCHAIN_HEADER_LEN: usize = 20;
 
 /// Struct sizes (must match on-chain)
-pub const WALLET_DATA_LEN: usize = 48;
+pub const WALLET_DATA_LEN: usize = 80;
 pub const WALLET_LEN: usize = PREFIX_LEN + WALLET_DATA_LEN;
 pub const VAULT_DATA_LEN: usize = 33;
 pub const VAULT_LEN: usize = PREFIX_LEN + VAULT_DATA_LEN;

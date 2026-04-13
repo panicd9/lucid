@@ -144,7 +144,7 @@ enum WalletAction {
     },
     /// Show wallet details
     Show {
-        /// Wallet address or name
+        /// Wallet address
         #[arg(long)]
         wallet: String,
         /// RPC URL

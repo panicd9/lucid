@@ -7,6 +7,7 @@ use super::{pda, program_id};
 
 /// Build a CreateWallet instruction
 pub fn create_wallet(
+    create_key: &Address,
     name: &[u8],
     proposers: &[Address],
     approvers: &[Address],
@@ -16,7 +17,7 @@ pub fn create_wallet(
     payer: &Address,
 ) -> Instruction {
     let pid = program_id();
-    let (wallet_pda, _) = pda::find_wallet_pda(name, &pid);
+    let (wallet_pda, _) = pda::find_wallet_pda(create_key, &pid);
     let (vault_pda, _) = pda::find_vault_pda(&wallet_pda, &pid);
     let (intent0, _) = pda::find_intent_pda(&wallet_pda, 0, &pid);
     let (intent1, _) = pda::find_intent_pda(&wallet_pda, 1, &pid);
@@ -33,6 +34,7 @@ pub fn create_wallet(
 
     // Append instruction args (not captured by Shank IDL)
     let mut data = vec![CREATE_WALLET_DISCRIMINATOR];
+    data.extend_from_slice(create_key.as_ref());
     data.push(name.len() as u8);
     data.extend_from_slice(name);
     data.push(proposers.len() as u8);

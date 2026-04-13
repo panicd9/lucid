@@ -3,6 +3,7 @@ use colored::Colorize;
 use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
+    signature::Keypair,
     signer::Signer,
     transaction::Transaction,
 };
@@ -48,10 +49,15 @@ pub fn create(
         anyhow::bail!("Approver count must be 1-16");
     }
 
-    // Build instruction data: [disc=0, name_len, name_bytes, proposer_count, proposer_pubkeys,
-    //   approver_count, approver_pubkeys, approval_threshold, cancellation_threshold, timelock_seconds(u32 LE)]
+    // Generate a random create_key for unique PDA derivation
+    let create_key = Keypair::new().pubkey();
+
+    // Build instruction data: [disc=0, create_key(32), name_len, name_bytes, proposer_count,
+    //   proposer_pubkeys, approver_count, approver_pubkeys, approval_threshold,
+    //   cancellation_threshold, timelock_seconds(u32 LE)]
     let mut data = Vec::new();
     data.push(0u8); // discriminator
+    data.extend_from_slice(create_key.as_ref());
     data.push(name_bytes.len() as u8);
     data.extend_from_slice(name_bytes);
     data.push(proposers.len() as u8);
@@ -67,7 +73,7 @@ pub fn create(
     data.extend_from_slice(&timelock.to_le_bytes());
 
     // Derive PDAs
-    let (wallet_pda, _) = pda::find_wallet_pda(name_bytes, &program_id);
+    let (wallet_pda, _) = pda::find_wallet_pda(&create_key, &program_id);
     let (vault_pda, _) = pda::find_vault_pda(&wallet_pda, &program_id);
     let (intent0, _) = pda::find_intent_pda(&wallet_pda, 0, &program_id);
     let (intent1, _) = pda::find_intent_pda(&wallet_pda, 1, &program_id);
@@ -107,13 +113,8 @@ pub fn show(wallet_str: &str, url: &str) -> Result<()> {
     let client = rpc::create_client(url);
     let program_id = pda::PROGRAM_ID;
 
-    // Try to parse as pubkey first, otherwise treat as name
-    let wallet_pubkey = if let Ok(pk) = Pubkey::from_str(wallet_str) {
-        pk
-    } else {
-        let (pk, _) = pda::find_wallet_pda(wallet_str.as_bytes(), &program_id);
-        pk
-    };
+    let wallet_pubkey = Pubkey::from_str(wallet_str)
+        .context("Wallet must be a base58 address (name-based lookup not supported — use the address from 'wallet create')")?;
 
     let data = rpc::fetch_account(&client, &wallet_pubkey)?;
     if data.len() < PREFIX_LEN + WALLET_DATA_LEN {
@@ -131,13 +132,15 @@ pub fn show(wallet_str: &str, url: &str) -> Result<()> {
     let _bump = wd[10];
     let name_len = wd[11] as usize;
     // 4 bytes reserved at [12..16]
-    let name_bytes = &wd[16..16 + name_len.min(32)];
+    let create_key = Pubkey::from(<[u8; 32]>::try_from(&wd[16..48])?);
+    let name_bytes = &wd[48..48 + name_len.min(32)];
     let name = String::from_utf8_lossy(name_bytes);
 
     let (vault_pda, _) = pda::find_vault_pda(&wallet_pubkey, &program_id);
 
     println!("{}", "=== Lucid Wallet ===".cyan().bold());
     println!("  Name:             {}", name.to_string().white().bold());
+    println!("  Create Key:       {}", create_key);
     println!("  Address:          {}", wallet_pubkey);
     println!("  Vault:            {}", vault_pda);
     println!(
@@ -310,12 +313,8 @@ pub fn add_intents(
     let payer = rpc::load_keypair(keypair_path)?;
     let program_id = pda::PROGRAM_ID;
 
-    let wallet_pubkey = if let Ok(pk) = Pubkey::from_str(wallet_str) {
-        pk
-    } else {
-        let (pk, _) = pda::find_wallet_pda(wallet_str.as_bytes(), &program_id);
-        pk
-    };
+    let wallet_pubkey = Pubkey::from_str(wallet_str)
+        .context("Wallet must be a base58 address")?;
 
     // Read all intent JSON files from directory
     let mut entries: Vec<_> = std::fs::read_dir(intents_dir)?

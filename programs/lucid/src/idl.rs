@@ -14,7 +14,7 @@ pinocchio_pubkey::declare_id!("LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH");
 // ─── Accounts ────────────────────────────────────────────────────────
 
 /// Multisig wallet configuration account.
-/// Seeds: ["wallet", name_bytes]
+/// Seeds: ["wallet", create_key]
 #[derive(ShankAccount)]
 pub struct Wallet {
     pub proposal_index: u64,
@@ -23,6 +23,7 @@ pub struct Wallet {
     pub bump: u8,
     pub name_len: u8,
     pub reserved: [u8; 4],
+    pub create_key: [u8; 32],
     pub name: [u8; 32],
 }
 

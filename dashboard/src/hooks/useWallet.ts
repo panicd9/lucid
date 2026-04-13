@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { RPC_ENDPOINTS } from '../lib/constants';
-import { findWalletPDA, findVaultPDA, findIntentPDA } from '../lib/pda';
+import { findVaultPDA, findIntentPDA } from '../lib/pda';
 import {
   WalletAccount,
   IntentAccount,
@@ -35,14 +35,12 @@ export function useWallet(addressOrName: string | undefined, network: string) {
           'confirmed'
         );
 
-        // Determine wallet address: if it looks like a base58 pubkey, use directly; else derive PDA from name
+        // Determine wallet address: must be a base58 pubkey (name-based lookup requires creator)
         let walletAddress: PublicKey;
         try {
           walletAddress = new PublicKey(addressOrName);
         } catch {
-          // Treat as a wallet name
-          const [pda] = findWalletPDA(addressOrName);
-          walletAddress = pda;
+          throw new Error('Invalid wallet address. Name-based lookup requires a creator pubkey — use the full PDA address instead.');
         }
 
         // Fetch wallet account

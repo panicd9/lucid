@@ -7,9 +7,9 @@ import {
   PROPOSAL_SEED,
 } from './constants';
 
-export function findWalletPDA(name: string): [PublicKey, number] {
+export function findWalletPDA(createKey: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [WALLET_SEED, Buffer.from(name)],
+    [WALLET_SEED, createKey.toBuffer()],
     PROGRAM_ID
   );
 }

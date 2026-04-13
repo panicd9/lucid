@@ -33,13 +33,17 @@ impl CreateWallet {
             return Err(ProgramError::MissingRequiredSignature);
         }
 
-        // Parse instruction data
-        require_len!(data, 1);
-        let name_len = data[0] as usize;
+        // Parse instruction data: [create_key(32), name_len(1), name, ...]
+        require_len!(data, 32);
+        let create_key = &data[0..32];
+        let mut offset = 32;
+
+        require_len!(data, offset + 1);
+        let name_len = data[offset] as usize;
+        offset += 1;
         if name_len == 0 || name_len > MAX_NAME_LEN {
             return Err(ProgramError::Custom(ERR_NAME_TOO_LONG));
         }
-        let mut offset = 1;
         require_len!(data, offset + name_len);
         let name = &data[offset..offset + name_len];
         offset += name_len;
@@ -90,7 +94,7 @@ impl CreateWallet {
         let rent = Rent::get()?;
 
         // ── Derive wallet PDA ──
-        let wallet_seeds: &[&[u8]] = &[WALLET_SEED, name];
+        let wallet_seeds: &[&[u8]] = &[WALLET_SEED, create_key];
         let (wallet_pda, wallet_bump) = Address::find_program_address(wallet_seeds, program_id);
         if accounts[0].address() != &wallet_pda {
             return Err(ProgramError::InvalidSeeds);
@@ -100,7 +104,7 @@ impl CreateWallet {
         let wallet_bump_bytes = [wallet_bump];
         let wallet_signer_seeds = [
             Seed::from(WALLET_SEED),
-            Seed::from(name),
+            Seed::from(create_key),
             Seed::from(wallet_bump_bytes.as_slice()),
         ];
         let wallet_signer = [Signer::from(wallet_signer_seeds.as_slice())];
@@ -129,6 +133,7 @@ impl CreateWallet {
             wallet.bump = wallet_bump;
             wallet.name_len = name.len() as u8;
             wallet._reserved = [0; 4];
+            wallet.create_key = create_key.try_into().map_err(|_| ProgramError::InvalidInstructionData)?;
             wallet.name = [0; 32];
             wallet.name[..name.len()].copy_from_slice(name);
         }

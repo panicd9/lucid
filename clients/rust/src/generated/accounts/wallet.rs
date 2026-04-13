@@ -16,11 +16,12 @@ pub struct Wallet {
     pub bump: u8,
     pub name_len: u8,
     pub reserved: [u8; 4],
+    pub create_key: [u8; 32],
     pub name: [u8; 32],
 }
 
 impl Wallet {
-    pub const LEN: usize = 48;
+    pub const LEN: usize = 80;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

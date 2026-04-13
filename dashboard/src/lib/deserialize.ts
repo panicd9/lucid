@@ -18,11 +18,12 @@ export interface WalletAccount {
   intentCount: number;
   frozen: boolean;
   bump: number;
+  createKey: PublicKey;
   name: string;
 }
 
 const MAX_SIGNERS = 16;
-const WALLET_MIN_LEN = PREFIX_LEN + 48; // header + data
+const WALLET_MIN_LEN = PREFIX_LEN + 80; // header + data
 
 export function deserializeWallet(data: Buffer): WalletAccount {
   if (data.length < WALLET_MIN_LEN) {
@@ -48,12 +49,15 @@ export function deserializeWallet(data: Buffer): WalletAccount {
 
   offset += 4; // reserved
 
+  const createKey = new PublicKey(data.subarray(offset, offset + 32));
+  offset += 32;
+
   if (offset + nameLen > data.length) {
     throw new Error('Wallet data truncated: name extends beyond buffer');
   }
   const name = data.subarray(offset, offset + nameLen).toString('utf-8');
 
-  return { proposalIndex, intentCount, frozen, bump, name };
+  return { proposalIndex, intentCount, frozen, bump, createKey, name };
 }
 
 // ─── IntentHeader ────────────────────────────────────────────────────

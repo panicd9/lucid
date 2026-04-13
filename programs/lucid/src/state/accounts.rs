@@ -4,7 +4,7 @@ use crate::state::constants::*;
 use crate::state::errors::*;
 
 // ─── Wallet ───────────────────────────────────────────────────────────
-/// Seeds: ["wallet", name_bytes]
+/// Seeds: ["wallet", create_key]
 /// Layout: [disc:1 | version:1 | data...]
 #[repr(C)]
 pub struct Wallet {
@@ -14,13 +14,14 @@ pub struct Wallet {
     pub bump: u8,
     pub name_len: u8,
     pub _reserved: [u8; 4],
+    pub create_key: [u8; 32],
     pub name: [u8; 32],
 }
 
-assert_no_padding!(Wallet, 48);
+assert_no_padding!(Wallet, 80);
 
 impl Wallet {
-    pub const DATA_LEN: usize = 48;
+    pub const DATA_LEN: usize = 80;
     pub const LEN: usize = PREFIX_LEN + Self::DATA_LEN;
     pub const DISCRIMINATOR: u8 = DISC_WALLET;
 

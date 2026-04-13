@@ -27,7 +27,7 @@ function buildWalletBuffer(opts: {
   bump?: number;
   name?: string;
 }): Buffer {
-  const buf = Buffer.alloc(50, 0);
+  const buf = Buffer.alloc(82, 0); // PREFIX_LEN(2) + WALLET_DATA_LEN(80)
   buf[0] = DISC_WALLET; // discriminator
   buf[1] = 1; // version
   if (opts.proposalIndex !== undefined) buf.writeBigUInt64LE(opts.proposalIndex, 2);
@@ -37,7 +37,8 @@ function buildWalletBuffer(opts: {
   const name = opts.name ?? 'test';
   buf[13] = name.length;
   // skip 4 reserved bytes (14-17)
-  Buffer.from(name).copy(buf, 18);
+  // skip 32-byte create_key (18-49) — left as zeros
+  Buffer.from(name).copy(buf, 50);
   return buf;
 }
 
