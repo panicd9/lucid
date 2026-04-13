@@ -19,3 +19,6 @@ dashboard/dist/
 
 # Test artifacts
 test-ledger/
+
+# Demo output
+demo-intents/

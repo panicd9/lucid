@@ -77,7 +77,29 @@ fn known_programs() -> Vec<KnownProgram> {
 /// Anchor IDL structures for Tier 2
 #[derive(serde::Deserialize)]
 struct AnchorIdl {
+    #[serde(default)]
+    address: Option<String>,
+    #[serde(default)]
+    metadata: Option<AnchorMetadata>,
     instructions: Vec<AnchorInstruction>,
+}
+
+#[derive(serde::Deserialize)]
+struct AnchorMetadata {
+    #[serde(default)]
+    name: Option<String>,
+}
+
+impl AnchorIdl {
+    fn program_address(&self) -> Option<&str> {
+        self.address.as_deref()
+    }
+    fn program_name(&self) -> &str {
+        self.metadata
+            .as_ref()
+            .and_then(|m| m.name.as_deref())
+            .unwrap_or("unknown")
+    }
 }
 
 #[derive(serde::Deserialize)]
@@ -154,16 +176,31 @@ pub fn verify(intents_dir: &str, idl_path: Option<&str>) -> Result<()> {
     let mut fail_count = 0;
     let mut warn_count = 0;
 
-    println!(
-        "{}",
-        format!(
-            "Verifying {} intents (Tier {})",
-            entries.len(),
-            if idl.is_some() { 2 } else { 1 }
-        )
-        .cyan()
-        .bold()
-    );
+    // Determine IDL program address for mixed-tier routing
+    let idl_program_addr = idl.as_ref().and_then(|i| i.program_address()).map(|s| s.to_string());
+
+    if let Some(ref idl_val) = idl {
+        println!(
+            "{}",
+            format!(
+                "Verifying {} intents against {} IDL + known programs",
+                entries.len(),
+                idl_val.program_name()
+            )
+            .cyan()
+            .bold()
+        );
+    } else {
+        println!(
+            "{}",
+            format!(
+                "Verifying {} intents (Tier 1 — known programs)",
+                entries.len()
+            )
+            .cyan()
+            .bold()
+        );
+    }
     println!();
 
     for entry in &entries {
@@ -194,30 +231,52 @@ pub fn verify(intents_dir: &str, idl_path: Option<&str>) -> Result<()> {
             warnings.push("Empty template".to_string());
         }
 
-        if let Some(ref idl) = idl {
-            // Tier 2: Verify against IDL
-            verify_against_idl(&intent, idl, &mut issues, &mut warnings);
+        // Route to appropriate verification tier
+        let is_known = known.iter().any(|p| p.address == intent.program_id);
+        let matches_idl = idl_program_addr.as_deref() == Some(&intent.program_id);
+        let tier_label;
+
+        if let Some(ref idl_val) = idl {
+            if matches_idl {
+                // Tier 2: Intent matches IDL program
+                verify_against_idl(&intent, idl_val, &mut issues, &mut warnings);
+                tier_label = "Tier 2";
+            } else if is_known {
+                // Tier 1: Intent matches a known program
+                verify_against_known(&intent, &known, &mut issues, &mut warnings);
+                tier_label = "Tier 1";
+            } else {
+                // Unknown program, not in IDL or known list
+                warnings.push(format!(
+                    "Program {} not in IDL or known program list",
+                    intent.program_id
+                ));
+                tier_label = "Tier 3";
+            }
         } else {
-            // Tier 1: Verify against known programs
+            // No IDL provided — Tier 1 only
             verify_against_known(&intent, &known, &mut issues, &mut warnings);
+            tier_label = "Tier 1";
         }
 
         if issues.is_empty() && warnings.is_empty() {
             println!(
-                "  {} {} - {} [{}]",
+                "  {} {} - {} [{}] ({})",
                 "PASS".green().bold(),
                 filename,
                 intent.instruction_name,
-                intent.risk_level
+                intent.risk_level,
+                tier_label
             );
             pass_count += 1;
         } else if issues.is_empty() {
             println!(
-                "  {} {} - {} [{}]",
+                "  {} {} - {} [{}] ({})",
                 "WARN".yellow().bold(),
                 filename,
                 intent.instruction_name,
-                intent.risk_level
+                intent.risk_level,
+                tier_label
             );
             for w in &warnings {
                 println!("       {} {}", "!".yellow(), w);
@@ -225,11 +284,12 @@ pub fn verify(intents_dir: &str, idl_path: Option<&str>) -> Result<()> {
             warn_count += 1;
         } else {
             println!(
-                "  {} {} - {} [{}]",
+                "  {} {} - {} [{}] ({})",
                 "FAIL".red().bold(),
                 filename,
                 intent.instruction_name,
-                intent.risk_level
+                intent.risk_level,
+                tier_label
             );
             for i in &issues {
                 println!("       {} {}", "x".red(), i);
