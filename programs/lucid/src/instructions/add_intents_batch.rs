@@ -3,9 +3,6 @@ use pinocchio::address::Address;
 use pinocchio::cpi::{Seed, Signer};
 use pinocchio::error::ProgramError;
 use pinocchio::ProgramResult;
-use pinocchio::sysvars::Sysvar;
-use pinocchio::sysvars::rent::Rent;
-
 use crate::state::accounts::{self, *};
 use crate::state::constants::*;
 use crate::state::errors::*;
@@ -32,7 +29,6 @@ impl AddIntentsBatch {
             return Err(ProgramError::NotEnoughAccountKeys);
         }
 
-        let rent = Rent::get()?;
         let wallet_address = accounts[0].address().to_bytes();
 
         let mut wallet_intent_count;
@@ -70,7 +66,7 @@ impl AddIntentsBatch {
             }
 
             let total_size = PREFIX_LEN + intent_data_len;
-            let intent_lamports = rent.try_minimum_balance(total_size)?;
+            let intent_lamports = rent_exempt_lamports(total_size);
 
             let intent_bump_bytes = [intent_bump];
             let intent_signer_seeds = [

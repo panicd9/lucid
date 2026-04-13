@@ -4,7 +4,7 @@ use pinocchio::cpi::{Seed, Signer};
 use pinocchio::error::ProgramError;
 use pinocchio::ProgramResult;
 use pinocchio::sysvars::Sysvar;
-use pinocchio::sysvars::{clock::Clock, rent::Rent};
+use pinocchio::sysvars::clock::Clock;
 
 use crate::state::accounts::*;
 use crate::state::constants::*;
@@ -34,8 +34,6 @@ impl Propose {
         let params_data = &data[8..];
 
         let clock = Clock::get()?;
-        let rent = Rent::get()?;
-
         let wallet_address = accounts[0].address().to_bytes();
         let intent_address = accounts[1].address().to_bytes();
         let payer_address = accounts[4].address().to_bytes();
@@ -96,7 +94,7 @@ impl Propose {
         }
 
         let proposal_size = Proposal::HEADER_LEN + params_data.len();
-        let proposal_lamports = rent.try_minimum_balance(proposal_size)?;
+        let proposal_lamports = rent_exempt_lamports(proposal_size);
 
         let proposal_bump_bytes = [proposal_bump];
         let proposal_signer_seeds = [

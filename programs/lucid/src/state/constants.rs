@@ -107,3 +107,15 @@ pub const DEFAULT_META_TIMELOCK: u32 = 86400;
 
 /// Disc + version prefix length
 pub const PREFIX_LEN: usize = 2;
+
+/// Rent-exempt minimum balance.
+///
+/// Pinocchio's `Rent::try_minimum_balance` is broken — it reads only the first
+/// 8 bytes of the sysvar (`lamports_per_byte_year = 3480`) but never reads the
+/// `exemption_threshold` (f64 = 2.0), so it returns half the correct amount.
+///
+/// We use the well-known constant: `(128 + data_len) * 3480 * 2`.
+#[inline]
+pub const fn rent_exempt_lamports(data_len: usize) -> u64 {
+    (128 + data_len as u64) * 6960
+}

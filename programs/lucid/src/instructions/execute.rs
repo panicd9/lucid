@@ -391,8 +391,7 @@ fn execute_meta_add(
     };
 
     let total_size = PREFIX_LEN + intent_def.len();
-    let rent = pinocchio::sysvars::rent::Rent::get()?;
-    let lamports = rent.try_minimum_balance(total_size)?;
+    let lamports = rent_exempt_lamports(total_size);
 
     let index_bytes = [intent_count];
     let intent_seeds: &[&[u8]] = &[INTENT_SEED, wallet_address.as_slice(), &index_bytes];

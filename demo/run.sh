@@ -10,16 +10,29 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEMO="$ROOT/demo"
+WALLETS="$DEMO/wallets"
 KEYPAIR="${KEYPAIR:-$HOME/.config/solana/id.json}"
 RPC="http://127.0.0.1:8899"
+
+# Demo wallets (pre-generated, gitignored)
 PAYER=$(solana address -k "$KEYPAIR")
+WALLET1=$(solana address -k "$WALLETS/wallet1.json")
+WALLET2=$(solana address -k "$WALLETS/wallet2.json")
+WALLET3=$(solana address -k "$WALLETS/wallet3.json")
+WALLET4=$(solana address -k "$WALLETS/wallet4.json")
+WALLET5=$(solana address -k "$WALLETS/wallet5.json")
 
 echo "============================================"
 echo "  Lucid Demo — Intent-Based Multisig"
 echo "============================================"
 echo ""
-echo "Payer:   $PAYER"
-echo "RPC:     $RPC"
+echo "Payer:    $PAYER"
+echo "Wallet 1: $WALLET1"
+echo "Wallet 2: $WALLET2"
+echo "Wallet 3: $WALLET3"
+echo "Wallet 4: $WALLET4"
+echo "Wallet 5: $WALLET5"
+echo "RPC:      $RPC"
 echo ""
 
 # ── Step 1: Generate intents from Campfire IDL ──────────────
@@ -41,7 +54,7 @@ echo "── Step 3: Create 'treasury' multisig wallet (2-of-3)"
 CREATE_OUTPUT=$(cargo run -p lucid-cli -- wallet create \
   --name treasury \
   --proposers "$PAYER" \
-  --approvers "$PAYER,$PAYER,$PAYER" \
+  --approvers "$WALLET1,$WALLET2,$WALLET3" \
   --approval-threshold 2 \
   --cancellation-threshold 1 \
   --keypair "$KEYPAIR" \

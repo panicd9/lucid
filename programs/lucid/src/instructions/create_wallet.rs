@@ -3,9 +3,6 @@ use pinocchio::address::Address;
 use pinocchio::cpi::{Seed, Signer};
 use pinocchio::error::ProgramError;
 use pinocchio::ProgramResult;
-use pinocchio::sysvars::Sysvar;
-use pinocchio::sysvars::rent::Rent;
-
 use crate::state::accounts::*;
 use crate::state::constants::*;
 use crate::state::errors::*;
@@ -91,8 +88,6 @@ impl CreateWallet {
             data[offset + 2..offset + 6].try_into().map_err(|_| ProgramError::InvalidInstructionData)?
         );
 
-        let rent = Rent::get()?;
-
         // ── Derive wallet PDA ──
         let wallet_seeds: &[&[u8]] = &[WALLET_SEED, create_key];
         let (wallet_pda, wallet_bump) = Address::find_program_address(wallet_seeds, program_id);
@@ -110,7 +105,7 @@ impl CreateWallet {
         let wallet_signer = [Signer::from(wallet_signer_seeds.as_slice())];
 
         let wallet_space = Wallet::LEN;
-        let wallet_lamports = rent.try_minimum_balance(wallet_space)?;
+        let wallet_lamports = rent_exempt_lamports(wallet_space);
 
         pinocchio_system::instructions::CreateAccount {
             from: &accounts[5],
@@ -155,7 +150,7 @@ impl CreateWallet {
         let vault_signer = [Signer::from(vault_signer_seeds.as_slice())];
 
         let vault_space = Vault::LEN;
-        let vault_lamports = rent.try_minimum_balance(vault_space)?;
+        let vault_lamports = rent_exempt_lamports(vault_space);
 
         pinocchio_system::instructions::CreateAccount {
             from: &accounts[5],
@@ -209,7 +204,7 @@ impl CreateWallet {
                 + param_entries_size
                 + byte_pool_len;
 
-            let intent_lamports = rent.try_minimum_balance(total_size)?;
+            let intent_lamports = rent_exempt_lamports(total_size);
             let intent_bump_bytes = [intent_bump];
             let intent_signer_seeds = [
                 Seed::from(INTENT_SEED),

@@ -20,3 +20,6 @@ dashboard/dist/
 # Test artifacts
 test-ledger/
 .surfpool/
+
+# Demo wallets (ephemeral keypairs)
+demo/wallets/
