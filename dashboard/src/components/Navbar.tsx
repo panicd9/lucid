@@ -58,6 +58,7 @@ export default function Navbar({ network, onNetworkChange }: Props) {
           onChange={(e) => onNetworkChange(e.target.value)}
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-emerald-500/50 cursor-pointer"
         >
+          <option value="localhost">Localhost</option>
           <option value="devnet">Devnet</option>
           <option value="mainnet">Mainnet</option>
         </select>

@@ -6,7 +6,7 @@ import Constitution from './pages/Constitution';
 import Proposals from './pages/Proposals';
 
 export default function App() {
-  const [network, setNetwork] = useState('devnet');
+  const [network, setNetwork] = useState('localhost');
 
   return (
     <div className="min-h-screen bg-slate-950">

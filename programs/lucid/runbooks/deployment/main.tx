@@ -1,0 +1,16 @@
+################################################################
+# Manage lucid deployment through Crypto Infrastructure as Code
+################################################################
+
+addon "svm" {
+    rpc_api_url = input.rpc_api_url
+    network_id = input.network_id
+}
+
+action "deploy_lucid" "svm::deploy_program" {
+    description = "Deploy lucid program"
+    program = svm::get_program_from_native_project("lucid", "../../target/deploy/lucid-keypair.json", null, "../../target/deploy/lucid.so")
+    authority = signer.authority
+    payer = signer.payer
+    instant_surfnet_deployment = true
+}
