@@ -8,4 +8,4 @@
 use solana_address::{address, Address};
 
 /// `lucid` program ID.
-pub const LUCID_ID: Address = address!("LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH");
+pub const LUCID_ID: Address = address!("LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR");

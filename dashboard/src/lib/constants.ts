@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 
 // Program ID — update after deploy
-export const PROGRAM_ID = new PublicKey('LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH');
+export const PROGRAM_ID = new PublicKey('LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR');
 
 // PDA Seeds
 export const WALLET_SEED = Buffer.from('wallet');

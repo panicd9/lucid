@@ -9,7 +9,7 @@ use shank::{ShankAccount, ShankInstruction};
 
 // Re-export the program ID so Shank can pick it up.
 // TODO: replace with deployed program address.
-pinocchio_pubkey::declare_id!("LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH");
+pinocchio_pubkey::declare_id!("LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR");
 
 // ─── Accounts ────────────────────────────────────────────────────────
 

@@ -92,7 +92,7 @@ import {
 } from "../instructions";
 
 export const LUCID_PROGRAM_ADDRESS =
-  "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH" as Address<"LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH">;
+  "LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR" as Address<"LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR">;
 
 export enum LucidAccount {
   Wallet,
@@ -159,7 +159,7 @@ export function identifyLucidInstruction(
 }
 
 export type ParsedLucidInstruction<
-  TProgram extends string = "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH",
+  TProgram extends string = "LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR",
 > =
   | ({
       instructionType: LucidInstruction.CreateWallet;

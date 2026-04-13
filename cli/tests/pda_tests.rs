@@ -2,7 +2,7 @@ use lucid_cli::pda::*;
 use solana_sdk::pubkey::Pubkey;
 use std::str::FromStr;
 
-const PROGRAM_ID_STR: &str = "LUC1Dv2v3oMYnoZDgMkwkFo5GXDBrUg7KuRGTMRsbuH";
+const PROGRAM_ID_STR: &str = "LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR";
 
 fn program_id() -> Pubkey {
     Pubkey::from_str(PROGRAM_ID_STR).unwrap()
