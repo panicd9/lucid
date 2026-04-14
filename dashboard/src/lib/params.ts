@@ -6,6 +6,8 @@
  */
 import { PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
+import { sha256 } from '@noble/hashes/sha256';
+import { bytesToHex } from '@noble/hashes/utils';
 import {
   PARAM_TYPE_ADDRESS,
   PARAM_TYPE_U64,
@@ -16,6 +18,13 @@ import {
   PARAM_TYPE_U16,
   PARAM_TYPE_U32,
   PARAM_TYPE_U128,
+  INTENT_TYPE_ADD,
+  INTENT_TYPE_UPDATE,
+  PARAM_ENTRY_SIZE,
+  ACCOUNT_ENTRY_SIZE,
+  INSTRUCTION_ENTRY_SIZE,
+  DATA_SEGMENT_ENTRY_SIZE,
+  SEED_ENTRY_SIZE,
 } from './constants';
 import type { ParamEntry } from './deserialize';
 
@@ -28,6 +37,62 @@ function formatWithDecimals(val: bigint, decimals: number): string {
   if (frac === 0n) return whole.toString();
   const fracStr = frac.toString().padStart(decimals, '0').replace(/0+$/, '');
   return `${whole}.${fracStr}`;
+}
+
+const INTENT_HEADER_DATA_LEN = 88;
+
+/**
+ * Render a meta-intent definition blob as a human-readable summary.
+ * Same logic as on-chain `format_meta_definition_into`.
+ * Returns: `"template text" params:N accounts:M sha256:HEX`
+ */
+function formatMetaDefinition(defBytes: Uint8Array): string {
+  if (defBytes.length < INTENT_HEADER_DATA_LEN) {
+    return '<invalid definition>';
+  }
+
+  const proposerCount = defBytes[78];
+  const approverCount = defBytes[79];
+  const paramCount = defBytes[80];
+  const accountCount = defBytes[81];
+  const instructionCount = defBytes[82];
+  const dataSegmentCount = defBytes[83];
+  const seedCount = defBytes[84];
+  const bytePoolLen = defBytes[70] | (defBytes[71] << 8);
+
+  // Calculate byte_pool offset within blob (no PREFIX_LEN)
+  const bpOffset =
+    INTENT_HEADER_DATA_LEN +
+    proposerCount * 32 +
+    approverCount * 32 +
+    paramCount * PARAM_ENTRY_SIZE +
+    accountCount * ACCOUNT_ENTRY_SIZE +
+    instructionCount * INSTRUCTION_ENTRY_SIZE +
+    dataSegmentCount * DATA_SEGMENT_ENTRY_SIZE +
+    seedCount * SEED_ENTRY_SIZE;
+
+  // Extract template
+  let templateStr: string;
+  if (bytePoolLen >= 4 && bpOffset + 4 <= defBytes.length) {
+    const tmplOffset = defBytes[bpOffset] | (defBytes[bpOffset + 1] << 8);
+    const tmplLen = defBytes[bpOffset + 2] | (defBytes[bpOffset + 3] << 8);
+    const tmplStart = bpOffset + 4 + tmplOffset;
+    const tmplEnd = tmplStart + tmplLen;
+    if (tmplEnd <= defBytes.length) {
+      const raw = new TextDecoder().decode(defBytes.slice(tmplStart, tmplEnd));
+      templateStr = raw.length > 200 ? `"${raw.slice(0, 197)}..."` : `"${raw}"`;
+    } else {
+      templateStr = '"<invalid>"';
+    }
+  } else {
+    templateStr = '"<empty>"';
+  }
+
+  // SHA256 hash
+  const hash = sha256(defBytes);
+  const hashHex = bytesToHex(hash);
+
+  return `${templateStr} params:${paramCount} accounts:${accountCount} sha256:${hashHex}`;
 }
 
 /** Byte size for a fixed-size param type. Returns 0 for variable-length (string). */
@@ -60,7 +125,8 @@ export function paramTypeSize(paramType: number): number {
  */
 export function decodeParamsData(
   paramsData: Uint8Array,
-  intentParams: ParamEntry[]
+  intentParams: ParamEntry[],
+  intentType?: number
 ): string[] {
   const values: string[] = [];
   let offset = 0;
@@ -94,7 +160,11 @@ export function decodeParamsData(
         const len = view.getUint16(offset, true);
         offset += 2;
         const strBytes = paramsData.slice(offset, offset + len);
-        values.push(new TextDecoder().decode(strBytes));
+        if (intentType === INTENT_TYPE_ADD || intentType === INTENT_TYPE_UPDATE) {
+          values.push(formatMetaDefinition(strBytes));
+        } else {
+          values.push(new TextDecoder().decode(strBytes));
+        }
         offset += len;
         break;
       }

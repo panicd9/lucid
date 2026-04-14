@@ -54,7 +54,7 @@ export default function SigningModal({
   const signer = useWalletAccountTransactionSendingSigner(account!, chain);
 
   // Decode and render the message preview
-  const decoded = decodeParamsData(proposal.paramsData, intentData.params);
+  const decoded = decodeParamsData(proposal.paramsData, intentData.params, intentData.intentType);
   const rendered = renderTemplate(intentData.template, decoded, intentData.params);
   const expiryStr = formatExpiry(expirySeconds);
   const messageBody = buildMessageBody(

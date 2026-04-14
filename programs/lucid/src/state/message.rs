@@ -32,7 +32,7 @@ pub fn build_message(
     copy_to(&mut body, &mut bpos, b" ")?;
 
     // Render template with params
-    render_template_into(&mut body, &mut bpos, intent, intent_data, params_data)?;
+    render_template_into(&mut body, &mut bpos, intent, intent_data, params_data, intent.intent_type)?;
 
     // " | wallet: "
     copy_to(&mut body, &mut bpos, b" | wallet: ")?;
@@ -90,6 +90,7 @@ fn render_template_into(
     intent: &IntentHeader,
     intent_data: &[u8],
     params_data: &[u8],
+    intent_type: u8,
 ) -> Result<(), ProgramError> {
     let template = read_template(intent_data, intent)?;
 
@@ -111,7 +112,7 @@ fn render_template_into(
             let param_index = resolve_param_index(idx_bytes, intent, intent_data)?;
 
             // Format the parameter value
-            format_param_into(buf, pos, intent_data, intent, params_data, param_index)?;
+            format_param_into(buf, pos, intent_data, intent, params_data, param_index, intent_type)?;
 
             i = end + 1;
         } else {
@@ -137,6 +138,7 @@ fn format_param_into(
     intent: &IntentHeader,
     params_data: &[u8],
     param_index: u8,
+    intent_type: u8,
 ) -> Result<(), ProgramError> {
     let entry = read_param_entry(intent_data, intent, param_index)?;
     let bytes = read_param_bytes(intent_data, intent, params_data, param_index)?;
@@ -172,7 +174,12 @@ fn format_param_into(
             if bytes.len() < 2 + slen {
                 return Err(ProgramError::InvalidInstructionData);
             }
-            copy_to(buf, pos, &bytes[2..2 + slen])?;
+            let content = &bytes[2..2 + slen];
+            if intent_type == INTENT_TYPE_ADD || intent_type == INTENT_TYPE_UPDATE {
+                format_meta_definition_into(buf, pos, content)?;
+            } else {
+                copy_to(buf, pos, content)?;
+            }
         }
         PARAM_TYPE_BOOL => {
             if bytes[0] != 0 {
@@ -266,7 +273,7 @@ pub fn render_intent_message(
     let mut buf = [0u8; 512];
     let mut pos = 0;
 
-    render_template_into(&mut buf, &mut pos, intent, intent_data, params_data)?;
+    render_template_into(&mut buf, &mut pos, intent, intent_data, params_data, intent.intent_type)?;
 
     copy_to(&mut buf, &mut pos, b" | wallet: ")?;
     copy_to(&mut buf, &mut pos, wallet_name)?;
@@ -425,6 +432,116 @@ pub fn base58_encode(input: &[u8]) -> ([u8; 44], usize) {
     }
 
     (buf, pos)
+}
+
+// ─── Meta-intent definition rendering ──────────────────────────────────
+
+/// Render a meta-intent definition blob as a human-readable summary.
+/// Input: raw definition bytes (same layout as intent account data after PREFIX_LEN).
+/// Output: `"template text" params:N accounts:M sha256:HEX`
+fn format_meta_definition_into(
+    buf: &mut [u8],
+    pos: &mut usize,
+    def_bytes: &[u8],
+) -> Result<(), ProgramError> {
+    if def_bytes.len() < IntentHeader::DATA_LEN {
+        return Err(ProgramError::InvalidInstructionData);
+    }
+
+    // Read counts from header (offsets within the 88-byte IntentHeader struct)
+    let proposer_count = def_bytes[78] as usize;
+    let approver_count = def_bytes[79] as usize;
+    let param_count = def_bytes[80];
+    let account_count = def_bytes[81];
+    let instruction_count = def_bytes[82] as usize;
+    let data_segment_count = def_bytes[83] as usize;
+    let seed_count = def_bytes[84] as usize;
+    let byte_pool_len = u16::from_le_bytes([def_bytes[70], def_bytes[71]]) as usize;
+
+    // Calculate byte_pool offset within def_bytes (no PREFIX_LEN in the blob)
+    let bp_offset = IntentHeader::DATA_LEN
+        + (proposer_count * 32)
+        + (approver_count * 32)
+        + (param_count as usize * ParamEntry::SIZE)
+        + (account_count as usize * AccountEntry::SIZE)
+        + (instruction_count * InstructionEntry::SIZE)
+        + (data_segment_count * DataSegmentEntry::SIZE)
+        + (seed_count * SeedEntry::SIZE);
+
+    // Extract template from byte_pool
+    if byte_pool_len >= 4 && bp_offset + 4 <= def_bytes.len() {
+        let tmpl_offset = u16::from_le_bytes([def_bytes[bp_offset], def_bytes[bp_offset + 1]]) as usize;
+        let tmpl_len = u16::from_le_bytes([def_bytes[bp_offset + 2], def_bytes[bp_offset + 3]]) as usize;
+        let tmpl_start = bp_offset + 4 + tmpl_offset;
+        let tmpl_end = tmpl_start + tmpl_len;
+
+        // Opening quote
+        copy_to(buf, pos, b"\"")?;
+        if tmpl_end <= def_bytes.len() && tmpl_len <= 200 {
+            copy_to(buf, pos, &def_bytes[tmpl_start..tmpl_end])?;
+        } else if tmpl_end <= def_bytes.len() {
+            // Truncate long templates
+            copy_to(buf, pos, &def_bytes[tmpl_start..tmpl_start + 197])?;
+            copy_to(buf, pos, b"...")?;
+        }
+        copy_to(buf, pos, b"\"")?;
+    } else {
+        copy_to(buf, pos, b"\"<empty>\"")?;
+    }
+
+    // params:N
+    copy_to(buf, pos, b" params:")?;
+    let pc = u64_to_decimal(param_count as u64);
+    copy_to(buf, pos, &pc.0[..pc.1])?;
+
+    // accounts:M
+    copy_to(buf, pos, b" accounts:")?;
+    let ac = u64_to_decimal(account_count as u64);
+    copy_to(buf, pos, &ac.0[..ac.1])?;
+
+    // sha256:HASH
+    let hash = sha256_hash(def_bytes);
+    copy_to(buf, pos, b" sha256:")?;
+    hex_encode_into(buf, pos, &hash)?;
+
+    Ok(())
+}
+
+/// Compute SHA256 hash using Solana's sol_sha256 syscall.
+#[cfg(target_os = "solana")]
+fn sha256_hash(data: &[u8]) -> [u8; 32] {
+    use core::mem::MaybeUninit;
+    use pinocchio::syscalls::sol_sha256;
+    let input: [&[u8]; 1] = [data];
+    let mut hash = MaybeUninit::<[u8; 32]>::uninit();
+    unsafe {
+        sol_sha256(
+            input.as_ptr() as *const u8,
+            1,
+            hash.as_mut_ptr() as *mut u8,
+        );
+        hash.assume_init()
+    }
+}
+
+/// Off-chain stub: returns zeros. Real hash verification happens in LiteSVM integration tests.
+#[cfg(not(target_os = "solana"))]
+fn sha256_hash(_data: &[u8]) -> [u8; 32] {
+    [0u8; 32]
+}
+
+/// Encode bytes as lowercase hex into a buffer.
+fn hex_encode_into(buf: &mut [u8], pos: &mut usize, input: &[u8]) -> Result<(), ProgramError> {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    for &byte in input {
+        if *pos + 2 > buf.len() {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+        buf[*pos] = HEX[(byte >> 4) as usize];
+        buf[*pos + 1] = HEX[(byte & 0xf) as usize];
+        *pos += 2;
+    }
+    Ok(())
 }
 
 /// Parse timestamp from the end of the message body.

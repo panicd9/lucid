@@ -48,7 +48,8 @@ pub fn approve(
     // Fetch intent to render template
     let intent_data = rpc::fetch_account(&client, &intent_pda)?;
     let template = intent_utils::read_template_string(&intent_data).unwrap_or_default();
-    let rendered = intent_utils::render_template_with_params(&template, &intent_data, params_data);
+    let intent_type = intent_data[PREFIX_LEN + 74];
+    let rendered = intent_utils::render_template_with_params(&template, &intent_data, params_data, intent_type);
 
     // Build expiry timestamp
     let expiry_str = intent_utils::format_expiry(expiry_secs);

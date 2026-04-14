@@ -162,7 +162,7 @@ pub fn accounts_entry_offset(h: &IntentHeaderInfo) -> usize {
 
 /// Render a template by substituting param placeholders with decoded values from params_data.
 /// Uses the compact cancel.rs approach with `param_type_size`.
-pub fn render_template_with_params(template: &str, intent_data: &[u8], params_data: &[u8]) -> String {
+pub fn render_template_with_params(template: &str, intent_data: &[u8], params_data: &[u8], intent_type: u8) -> String {
     let h = match deserialize_intent_header(intent_data) {
         Ok(h) => h,
         Err(_) => return template.to_string(),
@@ -189,9 +189,13 @@ pub fn render_template_with_params(template: &str, intent_data: &[u8], params_da
                 let slen = u16::from_le_bytes([params_data[data_offset], params_data[data_offset + 1]]) as usize;
                 data_offset += 2;
                 if data_offset + slen <= params_data.len() {
-                    let s = String::from_utf8_lossy(&params_data[data_offset..data_offset + slen]).to_string();
+                    let content = &params_data[data_offset..data_offset + slen];
                     data_offset += slen;
-                    s
+                    if intent_type == INTENT_TYPE_ADD || intent_type == INTENT_TYPE_UPDATE {
+                        format_meta_definition(content)
+                    } else {
+                        String::from_utf8_lossy(content).to_string()
+                    }
                 } else {
                     "???".to_string()
                 }
@@ -319,6 +323,64 @@ fn format_with_decimals(val: u64, decimals: u8) -> String {
         let trimmed = frac_str.trim_end_matches('0');
         format!("{}.{}", whole, trimmed)
     }
+}
+
+/// Render a meta-intent definition blob as a human-readable summary.
+/// Same logic as on-chain `format_meta_definition_into` but returns a String.
+fn format_meta_definition(def_bytes: &[u8]) -> String {
+    use sha2::{Sha256, Digest};
+
+    if def_bytes.len() < INTENT_HEADER_LEN {
+        return "<invalid definition>".to_string();
+    }
+
+    let proposer_count = def_bytes[78] as usize;
+    let approver_count = def_bytes[79] as usize;
+    let param_count = def_bytes[80];
+    let account_count = def_bytes[81];
+    let instruction_count = def_bytes[82] as usize;
+    let data_segment_count = def_bytes[83] as usize;
+    let seed_count = def_bytes[84] as usize;
+    let byte_pool_len = u16::from_le_bytes([def_bytes[70], def_bytes[71]]) as usize;
+
+    // Calculate byte_pool offset within blob (no PREFIX_LEN)
+    let bp_offset = INTENT_HEADER_LEN
+        + (proposer_count * 32)
+        + (approver_count * 32)
+        + (param_count as usize * PARAM_ENTRY_SIZE)
+        + (account_count as usize * ACCOUNT_ENTRY_SIZE)
+        + (instruction_count * INSTRUCTION_ENTRY_SIZE)
+        + (data_segment_count * DATA_SEGMENT_ENTRY_SIZE)
+        + (seed_count * SEED_ENTRY_SIZE);
+
+    // Extract template
+    let template_str = if byte_pool_len >= 4 && bp_offset + 4 <= def_bytes.len() {
+        let tmpl_offset = u16::from_le_bytes([def_bytes[bp_offset], def_bytes[bp_offset + 1]]) as usize;
+        let tmpl_len = u16::from_le_bytes([def_bytes[bp_offset + 2], def_bytes[bp_offset + 3]]) as usize;
+        let tmpl_start = bp_offset + 4 + tmpl_offset;
+        let tmpl_end = tmpl_start + tmpl_len;
+        if tmpl_end <= def_bytes.len() {
+            let s = String::from_utf8_lossy(&def_bytes[tmpl_start..tmpl_end]);
+            if s.len() > 200 {
+                format!("\"{}...\"", &s[..197])
+            } else {
+                format!("\"{}\"", s)
+            }
+        } else {
+            "\"<invalid>\"".to_string()
+        }
+    } else {
+        "\"<empty>\"".to_string()
+    };
+
+    // SHA256 hash
+    let hash = Sha256::digest(def_bytes);
+    let hash_hex = hex::encode(hash);
+
+    format!(
+        "{} params:{} accounts:{} sha256:{}",
+        template_str, param_count, account_count, hash_hex
+    )
 }
 
 /// Convert a camelCase or PascalCase string to snake_case.

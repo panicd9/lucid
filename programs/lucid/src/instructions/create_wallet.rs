@@ -179,9 +179,9 @@ impl CreateWallet {
         // ── Create 3 meta-intents ──
         let meta_types = [INTENT_TYPE_ADD, INTENT_TYPE_REMOVE, INTENT_TYPE_UPDATE];
         let meta_templates: [&[u8]; 3] = [
-            b"add intent definition_hash: {0}",
-            b"remove intent {0}",
-            b"update intent {0} definition_hash: {1}",
+            b"add intent: {0}",
+            b"remove intent #{0}",
+            b"update intent #{0}: {1}",
         ];
 
         for (idx, intent_type) in meta_types.iter().enumerate() {

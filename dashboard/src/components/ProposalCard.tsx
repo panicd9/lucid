@@ -59,7 +59,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
   let renderedTemplate = '';
   if (proposal.intentData) {
     try {
-      const decoded = decodeParamsData(proposal.paramsData, proposal.intentData.params);
+      const decoded = decodeParamsData(proposal.paramsData, proposal.intentData.params, proposal.intentData.intentType);
       renderedTemplate = renderTemplate(proposal.intentData.template, decoded, proposal.intentData.params);
     } catch {
       renderedTemplate = proposal.intentData.template || `Intent #${proposal.intentData.intentIndex}`;
