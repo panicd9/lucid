@@ -118,76 +118,40 @@ pub fn show(wallet_str: &str, url: &str) -> Result<()> {
         .context("Wallet must be a base58 address (name-based lookup not supported — use the address from 'wallet create')")?;
 
     let data = rpc::fetch_account(&client, &wallet_pubkey)?;
-    if data.len() < PREFIX_LEN + WALLET_DATA_LEN {
-        anyhow::bail!("Account data too small for Wallet");
-    }
-    if data[0] != DISC_WALLET {
-        anyhow::bail!("Account is not a Wallet (discriminator mismatch)");
-    }
-
-    // Parse wallet: skip 2-byte prefix, then read #[repr(C)] struct
-    let wd = &data[PREFIX_LEN..];
-    let proposal_index = u64::from_le_bytes(wd[0..8].try_into()?);
-    let intent_count = wd[8];
-    let frozen = wd[9];
-    let _bump = wd[10];
-    let name_len = wd[11] as usize;
-    // 4 bytes reserved at [12..16]
-    let create_key = Pubkey::from(<[u8; 32]>::try_from(&wd[16..48])?);
-    let name_bytes = &wd[48..48 + name_len.min(32)];
-    let name = String::from_utf8_lossy(name_bytes);
+    let w = intent_utils::deserialize_wallet(&data)?;
 
     let (vault_pda, _) = pda::find_vault_pda(&wallet_pubkey, &program_id);
 
     println!("{}", "=== Lucid Wallet ===".cyan().bold());
-    println!("  Name:             {}", name.to_string().white().bold());
-    println!("  Create Key:       {}", create_key);
+    println!("  Name:             {}", w.name.white().bold());
+    println!("  Create Key:       {}", w.create_key);
     println!("  Address:          {}", wallet_pubkey);
     println!("  Vault:            {}", vault_pda);
     println!(
         "  Frozen:           {}",
-        if frozen == 1 {
+        if w.frozen {
             "Yes".red().bold()
         } else {
             "No".green().bold()
         }
     );
-    println!("  Proposal Index:   {}", proposal_index);
-    println!("  Intent Count:     {}", intent_count);
+    println!("  Proposal Index:   {}", w.proposal_index);
+    println!("  Intent Count:     {}", w.intent_count);
 
     // Fetch and display intents
     println!("\n{}", "--- Intents ---".cyan());
-    for i in 0..intent_count {
+    for i in 0..w.intent_count {
         let (intent_pda, _) = pda::find_intent_pda(&wallet_pubkey, i, &program_id);
         match rpc::fetch_account(&client, &intent_pda) {
             Ok(idata) => {
-                if idata.len() < PREFIX_LEN + INTENT_HEADER_LEN {
-                    println!("  [{}] {} (data too small)", i, intent_pda);
-                    continue;
-                }
-                let ih = &idata[PREFIX_LEN..];
-                // IntentHeader layout: wallet(32) + target_program(32) + timelock(4) + active_proposals(2) + byte_pool_len(2) + bump(1) + ...
-                let timelock = u32::from_le_bytes(ih[64..68].try_into()?);
-                let _active_proposals = u16::from_le_bytes(ih[68..70].try_into()?);
-                let _byte_pool_len = u16::from_le_bytes(ih[70..72].try_into()?);
-                let _bump = ih[72];
-                let intent_index = ih[73];
-                let intent_type = ih[74];
-                let approved = ih[75];
-                let approval_threshold = ih[76];
-                let cancellation_threshold = ih[77];
-                let proposer_count = ih[78];
-                let approver_count = ih[79];
-                let _param_count = ih[80];
-                let _account_count = ih[81];
-                let _instruction_count = ih[82];
-                let _data_segment_count = ih[83];
-                let _seed_count = ih[84];
+                let h = match intent_utils::deserialize_intent_header(&idata) {
+                    Ok(h) => h,
+                    Err(_) => { println!("  [{}] {} (data too small)", i, intent_pda); continue; }
+                };
 
-                // Read template from byte_pool
                 let template = intent_utils::read_template_string(&idata);
 
-                let status_str = if approved == 1 {
+                let status_str = if h.approved == 1 {
                     "Active".green()
                 } else {
                     "Deactivated".red()
@@ -195,36 +159,25 @@ pub fn show(wallet_str: &str, url: &str) -> Result<()> {
 
                 println!(
                     "  [{}] {} | type: {} | {} | timelock: {}s | threshold: {}/{} | proposers: {} | approvers: {}",
-                    intent_index,
+                    h.intent_index,
                     intent_pda.to_string().dimmed(),
-                    intent_type_to_str(intent_type).yellow(),
+                    intent_type_to_str(h.intent_type).yellow(),
                     status_str,
-                    timelock,
-                    approval_threshold,
-                    cancellation_threshold,
-                    proposer_count,
-                    approver_count,
+                    h.timelock_seconds,
+                    h.approval_threshold,
+                    h.cancellation_threshold,
+                    h.proposer_count,
+                    h.approver_count,
                 );
                 if let Some(tmpl) = template {
                     println!("       Template: {}", tmpl.white());
                 }
 
-                // Print proposers
-                let proposers_offset = PREFIX_LEN + INTENT_HEADER_LEN;
-                for p in 0..proposer_count {
-                    let start = proposers_offset + (p as usize * 32);
-                    if start + 32 <= idata.len() {
-                        let pk = Pubkey::from(<[u8; 32]>::try_from(&idata[start..start + 32])?);
-                        println!("       Proposer {}: {}", p, pk);
-                    }
+                for (p, pk) in intent_utils::read_proposers(&idata, &h).iter().enumerate() {
+                    println!("       Proposer {}: {}", p, pk);
                 }
-                let approvers_offset = proposers_offset + (proposer_count as usize * 32);
-                for a in 0..approver_count {
-                    let start = approvers_offset + (a as usize * 32);
-                    if start + 32 <= idata.len() {
-                        let pk = Pubkey::from(<[u8; 32]>::try_from(&idata[start..start + 32])?);
-                        println!("       Approver {}: {}", a, pk);
-                    }
+                for (a, pk) in intent_utils::read_approvers(&idata, &h).iter().enumerate() {
+                    println!("       Approver {}: {}", a, pk);
                 }
             }
             Err(e) => {
@@ -308,29 +261,19 @@ pub fn add_intents(
 
     // Fetch current wallet to get intent_count
     let wallet_data = rpc::fetch_account(&client, &wallet_pubkey)?;
-    if wallet_data.len() < PREFIX_LEN + WALLET_DATA_LEN {
-        anyhow::bail!("Invalid wallet account data");
-    }
-    let mut current_intent_count = wallet_data[PREFIX_LEN + 8]; // intent_count offset
+    let w = intent_utils::deserialize_wallet(&wallet_data)?;
+    let mut current_intent_count = w.intent_count;
 
     // Fetch meta-intent[0] (Add) as fallback for proposer/approver lists
     let (meta_intent_pda, _) = pda::find_intent_pda(&wallet_pubkey, 0, &program_id);
     let meta_data = rpc::fetch_account(&client, &meta_intent_pda)
         .context("Failed to fetch meta-intent[0] — wallet may not be initialized")?;
-    if meta_data.len() < PREFIX_LEN + INTENT_HEADER_LEN {
-        anyhow::bail!("Invalid meta-intent account data");
-    }
-    let mh = &meta_data[PREFIX_LEN..];
-    let default_approval_threshold = mh[76];
-    let default_cancellation_threshold = mh[77];
-    let meta_proposer_count = mh[78] as usize;
-    let meta_approver_count = mh[79] as usize;
-    let meta_proposers_start = PREFIX_LEN + INTENT_HEADER_LEN;
-    let meta_approvers_start = meta_proposers_start + meta_proposer_count * 32;
-    let meta_approvers_end = meta_approvers_start + meta_approver_count * 32;
-    if meta_data.len() < meta_approvers_end {
-        anyhow::bail!("Meta-intent too short for proposer/approver arrays");
-    }
+    let mh = intent_utils::deserialize_intent_header(&meta_data)?;
+    let default_proposers: Vec<u8> = intent_utils::read_proposers(&meta_data, &mh)
+        .iter().flat_map(|pk| pk.to_bytes()).collect();
+    let default_approvers: Vec<u8> = intent_utils::read_approvers(&meta_data, &mh)
+        .iter().flat_map(|pk| pk.to_bytes()).collect();
+
     // CLI overrides take priority, then fall back to wallet meta-intent defaults
     let final_proposer_bytes = if let Some(ps) = proposers_str {
         let mut bytes = Vec::new();
@@ -340,7 +283,7 @@ pub fn add_intents(
         }
         bytes
     } else {
-        meta_data[meta_proposers_start..meta_approvers_start].to_vec()
+        default_proposers
     };
 
     let final_approver_bytes = if let Some(aps) = approvers_str {
@@ -351,11 +294,11 @@ pub fn add_intents(
         }
         bytes
     } else {
-        meta_data[meta_approvers_start..meta_approvers_end].to_vec()
+        default_approvers
     };
 
-    let final_approval_threshold = approval_threshold.unwrap_or(default_approval_threshold);
-    let final_cancellation_threshold = cancellation_threshold.unwrap_or(default_cancellation_threshold);
+    let final_approval_threshold = approval_threshold.unwrap_or(mh.approval_threshold);
+    let final_cancellation_threshold = cancellation_threshold.unwrap_or(mh.cancellation_threshold);
 
     println!(
         "Adding {} intents to wallet {} (current count: {})",

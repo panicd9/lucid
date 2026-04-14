@@ -29,17 +29,9 @@ pub fn propose(
 
     // Fetch wallet to get proposal_index and name
     let wallet_data = rpc::fetch_account(&client, &wallet_pubkey)?;
-    if wallet_data.len() < PREFIX_LEN + WALLET_DATA_LEN {
-        anyhow::bail!("Invalid wallet account data");
-    }
-    if wallet_data[0] != DISC_WALLET {
-        anyhow::bail!("Account is not a Wallet");
-    }
-
-    let wd = &wallet_data[PREFIX_LEN..];
-    let proposal_index = u64::from_le_bytes(wd[0..8].try_into()?);
-    let name_len = wd[11] as usize;
-    let wallet_name = std::str::from_utf8(&wd[16..16 + name_len.min(32)])?;
+    let w = intent_utils::deserialize_wallet(&wallet_data)?;
+    let proposal_index = w.proposal_index;
+    let wallet_name = &w.name;
 
     // Derive intent PDA
     let (intent_pda, _) = pda::find_intent_pda(&wallet_pubkey, intent_index, &program_id);
@@ -123,17 +115,11 @@ fn parse_params_to_bytes(
 ) -> Result<Vec<u8>> {
     // Fetch intent to understand param types
     let intent_data = rpc::fetch_account(client, intent_pda)?;
-    if intent_data.len() < PREFIX_LEN + INTENT_HEADER_LEN {
-        anyhow::bail!("Invalid intent account data");
-    }
-
-    let ih = &intent_data[PREFIX_LEN..];
-    let param_count = ih[80] as usize;
-    let proposer_count = ih[78] as usize;
-    let approver_count = ih[79] as usize;
+    let h = intent_utils::deserialize_intent_header(&intent_data)?;
+    let param_count = h.param_count as usize;
 
     // Read param entries to get their types
-    let params_offset = PREFIX_LEN + INTENT_HEADER_LEN + (proposer_count * 32) + (approver_count * 32);
+    let params_offset = intent_utils::params_entry_offset(&h);
     let mut param_types = Vec::new();
     for i in 0..param_count {
         let entry_offset = params_offset + (i * PARAM_ENTRY_SIZE);

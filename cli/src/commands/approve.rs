@@ -28,13 +28,9 @@ pub fn approve(
 
     // Fetch wallet to get name
     let wallet_data = rpc::fetch_account(&client, &wallet_pubkey)?;
-    if wallet_data.len() < PREFIX_LEN + WALLET_DATA_LEN {
-        anyhow::bail!("Invalid wallet account data");
-    }
-    let wd = &wallet_data[PREFIX_LEN..];
-    let name_len = wd[11] as usize;
-    let wallet_name = std::str::from_utf8(&wd[16..16 + name_len.min(32)])?;
-    let intent_count = wd[8];
+    let w = intent_utils::deserialize_wallet(&wallet_data)?;
+    let wallet_name = &w.name;
+    let intent_count = w.intent_count;
 
     // Find proposal by scanning intents
     let (intent_pda, proposal_pda, proposal_data) =

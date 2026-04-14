@@ -15,6 +15,18 @@
       "paramType": "u8",
       "constraintType": "none",
       "constraintValue": 0
+    },
+    {
+      "name": "mint",
+      "paramType": "address",
+      "constraintType": "none",
+      "constraintValue": 0
+    },
+    {
+      "name": "destination",
+      "paramType": "address",
+      "constraintType": "none",
+      "constraintValue": 0
     }
   ],
   "accounts": [
@@ -34,14 +46,14 @@
       "source": "param",
       "writable": false,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": 2
     },
     {
       "name": "destination",
       "source": "param",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": 3
     },
     {
       "name": "authority",

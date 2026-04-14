@@ -9,6 +9,12 @@
       "paramType": "u64",
       "constraintType": "none",
       "constraintValue": 0
+    },
+    {
+      "name": "to",
+      "paramType": "address",
+      "constraintType": "none",
+      "constraintValue": 0
     }
   ],
   "accounts": [
@@ -24,7 +30,7 @@
       "source": "param",
       "writable": true,
       "isSigner": false,
-      "sourceData": null
+      "sourceData": 1
     }
   ],
   "dataSegments": [

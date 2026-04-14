@@ -27,19 +27,15 @@ pub fn execute(
 
     // Fetch wallet
     let wallet_data = rpc::fetch_account(&client, &wallet_pubkey)?;
-    if wallet_data.len() < PREFIX_LEN + WALLET_DATA_LEN {
-        anyhow::bail!("Invalid wallet account data");
-    }
-    let wd = &wallet_data[PREFIX_LEN..];
-    let intent_count = wd[8];
+    let w = intent_utils::deserialize_wallet(&wallet_data)?;
 
     // Find proposal by scanning intents
     let (intent_pda, proposal_pda, proposal_data) =
-        intent_utils::find_proposal_for_wallet(&client, &wallet_pubkey, proposal_index, intent_count, &program_id)?;
+        intent_utils::find_proposal_for_wallet(&client, &wallet_pubkey, proposal_index, w.intent_count, &program_id)?;
 
     // Determine intent index from the PDA
     let mut found_intent_index = 0u8;
-    for i in 0..intent_count {
+    for i in 0..w.intent_count {
         let (ipda, _) = pda::find_intent_pda(&wallet_pubkey, i, &program_id);
         if ipda == intent_pda {
             found_intent_index = i;
@@ -59,11 +55,8 @@ pub fn execute(
 
     // Fetch intent to determine type and remaining accounts
     let intent_data = rpc::fetch_account(&client, &intent_pda)?;
-    if intent_data.len() < PREFIX_LEN + INTENT_HEADER_LEN {
-        anyhow::bail!("Invalid intent account data");
-    }
-    let ih = &intent_data[PREFIX_LEN..];
-    let intent_type = ih[74];
+    let ih = intent_utils::deserialize_intent_header(&intent_data)?;
+    let intent_type = ih.intent_type;
 
     // Derive vault and event authority
     let (vault_pda, _) = pda::find_vault_pda(&wallet_pubkey, &program_id);
@@ -97,7 +90,7 @@ pub fn execute(
         }
         INTENT_TYPE_ADD => {
             // Meta-add: need new_intent PDA, payer, system_program
-            let new_intent_index = wd[8]; // current intent_count (will be the new index)
+            let new_intent_index = w.intent_count; // current intent_count (will be the new index)
             let (new_intent_pda, _) =
                 pda::find_intent_pda(&wallet_pubkey, new_intent_index, &program_id);
             accounts.push(AccountMeta::new(new_intent_pda, false));
@@ -146,42 +139,17 @@ fn build_remaining_accounts_for_custom(
     vault_pda: &Pubkey,
     _program_id: &Pubkey,
 ) -> Result<Vec<AccountMeta>> {
-    let ih = &intent_data[PREFIX_LEN..];
-    let proposer_count = ih[78] as usize;
-    let approver_count = ih[79] as usize;
-    let param_count = ih[80] as usize;
-    let account_count = ih[81] as usize;
-    let instruction_count = ih[82] as usize;
-    let data_segment_count = ih[83] as usize;
-    let seed_count = ih[84] as usize;
-
-    let accounts_offset = PREFIX_LEN + INTENT_HEADER_LEN
-        + (proposer_count * 32)
-        + (approver_count * 32)
-        + (param_count * PARAM_ENTRY_SIZE);
+    let h = intent_utils::deserialize_intent_header(intent_data)?;
+    let account_count = h.account_count as usize;
+    let accounts_offset = intent_utils::accounts_entry_offset(&h);
+    let bp_offset = intent_utils::byte_pool_offset(&h);
 
     let params_data_start = PREFIX_LEN + PROPOSAL_DATA_LEN;
     let pd = &proposal_data[PREFIX_LEN..];
     let params_data_len = u16::from_le_bytes([pd[160], pd[161]]) as usize;
     let params_data = &proposal_data[params_data_start..params_data_start + params_data_len];
 
-    // Build byte_pool offset for reading static addresses
-    let bp_offset = PREFIX_LEN + INTENT_HEADER_LEN
-        + (proposer_count * 32)
-        + (approver_count * 32)
-        + (param_count * PARAM_ENTRY_SIZE)
-        + (account_count * ACCOUNT_ENTRY_SIZE)
-        + (instruction_count * INSTRUCTION_ENTRY_SIZE)
-        + (data_segment_count * DATA_SEGMENT_ENTRY_SIZE)
-        + (seed_count * SEED_ENTRY_SIZE);
-
     let mut remaining = Vec::new();
-
-    // Read instruction entry to find which accounts are needed
-    let ix_offset = accounts_offset + (account_count * ACCOUNT_ENTRY_SIZE);
-    if ix_offset + INSTRUCTION_ENTRY_SIZE > intent_data.len() {
-        return Ok(remaining);
-    }
 
     // Read all account entries and resolve addresses
     for a in 0..account_count {
@@ -209,7 +177,7 @@ fn build_remaining_accounts_for_custom(
             SOURCE_PARAM => {
                 let param_idx = source_data[0] as usize;
                 // Read the address from params_data at the right offset
-                let addr = read_param_address(intent_data, params_data, param_idx, proposer_count, approver_count)?;
+                let addr = read_param_address(intent_data, params_data, param_idx, &h)?;
                 addr
             }
             SOURCE_VAULT => *vault_pda,
@@ -244,11 +212,9 @@ fn read_param_address(
     intent_data: &[u8],
     params_data: &[u8],
     param_idx: usize,
-    proposer_count: usize,
-    approver_count: usize,
+    h: &intent_utils::IntentHeaderInfo,
 ) -> Result<Pubkey> {
-    let params_entry_offset =
-        PREFIX_LEN + INTENT_HEADER_LEN + (proposer_count * 32) + (approver_count * 32);
+    let params_entry_offset = intent_utils::params_entry_offset(h);
 
     // Walk through params_data to find the offset for param_idx
     let mut offset = 0usize;
