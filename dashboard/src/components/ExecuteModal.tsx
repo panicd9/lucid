@@ -48,7 +48,7 @@ export default function ExecuteModal({
   let rendered = '';
   try {
     const decoded = decodeParamsData(proposal.paramsData, intentData.params);
-    rendered = renderTemplate(intentData.template, decoded);
+    rendered = renderTemplate(intentData.template, decoded, intentData.params);
   } catch {
     rendered = intentData.template || `Intent #${intentData.intentIndex}`;
   }

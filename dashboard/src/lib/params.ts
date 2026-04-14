@@ -208,16 +208,20 @@ export function encodeParamsData(
 }
 
 /**
- * Render an intent template by replacing positional placeholders {0}, {1}, ...
- * with decoded param values.
+ * Render an intent template by replacing both positional ({0}, {1})
+ * and named ({amount}, {to}) placeholders with decoded param values.
  */
 export function renderTemplate(
   template: string,
-  decodedValues: string[]
+  decodedValues: string[],
+  intentParams?: ParamEntry[]
 ): string {
   let result = template;
   for (let i = 0; i < decodedValues.length; i++) {
     result = result.replaceAll(`{${i}}`, decodedValues[i]);
+    if (intentParams && intentParams[i]?.name) {
+      result = result.replaceAll(`{${intentParams[i].name}}`, decodedValues[i]);
+    }
   }
   return result;
 }

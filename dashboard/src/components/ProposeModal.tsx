@@ -62,7 +62,7 @@ export default function ProposeModal({
   };
 
   // Preview
-  const rendered = renderTemplate(intent.template, paramValues);
+  const rendered = renderTemplate(intent.template, paramValues, intent.params);
   const expiryStr = formatExpiry(expirySeconds);
 
   const handleSubmit = async () => {

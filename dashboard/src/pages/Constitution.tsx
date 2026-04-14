@@ -4,6 +4,7 @@ import { useLucidWallet } from '../hooks/useWallet';
 import { FrozenStatusBadge } from '../components/StatusBadge';
 import AddressDisplay from '../components/AddressDisplay';
 import IntentCard from '../components/IntentCard';
+import WalletDisambiguation from '../components/WalletDisambiguation';
 
 interface Props {
   network: string;
@@ -12,7 +13,11 @@ interface Props {
 export default function Constitution({ network }: Props) {
   const { address } = useParams<{ address: string }>();
   const [refreshKey, setRefreshKey] = useState(0);
-  const { data, loading, error } = useLucidWallet(address, network, refreshKey);
+  const { data, candidates, loading, error } = useLucidWallet(address, network, refreshKey);
+
+  if (candidates && candidates.length > 1) {
+    return <WalletDisambiguation name={address ?? ''} candidates={candidates} />;
+  }
 
   if (loading) {
     return (
@@ -51,18 +56,6 @@ export default function Constitution({ network }: Props) {
   const metaIntents = intents.filter((i) => i.intentIndex <= 2);
   const protocolIntents = intents.filter((i) => i.intentIndex > 2);
 
-  // Aggregate stats
-  const allApprovers = new Set<string>();
-  const allProposers = new Set<string>();
-  let commonThreshold = '';
-  for (const intent of intents) {
-    intent.approvers.forEach((a) => allApprovers.add(a.toBase58()));
-    intent.proposers.forEach((p) => allProposers.add(p.toBase58()));
-  }
-  if (intents.length > 0) {
-    commonThreshold = `${intents[0].approvalThreshold}-of-${intents[0].approverCount}`;
-  }
-
   return (
     <div>
       {/* Header */}
@@ -83,27 +76,23 @@ export default function Constitution({ network }: Props) {
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-4 pt-4 border-t border-slate-700/50">
-          <div>
-            <p className="text-xs text-slate-500 mb-0.5">Proposers</p>
-            <p className="text-lg font-semibold text-slate-200">{allProposers.size}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 mb-0.5">Approvers</p>
-            <p className="text-lg font-semibold text-slate-200">{allApprovers.size}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 mb-0.5">Threshold</p>
-            <p className="text-lg font-semibold text-slate-200">{commonThreshold || '-'}</p>
-          </div>
+        {/* Stats — only wallet-level data, not aggregated from intents */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-slate-700/50">
           <div>
             <p className="text-xs text-slate-500 mb-0.5">Total Intents</p>
             <p className="text-lg font-semibold text-slate-200">{wallet.intentCount}</p>
           </div>
           <div>
+            <p className="text-xs text-slate-500 mb-0.5">Proposals</p>
+            <p className="text-lg font-semibold text-slate-200">{wallet.proposalIndex.toString()}</p>
+          </div>
+          <div>
             <p className="text-xs text-slate-500 mb-0.5">Vault</p>
             <AddressDisplay address={data.vaultAddress.toBase58()} chars={6} />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 mb-0.5">Create Key</p>
+            <AddressDisplay address={wallet.createKey.toBase58()} chars={6} />
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { useLucidWallet } from '../hooks/useWallet';
 import { useProposals } from '../hooks/useProposals';
 import ProposalCard from '../components/ProposalCard';
 import { STATUS_ACTIVE, STATUS_APPROVED } from '../lib/constants';
+import WalletDisambiguation from '../components/WalletDisambiguation';
 
 interface Props {
   network: string;
@@ -12,7 +13,11 @@ interface Props {
 export default function Proposals({ network }: Props) {
   const { address } = useParams<{ address: string }>();
   const [refreshKey, setRefreshKey] = useState(0);
-  const { data: walletData, loading: walletLoading, error: walletError } = useLucidWallet(address, network, refreshKey);
+  const { data: walletData, candidates, loading: walletLoading, error: walletError } = useLucidWallet(address, network, refreshKey);
+
+  if (candidates && candidates.length > 1) {
+    return <WalletDisambiguation name={address ?? ''} candidates={candidates} pathSuffix="/proposals" />;
+  }
 
   const {
     proposals,

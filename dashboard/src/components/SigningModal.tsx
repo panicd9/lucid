@@ -55,7 +55,7 @@ export default function SigningModal({
 
   // Decode and render the message preview
   const decoded = decodeParamsData(proposal.paramsData, intentData.params);
-  const rendered = renderTemplate(intentData.template, decoded);
+  const rendered = renderTemplate(intentData.template, decoded, intentData.params);
   const expiryStr = formatExpiry(expirySeconds);
   const messageBody = buildMessageBody(
     action,
