@@ -274,6 +274,7 @@ function buildParamEntry(opts: {
   nameLen?: number;
   paramType?: number;
   constraintType?: number;
+  displayDecimals?: number;
 }): Buffer {
   const buf = Buffer.alloc(PARAM_ENTRY_SIZE, 0);
   buf.writeBigUInt64LE(opts.constraintValue ?? 0n, 0);
@@ -281,7 +282,8 @@ function buildParamEntry(opts: {
   buf.writeUInt16LE(opts.nameLen ?? 0, 10);
   buf[12] = opts.paramType ?? 0;
   buf[13] = opts.constraintType ?? 0;
-  // bytes 14-15 are padding
+  buf[14] = opts.displayDecimals ?? 0;
+  // byte 15 is padding
   return buf;
 }
 

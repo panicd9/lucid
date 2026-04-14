@@ -171,7 +171,8 @@ pub struct ParamEntry {
     pub name_len: u16,
     pub param_type: u8,
     pub constraint_type: u8,
-    pub _pad: [u8; 2],
+    pub display_decimals: u8,          // decimal shift for human display (e.g. 9 for SOL)
+    pub _pad: u8,
 }
 
 assert_no_padding!(ParamEntry, 16);

@@ -8,7 +8,8 @@
       "name": "amount",
       "paramType": "u64",
       "constraintType": "none",
-      "constraintValue": 0
+      "constraintValue": 0,
+      "displayDecimals": 9
     },
     {
       "name": "to",
@@ -46,7 +47,7 @@
     }
   ],
   "seeds": [],
-  "template": "transfer {amount} lamports to {to}",
+  "template": "transfer {amount} SOL to {to}",
   "riskLevel": "HIGH",
   "timelockSeconds": 3600,
   "verification": {

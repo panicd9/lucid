@@ -42,12 +42,14 @@ fn wallet_with_template(
         param_type: helpers::PARAM_TYPE_U64,
         constraint_type: 0,
         constraint_value: 0,
+        display_decimals: 0,
         name: b"amount".to_vec(),
     });
     builder.params.push(helpers::intent::ParamDef {
         param_type: helpers::PARAM_TYPE_ADDRESS,
         constraint_type: 0,
         constraint_value: 0,
+        display_decimals: 0,
         name: b"destination".to_vec(),
     });
 

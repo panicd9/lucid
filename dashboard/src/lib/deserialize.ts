@@ -68,6 +68,7 @@ export interface ParamEntry {
   nameLen: number;
   paramType: number;
   constraintType: number;
+  displayDecimals: number;
   name: string; // resolved from byte_pool
 }
 
@@ -210,12 +211,14 @@ export function deserializeIntent(data: Buffer): IntentAccount {
     const nameLen = data.readUInt16LE(offset + 10);
     const paramType = data[offset + 12];
     const constraintType = data[offset + 13];
+    const displayDecimals = data[offset + 14];
     params.push({
       constraintValue,
       nameOffset,
       nameLen,
       paramType,
       constraintType,
+      displayDecimals,
       name: '', // resolved below
     });
     offset += PARAM_ENTRY_SIZE;

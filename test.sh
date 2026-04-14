@@ -40,10 +40,10 @@ run "cargo check (lucid program)" cargo check -p lucid
 
 # ── 3. Rust integration tests (LiteSVM) ──────────────────────────────
 printf "${YELLOW}[2/5] Rust integration tests${NC}\n"
-run "lifecycle tests"  cargo test -p lucid-tests --test lifecycle  -- --nocapture
-run "proposal tests"   cargo test -p lucid-tests --test proposal   -- --nocapture
-run "security tests"   cargo test -p lucid-tests --test security   -- --nocapture
-run "golden vectors"   cargo test -p lucid-tests --lib             -- --nocapture
+run "lifecycle tests"  cargo test -p lucid --test lifecycle  -- --nocapture
+run "proposal tests"   cargo test -p lucid --test proposal   -- --nocapture
+run "security tests"   cargo test -p lucid --test security   -- --nocapture
+run "golden vectors"   cargo test -p lucid --lib             -- --nocapture
 
 # ── 4. CLI ────────────────────────────────────────────────────────────
 printf "${YELLOW}[3/5] CLI tests${NC}\n"

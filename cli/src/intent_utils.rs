@@ -180,6 +180,7 @@ pub fn render_template_with_params(template: &str, intent_data: &[u8], params_da
             break;
         }
         let pt = intent_data[entry_offset + 12];
+        let display_decimals = intent_data[entry_offset + 14];
         let size = param_type_size(pt);
 
         let value_str = if size == 0 {
@@ -205,7 +206,10 @@ pub fn render_template_with_params(template: &str, intent_data: &[u8], params_da
             let bytes = &params_data[data_offset..data_offset + size];
             data_offset += size;
             match pt {
-                PARAM_TYPE_U64 => u64::from_le_bytes(bytes.try_into().unwrap_or([0; 8])).to_string(),
+                PARAM_TYPE_U64 => {
+                    let val = u64::from_le_bytes(bytes.try_into().unwrap_or([0; 8]));
+                    format_with_decimals(val, display_decimals)
+                }
                 PARAM_TYPE_I64 => i64::from_le_bytes(bytes.try_into().unwrap_or([0; 8])).to_string(),
                 PARAM_TYPE_BOOL => (bytes[0] != 0).to_string(),
                 PARAM_TYPE_U8 => bytes[0].to_string(),
@@ -298,6 +302,23 @@ pub fn find_proposal_for_wallet(
     }
 
     Ok((intent_pda, proposal_pda, proposal_data))
+}
+
+/// Format a u64 with display_decimals scaling (e.g., 1500000000 with decimals=9 → "1.5").
+fn format_with_decimals(val: u64, decimals: u8) -> String {
+    if decimals == 0 {
+        return val.to_string();
+    }
+    let divisor = 10u64.pow(decimals as u32);
+    let whole = val / divisor;
+    let frac = val % divisor;
+    if frac == 0 {
+        whole.to_string()
+    } else {
+        let frac_str = format!("{:0>width$}", frac, width = decimals as usize);
+        let trimmed = frac_str.trim_end_matches('0');
+        format!("{}.{}", whole, trimmed)
+    }
 }
 
 /// Convert a camelCase or PascalCase string to snake_case.

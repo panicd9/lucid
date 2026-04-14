@@ -597,7 +597,7 @@ fn build_intent_bytes(
         } else {
             (0, 0)
         };
-        // ParamEntry: constraint_value:u64, name_offset:u16, name_len:u16, param_type:u8, constraint_type:u8, pad:2
+        // ParamEntry: constraint_value:u64, name_offset:u16, name_len:u16, param_type:u8, constraint_type:u8, display_decimals:u8, pad:1
         result.extend_from_slice(&param.constraint_value.to_le_bytes()); // 8
         result.extend_from_slice(&name_off.to_le_bytes()); // 2
         result.extend_from_slice(&name_len.to_le_bytes()); // 2
@@ -608,7 +608,8 @@ fn build_intent_bytes(
             _ => 0u8,
         };
         result.push(ct); // 1
-        result.extend_from_slice(&[0u8; 2]); // pad
+        result.push(param.display_decimals); // 1
+        result.push(0u8); // pad
     }
 
     // Account entries

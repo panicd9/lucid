@@ -31,6 +31,7 @@ pub struct ParamDef {
     pub param_type: u8,
     pub constraint_type: u8,
     pub constraint_value: u64,
+    pub display_decimals: u8,
     pub name: Vec<u8>,
 }
 
@@ -178,8 +179,10 @@ impl IntentDataBuilder {
             data.push(param.param_type);
             // constraint_type: u8
             data.push(param.constraint_type);
-            // _pad: [u8; 2]
-            data.extend_from_slice(&[0u8; 2]);
+            // display_decimals: u8
+            data.push(param.display_decimals);
+            // _pad: u8
+            data.push(0);
         }
 
         // AccountEntries (N * 8 bytes each)
@@ -266,6 +269,7 @@ pub fn build_test_transfer_intent(
         param_type: PARAM_TYPE_U64,
         constraint_type: 0,
         constraint_value: 0,
+        display_decimals: 0,
         name: b"amount".to_vec(),
     });
 
@@ -274,6 +278,7 @@ pub fn build_test_transfer_intent(
         param_type: PARAM_TYPE_ADDRESS,
         constraint_type: 0,
         constraint_value: 0,
+        display_decimals: 0,
         name: b"destination".to_vec(),
     });
 

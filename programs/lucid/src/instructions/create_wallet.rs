@@ -295,7 +295,7 @@ fn write_meta_param_entries(buf: &mut [u8], intent_type: u8) {
 }
 
 fn write_param_entry(buf: &mut [u8], param_type: u8) {
-    // Layout: constraint_value:8, name_offset:2, name_len:2, param_type:1, constraint_type:1, pad:2
+    // Layout: constraint_value:8, name_offset:2, name_len:2, param_type:1, constraint_type:1, display_decimals:1, pad:1
     buf[..ParamEntry::SIZE].fill(0);
-    buf[12] = param_type; // offset of param_type in new layout
+    buf[12] = param_type;
 }

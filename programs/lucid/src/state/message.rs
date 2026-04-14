@@ -127,7 +127,9 @@ fn render_template_into(
     Ok(())
 }
 
-/// Format a parameter value for display in the message
+/// Format a parameter value for display in the message.
+/// When `display_decimals > 0`, numeric values are rendered with a decimal point
+/// (e.g., 1500000000 with decimals=9 → "1.5", 1000000000 → "1").
 fn format_param_into(
     buf: &mut [u8],
     pos: &mut usize,
@@ -138,6 +140,7 @@ fn format_param_into(
 ) -> Result<(), ProgramError> {
     let entry = read_param_entry(intent_data, intent, param_index)?;
     let bytes = read_param_bytes(intent_data, intent, params_data, param_index)?;
+    let decimals = entry.display_decimals;
 
     match entry.param_type {
         PARAM_TYPE_ADDRESS => {
@@ -147,8 +150,13 @@ fn format_param_into(
         }
         PARAM_TYPE_U64 => {
             let val = u64::from_le_bytes(bytes[..8].try_into().map_err(|_| ProgramError::InvalidInstructionData)?);
-            let s = u64_to_decimal(val);
-            copy_to(buf, pos, &s.0[..s.1])?;
+            if decimals > 0 {
+                let s = u64_to_decimal_scaled(val, decimals);
+                copy_to(buf, pos, &s.0[..s.1])?;
+            } else {
+                let s = u64_to_decimal(val);
+                copy_to(buf, pos, &s.0[..s.1])?;
+            }
         }
         PARAM_TYPE_I64 => {
             let val = i64::from_le_bytes(bytes[..8].try_into().map_err(|_| ProgramError::InvalidInstructionData)?);
@@ -280,6 +288,42 @@ fn copy_to(buf: &mut [u8], pos: &mut usize, src: &[u8]) -> Result<(), ProgramErr
     buf[*pos..end].copy_from_slice(src);
     *pos = end;
     Ok(())
+}
+
+/// Convert u64 to decimal string with display_decimals scaling.
+/// E.g., val=1500000000, decimals=9 → "1.5"; val=1000000000, decimals=9 → "1"
+/// No trailing zeros after decimal point; omit "." when fraction is zero.
+fn u64_to_decimal_scaled(val: u64, decimals: u8) -> ([u8; 40], usize) {
+    let mut buf = [0u8; 40];
+    let divisor = 10u64.pow(decimals as u32);
+    let whole = val / divisor;
+    let frac = val % divisor;
+
+    let w = u64_to_decimal(whole);
+    let mut pos = w.1;
+    buf[..pos].copy_from_slice(&w.0[..pos]);
+
+    if frac > 0 {
+        buf[pos] = b'.';
+        pos += 1;
+
+        // Write fractional digits with leading zeros, then strip trailing zeros
+        let f = u64_to_decimal(frac);
+        let frac_digits = decimals as usize;
+        let leading_zeros = frac_digits - f.1;
+        for _ in 0..leading_zeros {
+            buf[pos] = b'0';
+            pos += 1;
+        }
+        // Copy frac digits, then trim trailing zeros
+        buf[pos..pos + f.1].copy_from_slice(&f.0[..f.1]);
+        pos += f.1;
+        while pos > 0 && buf[pos - 1] == b'0' {
+            pos -= 1;
+        }
+    }
+
+    (buf, pos)
 }
 
 /// Convert u64 to decimal string, returns (buffer, length)

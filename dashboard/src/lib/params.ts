@@ -19,6 +19,17 @@ import {
 } from './constants';
 import type { ParamEntry } from './deserialize';
 
+/** Format a bigint with display_decimals scaling (e.g., 1500000000n with decimals=9 → "1.5"). */
+function formatWithDecimals(val: bigint, decimals: number): string {
+  if (decimals === 0) return val.toString();
+  const divisor = 10n ** BigInt(decimals);
+  const whole = val / divisor;
+  const frac = val % divisor;
+  if (frac === 0n) return whole.toString();
+  const fracStr = frac.toString().padStart(decimals, '0').replace(/0+$/, '');
+  return `${whole}.${fracStr}`;
+}
+
 /** Byte size for a fixed-size param type. Returns 0 for variable-length (string). */
 export function paramTypeSize(paramType: number): number {
   switch (paramType) {
@@ -69,7 +80,7 @@ export function decodeParamsData(
       }
       case PARAM_TYPE_U64: {
         const val = view.getBigUint64(offset, true);
-        values.push(val.toString());
+        values.push(formatWithDecimals(val, param.displayDecimals));
         offset += 8;
         break;
       }

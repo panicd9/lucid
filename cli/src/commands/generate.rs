@@ -158,6 +158,7 @@ fn generate_intent_from_instruction(
             param_type,
             constraint_type: "none".to_string(),
             constraint_value: 0,
+            display_decimals: 0,
         });
     }
 

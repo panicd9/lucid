@@ -30,6 +30,8 @@ pub struct ParamDef {
     pub constraint_type: String,
     #[serde(default)]
     pub constraint_value: u64,
+    #[serde(default)]
+    pub display_decimals: u8,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
