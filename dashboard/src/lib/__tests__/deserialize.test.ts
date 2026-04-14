@@ -351,19 +351,19 @@ describe('deserializeIntent', () => {
     const paramNameBytes = Buffer.from(paramName);
 
     // byte pool layout:
-    //   [0..1] template_offset = 4 (u16 LE)
+    //   [0..1] template_offset = 0 (u16 LE) — template at bytePool + 4 + 0
     //   [2..3] template_len = length of templateStr (u16 LE)
     //   [4..4+templateStr.length-1] template string
     //   [4+templateStr.length..] param name string
     const bytePoolLen = 4 + templateBytes.length + paramNameBytes.length;
     const bytePool = Buffer.alloc(bytePoolLen, 0);
-    bytePool.writeUInt16LE(4, 0); // template_offset
+    bytePool.writeUInt16LE(0, 0); // template_offset = 0
     bytePool.writeUInt16LE(templateBytes.length, 2); // template_len
     templateBytes.copy(bytePool, 4);
     paramNameBytes.copy(bytePool, 4 + templateBytes.length);
 
     // Param entry: nameOffset points into byte pool relative to bytePoolStart
-    // paramName is at bytePool offset 4 + templateStr.length = 4+17 = 21
+    // paramName is at bytePool offset 4 + templateStr.length
     const paramNameOffset = 4 + templateBytes.length;
     const param = buildParamEntry({
       constraintValue: 1000000n,

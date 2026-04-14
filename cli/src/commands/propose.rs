@@ -200,12 +200,17 @@ fn render_template_simple(template: &str, params_str: Option<&str>) -> String {
         let values: Vec<&str> = ps.split(',').collect();
         let mut result = template.to_string();
         for (i, val) in values.iter().enumerate() {
-            let value = if let Some((_k, v)) = val.split_once('=') {
-                v.trim()
+            let (key, value) = if let Some((k, v)) = val.split_once('=') {
+                (Some(k.trim()), v.trim())
             } else {
-                val.trim()
+                (None, val.trim())
             };
+            // Replace by numeric index {0}, {1}, ...
             result = result.replace(&format!("{{{}}}", i), value);
+            // Replace by param name {amount}, {to}, ...
+            if let Some(k) = key {
+                result = result.replace(&format!("{{{}}}", k), value);
+            }
         }
         result
     } else {

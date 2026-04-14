@@ -38,7 +38,9 @@ pub fn deserialize_wallet(data: &[u8]) -> Result<WalletInfo> {
 // ─── Typed IntentHeader deserialization ──────────────────────────────
 
 pub struct IntentHeaderInfo {
+    #[allow(dead_code)]
     pub wallet: Pubkey,
+    #[allow(dead_code)]
     pub target_program: Pubkey,
     pub timelock_seconds: u32,
     pub active_proposal_count: u16,
@@ -215,7 +217,29 @@ pub fn render_template_with_params(template: &str, intent_data: &[u8], params_da
             "???".to_string()
         };
 
+        // Replace by numeric index {0}, {1}, ...
         result = result.replace(&format!("{{{}}}", i), &value_str);
+
+        // Replace by param name {amount}, {to}, ... if name is available
+        let name_offset_field = u16::from_le_bytes([
+            intent_data[entry_offset + 8],
+            intent_data[entry_offset + 9],
+        ]) as usize;
+        let name_len_field = u16::from_le_bytes([
+            intent_data[entry_offset + 10],
+            intent_data[entry_offset + 11],
+        ]) as usize;
+        if name_len_field > 0 {
+            let bp_off = byte_pool_offset(&h);
+            // Names are stored at byte_pool + name_offset (absolute within pool)
+            let name_start = bp_off + name_offset_field;
+            let name_end = name_start + name_len_field;
+            if name_end <= intent_data.len() {
+                if let Ok(name) = std::str::from_utf8(&intent_data[name_start..name_end]) {
+                    result = result.replace(&format!("{{{}}}", name), &value_str);
+                }
+            }
+        }
     }
 
     result

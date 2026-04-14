@@ -108,7 +108,7 @@ fn render_template_into(
 
             // Parse param index (could be name or number)
             let idx_bytes = &template[start..end];
-            let param_index = parse_param_index(idx_bytes)?;
+            let param_index = resolve_param_index(idx_bytes, intent, intent_data)?;
 
             // Format the parameter value
             format_param_into(buf, pos, intent_data, intent, params_data, param_index)?;
@@ -199,8 +199,42 @@ fn format_param_into(
     Ok(())
 }
 
+/// Resolve a template placeholder to a param index.
+/// Tries numeric first (e.g. "0", "1"), then name lookup (e.g. "amount", "to").
+fn resolve_param_index(
+    bytes: &[u8],
+    intent: &IntentHeader,
+    intent_data: &[u8],
+) -> Result<u8, ProgramError> {
+    // Try numeric parse first
+    if let Ok(idx) = parse_param_index_numeric(bytes) {
+        return Ok(idx);
+    }
+    // Fall back to name lookup
+    let bp_offset = intent.byte_pool_offset();
+    for i in 0..intent.param_count {
+        let entry = read_param_entry(intent_data, intent, i)?;
+        if entry.name_len == 0 {
+            continue;
+        }
+        // Name is stored at byte_pool + name_offset (absolute within pool)
+        let name_start = bp_offset + entry.name_offset as usize;
+        let name_end = name_start + entry.name_len as usize;
+        if name_end > intent_data.len() {
+            continue;
+        }
+        if &intent_data[name_start..name_end] == bytes {
+            return Ok(i);
+        }
+    }
+    Err(ProgramError::InvalidAccountData)
+}
+
 /// Parse a decimal number from bytes (e.g., "0", "1", "12")
-fn parse_param_index(bytes: &[u8]) -> Result<u8, ProgramError> {
+fn parse_param_index_numeric(bytes: &[u8]) -> Result<u8, ProgramError> {
+    if bytes.is_empty() {
+        return Err(ProgramError::InvalidAccountData);
+    }
     let mut val: u8 = 0;
     for &b in bytes {
         if b < b'0' || b > b'9' {
