@@ -5,6 +5,7 @@ import {
   VAULT_SEED,
   INTENT_SEED,
   PROPOSAL_SEED,
+  EVENT_AUTHORITY_SEED,
 } from './constants';
 
 export function findWalletPDA(createKey: PublicKey): [PublicKey, number] {
@@ -39,6 +40,13 @@ export function findProposalPDA(
   buf.writeBigUInt64LE(BigInt(proposalIndex));
   return PublicKey.findProgramAddressSync(
     [PROPOSAL_SEED, intent.toBuffer(), buf],
+    PROGRAM_ID
+  );
+}
+
+export function findEventAuthorityPDA(): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [EVENT_AUTHORITY_SEED],
     PROGRAM_ID
   );
 }

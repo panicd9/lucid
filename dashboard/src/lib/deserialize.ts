@@ -274,11 +274,11 @@ export function deserializeIntent(data: Buffer): IntentAccount {
   if (bytePoolLen >= 4) {
     const templateOffset = data.readUInt16LE(bytePoolStart);
     const templateLen = data.readUInt16LE(bytePoolStart + 2);
-    if (templateLen > 0 && bytePoolStart + templateOffset + templateLen <= data.length) {
+    if (templateLen > 0 && bytePoolStart + 4 + templateOffset + templateLen <= data.length) {
       template = data
         .subarray(
-          bytePoolStart + templateOffset,
-          bytePoolStart + templateOffset + templateLen
+          bytePoolStart + 4 + templateOffset,
+          bytePoolStart + 4 + templateOffset + templateLen
         )
         .toString('utf-8');
     }

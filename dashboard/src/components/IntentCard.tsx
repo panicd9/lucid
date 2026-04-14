@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSelectedWalletAccount } from '@solana/react';
 import { IntentAccount } from '../lib/deserialize';
 import {
   INTENT_TYPE_LABELS,
@@ -9,13 +10,20 @@ import {
 import RiskBadge, { inferRiskLevel } from './RiskBadge';
 import TimelockDisplay from './TimelockDisplay';
 import AddressDisplay from './AddressDisplay';
+import ProposeModal from './ProposeModal';
 
 interface Props {
   intent: IntentAccount;
+  walletAddress: string;
+  walletName: string;
+  network: string;
+  onRefresh: () => void;
 }
 
-export default function IntentCard({ intent }: Props) {
+export default function IntentCard({ intent, walletAddress, walletName, network, onRefresh }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [showProposeModal, setShowProposeModal] = useState(false);
+  const [account] = useSelectedWalletAccount();
   const riskLevel = inferRiskLevel(intent.intentIndex, intent.intentType);
   const isMeta = intent.intentIndex <= 2;
 
@@ -241,7 +249,34 @@ export default function IntentCard({ intent }: Props) {
               </div>
             </div>
           )}
+
+          {/* New Proposal button — visible when connected wallet is a proposer */}
+          {account && intent.proposers.some((p) => p.toBase58() === account.address) && (
+            <div className="pt-2 border-t border-slate-700/50">
+              <button
+                onClick={() => setShowProposeModal(true)}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors"
+              >
+                New Proposal
+              </button>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* Propose modal */}
+      {showProposeModal && (
+        <ProposeModal
+          intent={intent}
+          walletAddress={walletAddress}
+          walletName={walletName}
+          network={network}
+          onClose={() => setShowProposeModal(false)}
+          onSuccess={() => {
+            setShowProposeModal(false);
+            onRefresh();
+          }}
+        />
       )}
     </div>
   );

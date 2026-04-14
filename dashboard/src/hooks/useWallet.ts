@@ -16,7 +16,7 @@ export interface WalletData {
   intents: IntentAccount[];
 }
 
-export function useWallet(addressOrName: string | undefined, network: string) {
+export function useLucidWallet(addressOrName: string | undefined, network: string, refreshKey = 0) {
   const [data, setData] = useState<WalletData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +95,7 @@ export function useWallet(addressOrName: string | undefined, network: string) {
     return () => {
       cancelled = true;
     };
-  }, [addressOrName, network]);
+  }, [addressOrName, network, refreshKey]);
 
   return { data, loading, error };
 }

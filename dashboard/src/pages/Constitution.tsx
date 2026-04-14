@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useWallet } from '../hooks/useWallet';
+import { useLucidWallet } from '../hooks/useWallet';
 import { FrozenStatusBadge } from '../components/StatusBadge';
 import AddressDisplay from '../components/AddressDisplay';
 import IntentCard from '../components/IntentCard';
@@ -10,7 +11,8 @@ interface Props {
 
 export default function Constitution({ network }: Props) {
   const { address } = useParams<{ address: string }>();
-  const { data, loading, error } = useWallet(address, network);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { data, loading, error } = useLucidWallet(address, network, refreshKey);
 
   if (loading) {
     return (
@@ -44,6 +46,8 @@ export default function Constitution({ network }: Props) {
   }
 
   const { wallet, intents } = data;
+  const walletAddr = data.address.toBase58();
+  const handleRefresh = () => setRefreshKey((k) => k + 1);
   const metaIntents = intents.filter((i) => i.intentIndex <= 2);
   const protocolIntents = intents.filter((i) => i.intentIndex > 2);
 
@@ -115,7 +119,14 @@ export default function Constitution({ network }: Props) {
           </div>
           <div className="space-y-2">
             {metaIntents.map((intent) => (
-              <IntentCard key={intent.intentIndex} intent={intent} />
+              <IntentCard
+                key={intent.intentIndex}
+                intent={intent}
+                walletAddress={walletAddr}
+                walletName={wallet.name}
+                network={network}
+                onRefresh={handleRefresh}
+              />
             ))}
           </div>
         </section>
@@ -132,7 +143,14 @@ export default function Constitution({ network }: Props) {
         {protocolIntents.length > 0 ? (
           <div className="space-y-2">
             {protocolIntents.map((intent) => (
-              <IntentCard key={intent.intentIndex} intent={intent} />
+              <IntentCard
+                key={intent.intentIndex}
+                intent={intent}
+                walletAddress={walletAddr}
+                walletName={wallet.name}
+                network={network}
+                onRefresh={handleRefresh}
+              />
             ))}
           </div>
         ) : (

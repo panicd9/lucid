@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import WalletButton from './WalletButton';
 
 interface Props {
   network: string;
@@ -62,6 +63,9 @@ export default function Navbar({ network, onNetworkChange }: Props) {
           <option value="devnet">Devnet</option>
           <option value="mainnet">Mainnet</option>
         </select>
+
+        {/* Wallet */}
+        <WalletButton />
       </div>
     </nav>
   );

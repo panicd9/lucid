@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useWallet } from '../hooks/useWallet';
+import { useLucidWallet } from '../hooks/useWallet';
 import { useProposals } from '../hooks/useProposals';
 import ProposalCard from '../components/ProposalCard';
 import { STATUS_ACTIVE, STATUS_APPROVED } from '../lib/constants';
@@ -10,7 +11,8 @@ interface Props {
 
 export default function Proposals({ network }: Props) {
   const { address } = useParams<{ address: string }>();
-  const { data: walletData, loading: walletLoading, error: walletError } = useWallet(address, network);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { data: walletData, loading: walletLoading, error: walletError } = useLucidWallet(address, network, refreshKey);
 
   const {
     proposals,
@@ -25,6 +27,8 @@ export default function Proposals({ network }: Props) {
 
   const loading = walletLoading || proposalsLoading;
   const error = walletError || proposalsError;
+
+  const handleRefresh = () => setRefreshKey((k) => k + 1);
 
   if (loading) {
     return (
@@ -48,6 +52,9 @@ export default function Proposals({ network }: Props) {
       </div>
     );
   }
+
+  const walletName = walletData?.wallet.name ?? '';
+  const walletAddr = walletData?.address.toBase58() ?? '';
 
   const activeProposals = proposals.filter(
     (p) => p.status === STATUS_ACTIVE || p.status === STATUS_APPROVED
@@ -90,7 +97,14 @@ export default function Proposals({ network }: Props) {
         {activeProposals.length > 0 ? (
           <div className="space-y-3">
             {activeProposals.map((p) => (
-              <ProposalCard key={p.address.toBase58()} proposal={p} />
+              <ProposalCard
+                key={p.address.toBase58()}
+                proposal={p}
+                walletName={walletName}
+                walletAddress={walletAddr}
+                network={network}
+                onRefresh={handleRefresh}
+              />
             ))}
           </div>
         ) : (
@@ -108,7 +122,14 @@ export default function Proposals({ network }: Props) {
         {pastProposals.length > 0 ? (
           <div className="space-y-3">
             {pastProposals.map((p) => (
-              <ProposalCard key={p.address.toBase58()} proposal={p} />
+              <ProposalCard
+                key={p.address.toBase58()}
+                proposal={p}
+                walletName={walletName}
+                walletAddress={walletAddr}
+                network={network}
+                onRefresh={handleRefresh}
+              />
             ))}
           </div>
         ) : (

@@ -8,6 +8,7 @@ export const WALLET_SEED = Buffer.from('wallet');
 export const VAULT_SEED = Buffer.from('vault');
 export const INTENT_SEED = Buffer.from('intent');
 export const PROPOSAL_SEED = Buffer.from('proposal');
+export const EVENT_AUTHORITY_SEED = Buffer.from('event_authority');
 
 // Discriminators
 export const DISC_WALLET = 1;
@@ -84,13 +85,13 @@ export const PARAM_TYPE_LABELS: Record<number, string> = {
 
 // Constraint types
 export const CONSTRAINT_NONE = 0;
-export const CONSTRAINT_MAX = 1;
-export const CONSTRAINT_EXACT = 2;
+export const CONSTRAINT_LESS_THAN_U64 = 1;
+export const CONSTRAINT_GREATER_THAN_U64 = 2;
 
 export const CONSTRAINT_LABELS: Record<number, string> = {
   [CONSTRAINT_NONE]: 'None',
-  [CONSTRAINT_MAX]: 'Max',
-  [CONSTRAINT_EXACT]: 'Exact',
+  [CONSTRAINT_LESS_THAN_U64]: 'Less Than',
+  [CONSTRAINT_GREATER_THAN_U64]: 'Greater Than',
 };
 
 // Account source types
@@ -110,6 +111,15 @@ export const SOURCE_LABELS: Record<number, string> = {
 
 // Risk levels (for display, mapped from intent metadata)
 export type RiskLevel = 'critical' | 'high' | 'medium' | 'low';
+
+// Network type
+export type Network = 'localhost' | 'devnet' | 'mainnet';
+
+// AccountRole values (match @solana/kit IAccountMeta role)
+export const ROLE_READONLY = 0;
+export const ROLE_WRITABLE = 1;
+export const ROLE_READONLY_SIGNER = 2;
+export const ROLE_WRITABLE_SIGNER = 3;
 
 // RPC endpoints
 export const RPC_ENDPOINTS: Record<string, string> = {

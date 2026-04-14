@@ -53,7 +53,7 @@ pub fn propose(
     // Build expiry timestamp
     let now = chrono::Utc::now();
     let expiry_time = now + chrono::Duration::seconds(expiry_secs as i64);
-    let expiry_str = expiry_time.format("%Y-%m-%d %H:%M:%S").to_string();
+    let expiry_str = expiry_time.format("%d %b %Y %H:%M:%S").to_string();
 
     // Fetch intent to read template for message rendering
     let intent_data = rpc::fetch_account(&client, &intent_pda)?;
@@ -62,10 +62,10 @@ pub fn propose(
     // Render template with params for display
     let rendered = render_template_simple(&template.unwrap_or_default(), params_str);
 
-    // Build the offchain message
+    // Build the offchain message — must match on-chain build_message() format exactly
     let body = format!(
-        "expires {}: propose {} | wallet: {} proposal: {}",
-        expiry_str, rendered, wallet_name, proposal_index
+        "propose {} | wallet: {}; proposal: #{}; expires: {}",
+        rendered, wallet_name, proposal_index, expiry_str
     );
 
     let mut message = Vec::new();

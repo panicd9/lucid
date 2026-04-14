@@ -75,12 +75,12 @@ pub fn cancel(
     // Build expiry
     let now = chrono::Utc::now();
     let expiry_time = now + chrono::Duration::seconds(expiry_secs as i64);
-    let expiry_str = expiry_time.format("%Y-%m-%d %H:%M:%S").to_string();
+    let expiry_str = expiry_time.format("%d %b %Y %H:%M:%S").to_string();
 
-    // Build offchain message
+    // Build offchain message — must match on-chain build_message() format exactly
     let body = format!(
-        "expires {}: cancel {} | wallet: {} proposal: {}",
-        expiry_str, rendered, wallet_name, proposal_index
+        "cancel {} | wallet: {}; proposal: #{}; expires: {}",
+        rendered, wallet_name, proposal_index, expiry_str
     );
 
     let mut message = Vec::new();
