@@ -288,7 +288,10 @@ impl Proposal {
 
 /// Validate that an IntentHeader has sane values after being written from user data
 pub fn validate_intent_header(intent: &IntentHeader, account_len: usize) -> Result<(), ProgramError> {
-    if intent.proposer_count == 0 || intent.proposer_count as usize > MAX_SIGNERS {
+    if intent.proposer_count == 0 {
+        return Err(ProgramError::Custom(ERR_NO_SIGNERS));
+    }
+    if intent.proposer_count as usize > MAX_SIGNERS {
         return Err(ProgramError::Custom(ERR_TOO_MANY_SIGNERS));
     }
     if intent.approver_count == 0 || intent.approver_count as usize > MAX_SIGNERS {

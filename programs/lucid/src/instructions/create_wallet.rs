@@ -48,7 +48,10 @@ impl CreateWallet {
         require_len!(data, offset + 1);
         let proposer_count = data[offset];
         offset += 1;
-        if proposer_count == 0 || proposer_count as usize > MAX_SIGNERS {
+        if proposer_count == 0 {
+            return Err(ProgramError::Custom(ERR_NO_SIGNERS));
+        }
+        if proposer_count as usize > MAX_SIGNERS {
             return Err(ProgramError::Custom(ERR_TOO_MANY_SIGNERS));
         }
         let proposers_len = proposer_count as usize * 32;
@@ -59,7 +62,10 @@ impl CreateWallet {
         require_len!(data, offset + 1);
         let approver_count = data[offset];
         offset += 1;
-        if approver_count == 0 || approver_count as usize > MAX_SIGNERS {
+        if approver_count == 0 {
+            return Err(ProgramError::Custom(ERR_NO_SIGNERS));
+        }
+        if approver_count as usize > MAX_SIGNERS {
             return Err(ProgramError::Custom(ERR_TOO_MANY_SIGNERS));
         }
         let approvers_len = approver_count as usize * 32;

@@ -276,6 +276,10 @@ pub fn freeze(wallet_str: &str, keypair_path: &str, url: &str) -> Result<()> {
 pub fn add_intents(
     wallet_str: &str,
     intents_dir: &str,
+    proposers_str: Option<&str>,
+    approvers_str: Option<&str>,
+    approval_threshold: Option<u8>,
+    cancellation_threshold: Option<u8>,
     keypair_path: &str,
     url: &str,
 ) -> Result<()> {
@@ -309,6 +313,50 @@ pub fn add_intents(
     }
     let mut current_intent_count = wallet_data[PREFIX_LEN + 8]; // intent_count offset
 
+    // Fetch meta-intent[0] (Add) as fallback for proposer/approver lists
+    let (meta_intent_pda, _) = pda::find_intent_pda(&wallet_pubkey, 0, &program_id);
+    let meta_data = rpc::fetch_account(&client, &meta_intent_pda)
+        .context("Failed to fetch meta-intent[0] — wallet may not be initialized")?;
+    if meta_data.len() < PREFIX_LEN + INTENT_HEADER_LEN {
+        anyhow::bail!("Invalid meta-intent account data");
+    }
+    let mh = &meta_data[PREFIX_LEN..];
+    let default_approval_threshold = mh[76];
+    let default_cancellation_threshold = mh[77];
+    let meta_proposer_count = mh[78] as usize;
+    let meta_approver_count = mh[79] as usize;
+    let meta_proposers_start = PREFIX_LEN + INTENT_HEADER_LEN;
+    let meta_approvers_start = meta_proposers_start + meta_proposer_count * 32;
+    let meta_approvers_end = meta_approvers_start + meta_approver_count * 32;
+    if meta_data.len() < meta_approvers_end {
+        anyhow::bail!("Meta-intent too short for proposer/approver arrays");
+    }
+    // CLI overrides take priority, then fall back to wallet meta-intent defaults
+    let final_proposer_bytes = if let Some(ps) = proposers_str {
+        let mut bytes = Vec::new();
+        for p in ps.split(',') {
+            let pk = Pubkey::from_str(p.trim()).context("Invalid proposer address")?;
+            bytes.extend_from_slice(pk.as_ref());
+        }
+        bytes
+    } else {
+        meta_data[meta_proposers_start..meta_approvers_start].to_vec()
+    };
+
+    let final_approver_bytes = if let Some(aps) = approvers_str {
+        let mut bytes = Vec::new();
+        for a in aps.split(',') {
+            let pk = Pubkey::from_str(a.trim()).context("Invalid approver address")?;
+            bytes.extend_from_slice(pk.as_ref());
+        }
+        bytes
+    } else {
+        meta_data[meta_approvers_start..meta_approvers_end].to_vec()
+    };
+
+    let final_approval_threshold = approval_threshold.unwrap_or(default_approval_threshold);
+    let final_cancellation_threshold = cancellation_threshold.unwrap_or(default_cancellation_threshold);
+
     println!(
         "Adding {} intents to wallet {} (current count: {})",
         entries.len(),
@@ -322,7 +370,13 @@ pub fn add_intents(
         let intent_def: IntentDefinition =
             serde_json::from_str(&content).with_context(|| format!("Failed to parse {}", path.display()))?;
 
-        let intent_bytes = build_intent_bytes(&intent_def)?;
+        let intent_bytes = build_intent_bytes(
+            &intent_def,
+            final_approval_threshold,
+            final_cancellation_threshold,
+            &final_proposer_bytes,
+            &final_approver_bytes,
+        )?;
 
         let (intent_pda, _) =
             pda::find_intent_pda(&wallet_pubkey, current_intent_count, &program_id);
@@ -370,7 +424,13 @@ pub fn add_intents(
 }
 
 /// Build the on-chain byte representation of an intent (everything after the 2-byte prefix)
-fn build_intent_bytes(def: &IntentDefinition) -> Result<Vec<u8>> {
+fn build_intent_bytes(
+    def: &IntentDefinition,
+    approval_threshold: u8,
+    cancellation_threshold: u8,
+    proposer_bytes: &[u8],
+    approver_bytes: &[u8],
+) -> Result<Vec<u8>> {
     let program_id_bytes = bs58::decode(&def.program_id)
         .into_vec()
         .context("Invalid programId")?;
@@ -558,14 +618,14 @@ fn build_intent_bytes(def: &IntentDefinition) -> Result<Vec<u8>> {
     result.push(INTENT_TYPE_CUSTOM);
     // approved: u8 (zero, filled by program)
     result.push(0);
-    // approval_threshold: u8 (zero, filled by program from wallet)
-    result.push(0);
-    // cancellation_threshold: u8 (zero, filled by program from wallet)
-    result.push(0);
-    // proposer_count: u8 (zero, filled by program from wallet)
-    result.push(0);
-    // approver_count: u8 (zero, filled by program from wallet)
-    result.push(0);
+    // approval_threshold: u8
+    result.push(approval_threshold);
+    // cancellation_threshold: u8
+    result.push(cancellation_threshold);
+    // proposer_count: u8
+    result.push((proposer_bytes.len() / 32) as u8);
+    // approver_count: u8
+    result.push((approver_bytes.len() / 32) as u8);
     // param_count: u8
     result.push(def.params.len() as u8);
     // account_count: u8
@@ -581,40 +641,9 @@ fn build_intent_bytes(def: &IntentDefinition) -> Result<Vec<u8>> {
 
     assert_eq!(result.len(), INTENT_HEADER_LEN, "IntentHeader size mismatch");
 
-    // NOTE: proposers and approvers are NOT included here.
-    // The on-chain AddIntent copies them from the wallet's meta-intents.
-    // For direct AddIntent during setup, the program fills wallet/bump/index/approved/active_proposal_count
-    // but expects the rest of the data (after the header) to be: param_entries, account_entries,
-    // instruction_entries, data_segment_entries, seed_entries, byte_pool.
-    // However, proposer/approver arrays come BEFORE params in the layout.
-    // Looking at the on-chain code more carefully, AddIntent just copies the raw intent_data_raw
-    // directly after PREFIX_LEN, then overwrites wallet/bump/index/approved fields.
-    // So the caller must provide the full header + everything after it.
-    // The proposer_count and approver_count in the header determine how many 32-byte keys follow.
-    // Since we set them to 0 above, no proposer/approver arrays are expected.
-    // But then validate_intent_header checks proposer_count > 0...
-    //
-    // Actually, re-reading AddIntent: it copies intent_data_raw into the account data after PREFIX_LEN,
-    // then validates. The intent_data_raw IS the full IntentHeader + arrays + byte_pool.
-    // The program then overwrites wallet, bump, intent_index, approved, active_proposal_count.
-    // But it does NOT set proposer/approver counts -- those come from the input data.
-    // So we need to know the proposer/approver lists to include here.
-    //
-    // For the CLI, we read them from the wallet's existing meta-intents.
-    // For now, set them to 0 and let the user handle it, OR we fetch from chain.
-    // Actually for hackathon, let's just skip proposers/approvers in the raw data
-    // since AddIntent is only available during setup phase and the program validates.
-    // The user needs to include proper proposer/approver data.
-
-    // For now, we'll include empty proposer/approver arrays (count=0 in header)
-    // This will fail validation. Let's fix: we need to include the proposer/approver data.
-    // But we don't have it in the intent definition JSON.
-    // The intent definition doesn't contain proposer/approver info - that comes from the wallet.
-    // So we need to fetch the wallet's meta-intent to get proposer/approver lists.
-
-    // SKIP proposer/approver bytes for now (they're 0-length since counts are 0)
-    // The on-chain program will reject this, but the format is correct.
-    // In practice, the add_intents command should fetch existing intent[0] to get proposer/approver lists.
+    // Proposer and approver arrays (copied from wallet's meta-intent)
+    result.extend_from_slice(proposer_bytes);
+    result.extend_from_slice(approver_bytes);
 
     // Param entries
     let _lit_seg_idx = 0;

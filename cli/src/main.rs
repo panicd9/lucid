@@ -172,6 +172,18 @@ enum WalletAction {
         /// Directory containing intent JSON files
         #[arg(long)]
         intents: String,
+        /// Proposer pubkeys (comma-separated). Omit to inherit from wallet.
+        #[arg(long)]
+        proposers: Option<String>,
+        /// Approver pubkeys (comma-separated). Omit to inherit from wallet.
+        #[arg(long)]
+        approvers: Option<String>,
+        /// Approval threshold. Omit to inherit from wallet.
+        #[arg(long)]
+        approval_threshold: Option<u8>,
+        /// Cancellation threshold. Omit to inherit from wallet.
+        #[arg(long)]
+        cancellation_threshold: Option<u8>,
         /// Path to keypair file
         #[arg(long, default_value = "~/.config/solana/id.json")]
         keypair: String,
@@ -214,9 +226,22 @@ fn main() {
             WalletAction::AddIntents {
                 wallet,
                 intents,
+                proposers,
+                approvers,
+                approval_threshold,
+                cancellation_threshold,
                 keypair,
                 url,
-            } => commands::wallet::add_intents(&wallet, &intents, &keypair, &url),
+            } => commands::wallet::add_intents(
+                &wallet,
+                &intents,
+                proposers.as_deref(),
+                approvers.as_deref(),
+                approval_threshold,
+                cancellation_threshold,
+                &keypair,
+                &url,
+            ),
         },
         Commands::Generate { idl, output } => commands::generate::generate(&idl, &output),
         Commands::Verify { intents, idl } => commands::verify::verify(&intents, idl.as_deref()),
