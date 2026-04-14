@@ -1,5 +1,6 @@
 #[allow(dead_code)]
 mod commands;
+mod intent_utils;
 mod pda;
 mod rpc;
 #[allow(dead_code)]

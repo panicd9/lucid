@@ -1,6 +1,7 @@
 use solana_signer::Signer;
 
-use lucid_tests::helpers::{self, ed25519, instructions, pda, setup};
+mod helpers;
+use helpers::{ed25519, instructions, pda, setup};
 
 /// Helper: create wallet + add a custom intent, return (WalletSetup, intent_pda, intent_index)
 fn wallet_with_custom_intent(

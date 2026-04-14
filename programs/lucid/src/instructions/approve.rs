@@ -14,7 +14,7 @@ pub struct Approve;
 
 impl Approve {
     /// Accounts: [wallet, intent, proposal, instructions_sysvar]
-    pub fn process(_data: &[u8], accounts: &mut [AccountView], program_id: &Address) -> ProgramResult {
+    pub fn process(accounts: &mut [AccountView], program_id: &Address) -> ProgramResult {
         if accounts.len() < 4 {
             return Err(ProgramError::NotEnoughAccountKeys);
         }

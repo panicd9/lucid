@@ -1,6 +1,7 @@
 use solana_signer::Signer;
 
-use lucid_tests::helpers::{self, instructions, pda, setup};
+mod helpers;
+use helpers::{instructions, pda, setup};
 
 // ─────────────────────��────────────────────────────���─────────────────────
 // CreateWallet

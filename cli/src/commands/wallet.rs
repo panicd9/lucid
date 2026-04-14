@@ -12,6 +12,7 @@ use std::str::FromStr;
 use crate::pda;
 use crate::rpc;
 use crate::types::*;
+use crate::intent_utils;
 
 pub fn create(
     name: &str,
@@ -167,7 +168,7 @@ pub fn show(wallet_str: &str, url: &str) -> Result<()> {
                 let ih = &idata[PREFIX_LEN..];
                 let timelock = u32::from_le_bytes(ih[32..36].try_into()?);
                 let _active_proposals = u16::from_le_bytes(ih[36..38].try_into()?);
-                let byte_pool_len = u16::from_le_bytes(ih[38..40].try_into()?);
+                let _byte_pool_len = u16::from_le_bytes(ih[38..40].try_into()?);
                 let intent_index = ih[41];
                 let intent_type = ih[42];
                 let approved = ih[43];
@@ -175,14 +176,14 @@ pub fn show(wallet_str: &str, url: &str) -> Result<()> {
                 let cancellation_threshold = ih[45];
                 let proposer_count = ih[46];
                 let approver_count = ih[47];
-                let param_count = ih[48];
-                let account_count = ih[49];
-                let instruction_count = ih[50];
-                let data_segment_count = ih[51];
-                let seed_count = ih[52];
+                let _param_count = ih[48];
+                let _account_count = ih[49];
+                let _instruction_count = ih[50];
+                let _data_segment_count = ih[51];
+                let _seed_count = ih[52];
 
                 // Read template from byte_pool
-                let template = read_template_from_data(&idata, ih, byte_pool_len, proposer_count, approver_count, param_count, account_count, instruction_count, data_segment_count, seed_count);
+                let template = intent_utils::read_template_string(&idata);
 
                 let status_str = if approved == 1 {
                     "Active".green()
@@ -233,43 +234,6 @@ pub fn show(wallet_str: &str, url: &str) -> Result<()> {
     Ok(())
 }
 
-fn read_template_from_data(
-    full_data: &[u8],
-    _header: &[u8],
-    byte_pool_len: u16,
-    proposer_count: u8,
-    approver_count: u8,
-    param_count: u8,
-    account_count: u8,
-    instruction_count: u8,
-    data_segment_count: u8,
-    seed_count: u8,
-) -> Option<String> {
-    if byte_pool_len < 4 {
-        return None;
-    }
-    let bp_offset = PREFIX_LEN + INTENT_HEADER_LEN
-        + (proposer_count as usize * 32)
-        + (approver_count as usize * 32)
-        + (param_count as usize * PARAM_ENTRY_SIZE)
-        + (account_count as usize * ACCOUNT_ENTRY_SIZE)
-        + (instruction_count as usize * INSTRUCTION_ENTRY_SIZE)
-        + (data_segment_count as usize * DATA_SEGMENT_ENTRY_SIZE)
-        + (seed_count as usize * SEED_ENTRY_SIZE);
-
-    if bp_offset + 4 > full_data.len() {
-        return None;
-    }
-    let tmpl_offset = u16::from_le_bytes([full_data[bp_offset], full_data[bp_offset + 1]]) as usize;
-    let tmpl_len = u16::from_le_bytes([full_data[bp_offset + 2], full_data[bp_offset + 3]]) as usize;
-    let abs_start = bp_offset + 4 + tmpl_offset;
-    let abs_end = abs_start + tmpl_len;
-    if abs_end > full_data.len() {
-        return None;
-    }
-    String::from_utf8(full_data[abs_start..abs_end].to_vec()).ok()
-}
-
 pub fn freeze(wallet_str: &str, keypair_path: &str, url: &str) -> Result<()> {
     let client = rpc::create_client(url);
     let payer = rpc::load_keypair(keypair_path)?;
@@ -280,8 +244,12 @@ pub fn freeze(wallet_str: &str, keypair_path: &str, url: &str) -> Result<()> {
     // Instruction data: [disc=4]
     let data = vec![4u8];
 
+    // Derive meta_intent (intent index 0) - required by on-chain freeze_wallet
+    let (meta_intent, _) = pda::find_intent_pda(&wallet_pubkey, 0, &program_id);
+
     let accounts = vec![
         AccountMeta::new(wallet_pubkey, false),
+        AccountMeta::new_readonly(meta_intent, false),
         AccountMeta::new(payer.pubkey(), true),
     ];
 

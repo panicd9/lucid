@@ -140,21 +140,6 @@ pub fn read_params_data<'a>(data: &'a [u8], proposal: &Proposal) -> Result<&'a [
     Ok(&data[start..end])
 }
 
-/// Write params_data into proposal account raw data
-pub fn write_params_data(
-    data: &mut [u8],
-    _proposal: &Proposal,
-    params: &[u8],
-) -> Result<(), ProgramError> {
-    let start = Proposal::HEADER_LEN;
-    let end = start + params.len();
-    if end > data.len() {
-        return Err(ProgramError::InvalidAccountData);
-    }
-    data[start..end].copy_from_slice(params);
-    Ok(())
-}
-
 /// Get the byte size of a parameter type
 pub fn param_type_size(param_type: u8) -> usize {
     use crate::state::constants::*;

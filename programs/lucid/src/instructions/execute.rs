@@ -544,6 +544,9 @@ fn emit_receipt(
     pos += rendered_len;
 
     let (_, ea_bump) = Address::find_program_address(&[EVENT_AUTHORITY_SEED], program_id);
+    // Append the bump byte so emit_event can use create_program_address
+    data[pos] = ea_bump;
+    pos += 1;
     let ea_bump_bytes = [ea_bump];
     let ea_seeds = [
         Seed::from(EVENT_AUTHORITY_SEED),

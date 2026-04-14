@@ -3,6 +3,7 @@ use sha2::{Digest, Sha256};
 use std::path::Path;
 
 use crate::types::*;
+use crate::intent_utils;
 
 /// Normalized instruction/account/arg types used by the generator.
 struct NormalizedIdl {
@@ -115,7 +116,7 @@ pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
 
     for ix in &idl.instructions {
         let intent = generate_intent_from_instruction(ix, &idl.address)?;
-        let filename = format!("{}.json", snake_case(&ix.name));
+        let filename = format!("{}.json", intent_utils::snake_case(&ix.name));
         let filepath = Path::new(output_dir).join(&filename);
         let json = serde_json::to_string_pretty(&intent)?;
         std::fs::write(&filepath, json)?;
@@ -141,7 +142,7 @@ fn generate_intent_from_instruction(
     let discriminator = if let Some(disc) = &ix.discriminator {
         disc.clone()
     } else {
-        let disc_input = format!("global:{}", snake_case(&ix.name));
+        let disc_input = format!("global:{}", intent_utils::snake_case(&ix.name));
         let mut hasher = Sha256::new();
         hasher.update(disc_input.as_bytes());
         let hash = hasher.finalize();
@@ -151,7 +152,7 @@ fn generate_intent_from_instruction(
     // Map args to params
     let mut params: Vec<ParamDef> = Vec::new();
     for arg in &ix.args {
-        let param_type = map_idl_type(&arg.arg_type);
+        let param_type = intent_utils::map_idl_type(&arg.arg_type);
         params.push(ParamDef {
             name: arg.name.clone(),
             param_type,
@@ -343,32 +344,6 @@ fn extract_pda_seeds(
     }
 }
 
-fn map_idl_type(ty: &serde_json::Value) -> String {
-    if let Some(s) = ty.as_str() {
-        match s {
-            "publicKey" | "pubkey" => "address".to_string(),
-            "u8" => "u8".to_string(),
-            "u16" => "u16".to_string(),
-            "u32" => "u32".to_string(),
-            "u64" => "u64".to_string(),
-            "u128" => "u128".to_string(),
-            "i64" => "i64".to_string(),
-            "bool" => "bool".to_string(),
-            "string" => "string".to_string(),
-            _ => "u64".to_string(),
-        }
-    } else if let Some(obj) = ty.as_object() {
-        if obj.contains_key("option") {
-            if let Some(inner) = obj.get("option") {
-                return map_idl_type(inner);
-            }
-        }
-        "u64".to_string()
-    } else {
-        "u64".to_string()
-    }
-}
-
 fn infer_account_source(
     acct: &NormalizedAccount,
     params: &[ParamDef],
@@ -427,7 +402,7 @@ fn infer_account_source(
 }
 
 fn generate_template(ix_name: &str, args: &[NormalizedArg]) -> String {
-    let readable_name = snake_case(ix_name).replace('_', " ");
+    let readable_name = intent_utils::snake_case(ix_name).replace('_', " ");
 
     // Special patterns
     let name_lower = ix_name.to_lowercase();
@@ -529,15 +504,4 @@ fn classify_risk(
 
     // Default: LOW
     ("LOW".to_string(), 0)
-}
-
-fn snake_case(s: &str) -> String {
-    let mut result = String::new();
-    for (i, c) in s.chars().enumerate() {
-        if c.is_uppercase() && i > 0 {
-            result.push('_');
-        }
-        result.push(c.to_lowercase().next().unwrap_or(c));
-    }
-    result
 }

@@ -3102,13 +3102,28 @@ checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 name = "lucid"
 version = "0.1.0"
 dependencies = [
+ "ed25519-dalek 2.2.0",
  "five8_const 1.0.0",
+ "litesvm",
+ "lucid-client",
  "pinocchio 0.11.1",
  "pinocchio-log",
  "pinocchio-pubkey",
  "pinocchio-system",
+ "rand 0.8.5",
+ "serde",
+ "serde_json",
  "shank",
+ "solana-account 3.4.0",
  "solana-address 2.6.0",
+ "solana-hash 3.1.0",
+ "solana-instruction 3.4.0",
+ "solana-keypair 3.1.2",
+ "solana-message 3.1.0",
+ "solana-sdk-ids 3.1.0",
+ "solana-signer 3.0.0",
+ "solana-system-interface 2.0.0",
+ "solana-transaction 3.1.0",
 ]
 
 [[package]]
@@ -3144,28 +3159,6 @@ dependencies = [
  "solana-cpi 3.1.0",
  "solana-instruction 3.4.0",
  "solana-program-error 3.0.1",
-]
-
-[[package]]
-name = "lucid-tests"
-version = "0.1.0"
-dependencies = [
- "ed25519-dalek 2.2.0",
- "litesvm",
- "lucid-client",
- "rand 0.8.5",
- "serde",
- "serde_json",
- "solana-account 3.4.0",
- "solana-address 2.6.0",
- "solana-hash 3.1.0",
- "solana-instruction 3.4.0",
- "solana-keypair 3.1.2",
- "solana-message 3.1.0",
- "solana-sdk-ids 3.1.0",
- "solana-signer 3.0.0",
- "solana-system-interface 2.0.0",
- "solana-transaction 3.1.0",
 ]
 
 [[package]]

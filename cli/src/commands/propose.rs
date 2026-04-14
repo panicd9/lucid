@@ -11,6 +11,7 @@ use std::str::FromStr;
 use crate::pda;
 use crate::rpc;
 use crate::types::*;
+use crate::intent_utils;
 
 pub fn propose(
     wallet_str: &str,
@@ -51,35 +52,22 @@ pub fn propose(
     };
 
     // Build expiry timestamp
-    let now = chrono::Utc::now();
-    let expiry_time = now + chrono::Duration::seconds(expiry_secs as i64);
-    let expiry_str = expiry_time.format("%d %b %Y %H:%M:%S").to_string();
+    let expiry_str = intent_utils::format_expiry(expiry_secs);
 
     // Fetch intent to read template for message rendering
     let intent_data = rpc::fetch_account(&client, &intent_pda)?;
-    let template = read_template_string(&intent_data);
+    let template = intent_utils::read_template_string(&intent_data);
 
     // Render template with params for display
     let rendered = render_template_simple(&template.unwrap_or_default(), params_str);
 
-    // Build the offchain message — must match on-chain build_message() format exactly
+    // Build the offchain message
     let body = format!(
         "propose {} | wallet: {}; proposal: #{}; expires: {}",
         rendered, wallet_name, proposal_index, expiry_str
     );
 
-    let mut message = Vec::new();
-    // \xffsolana offchain (16 bytes)
-    message.extend_from_slice(b"\xffsolana offchain");
-    // version: 0
-    message.push(0);
-    // format: 0 (ASCII)
-    message.push(0);
-    // length: u16 LE
-    let body_bytes = body.as_bytes();
-    message.extend_from_slice(&(body_bytes.len() as u16).to_le_bytes());
-    // body
-    message.extend_from_slice(body_bytes);
+    let message = intent_utils::build_offchain_message(&body);
 
     // Build Ed25519 precompile instruction
     let ed25519_ix = crate::rpc::build_ed25519_instruction(&payer, &message)?;
@@ -219,47 +207,6 @@ fn parse_params_to_bytes(
     }
 
     Ok(result)
-}
-
-fn read_template_string(data: &[u8]) -> Option<String> {
-    if data.len() < PREFIX_LEN + INTENT_HEADER_LEN {
-        return None;
-    }
-    let ih = &data[PREFIX_LEN..];
-    let byte_pool_len = u16::from_le_bytes([ih[38], ih[39]]) as usize;
-    let proposer_count = ih[46] as usize;
-    let approver_count = ih[47] as usize;
-    let param_count = ih[48] as usize;
-    let account_count = ih[49] as usize;
-    let instruction_count = ih[50] as usize;
-    let data_segment_count = ih[51] as usize;
-    let seed_count = ih[52] as usize;
-
-    if byte_pool_len < 4 {
-        return None;
-    }
-
-    let bp_offset = PREFIX_LEN + INTENT_HEADER_LEN
-        + (proposer_count * 32)
-        + (approver_count * 32)
-        + (param_count * PARAM_ENTRY_SIZE)
-        + (account_count * ACCOUNT_ENTRY_SIZE)
-        + (instruction_count * INSTRUCTION_ENTRY_SIZE)
-        + (data_segment_count * DATA_SEGMENT_ENTRY_SIZE)
-        + (seed_count * SEED_ENTRY_SIZE);
-
-    if bp_offset + 4 > data.len() {
-        return None;
-    }
-
-    let tmpl_offset = u16::from_le_bytes([data[bp_offset], data[bp_offset + 1]]) as usize;
-    let tmpl_len = u16::from_le_bytes([data[bp_offset + 2], data[bp_offset + 3]]) as usize;
-    let abs_start = bp_offset + 4 + tmpl_offset;
-    let abs_end = abs_start + tmpl_len;
-    if abs_end > data.len() {
-        return None;
-    }
-    String::from_utf8(data[abs_start..abs_end].to_vec()).ok()
 }
 
 fn render_template_simple(template: &str, params_str: Option<&str>) -> String {

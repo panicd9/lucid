@@ -11,6 +11,7 @@ use std::str::FromStr;
 use crate::pda;
 use crate::rpc;
 use crate::types::*;
+use crate::intent_utils;
 
 pub fn execute(
     wallet_str: &str,
@@ -32,33 +33,23 @@ pub fn execute(
     let wd = &wallet_data[PREFIX_LEN..];
     let intent_count = wd[8];
 
-    // Find proposal
-    let mut found_intent_pda = None;
-    let mut found_proposal_pda = None;
+    // Find proposal by scanning intents
+    let (intent_pda, proposal_pda, proposal_data) =
+        intent_utils::find_proposal_for_wallet(&client, &wallet_pubkey, proposal_index, intent_count, &program_id)?;
+
+    // Determine intent index from the PDA
     let mut found_intent_index = 0u8;
-
     for i in 0..intent_count {
-        let (intent_pda, _) = pda::find_intent_pda(&wallet_pubkey, i, &program_id);
-        let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, proposal_index, &program_id);
-
-        if rpc::fetch_account(&client, &proposal_pda).is_ok() {
-            found_intent_pda = Some(intent_pda);
-            found_proposal_pda = Some(proposal_pda);
+        let (ipda, _) = pda::find_intent_pda(&wallet_pubkey, i, &program_id);
+        if ipda == intent_pda {
             found_intent_index = i;
             break;
         }
     }
 
-    let intent_pda = found_intent_pda.ok_or_else(|| anyhow::anyhow!("Proposal not found for index {}", proposal_index))?;
-    let proposal_pda = found_proposal_pda.unwrap();
-
     // Verify proposal is approved
-    let proposal_data = rpc::fetch_account(&client, &proposal_pda)?;
-    if proposal_data.len() < PREFIX_LEN + PROPOSAL_DATA_LEN {
-        anyhow::bail!("Invalid proposal account data");
-    }
     let pd = &proposal_data[PREFIX_LEN..];
-    let status = pd[108]; // status offset: wallet(32)+intent(32)+proposal_index(8)+proposer(32)+approval_bitmap(2)+cancellation_bitmap(2)=108
+    let status = pd[108];
     if status != STATUS_APPROVED {
         anyhow::bail!(
             "Proposal is not approved (status: {})",

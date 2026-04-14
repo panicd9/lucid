@@ -8,14 +8,20 @@ use crate::state::constants::*;
 pub struct EmitEvent;
 
 impl EmitEvent {
-    pub fn process(accounts: &mut [AccountView], program_id: &Address) -> ProgramResult {
-        let (event_authority_pda, _) = Address::find_program_address(
-            &[EVENT_AUTHORITY_SEED],
+    pub fn process(data: &[u8], accounts: &mut [AccountView], program_id: &Address) -> ProgramResult {
+        // The bump byte is appended at the end of the data by execute.rs
+        if data.is_empty() {
+            return Err(ProgramError::InvalidInstructionData);
+        }
+        let bump = data[data.len() - 1];
+
+        let expected_pda = Address::create_program_address(
+            &[EVENT_AUTHORITY_SEED, &[bump]],
             program_id,
-        );
+        ).map_err(|_| ProgramError::InvalidSeeds)?;
 
         let has_authority = accounts.iter().any(|a| {
-            a.address() == &event_authority_pda && a.is_signer()
+            a.address() == &expected_pda && a.is_signer()
         });
 
         if !has_authority {

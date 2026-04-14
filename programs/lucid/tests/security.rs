@@ -2,7 +2,8 @@ use solana_keypair::Keypair;
 use solana_signer::Signer;
 
 use lucid_client::instructions::CreateWalletBuilder;
-use lucid_tests::helpers::{self, ed25519, instructions, pda, setup};
+mod helpers;
+use helpers::{ed25519, instructions, pda, setup};
 
 // ────────────────────────────────────────────────────────────────────────
 // Setup-phase enforcement

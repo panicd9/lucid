@@ -111,11 +111,12 @@ fn parse_timestamp_to_unix(s: &[u8]) -> Result<i64, ProgramError> {
     let sec = parse_decimal(&s[18..20])? as i64;
 
     let days_in_months: [i64; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    let mut total_days: i64 = 0;
 
-    for y in 1970..year {
-        total_days += if is_leap(y) { 366 } else { 365 };
-    }
+    // O(1) leap day calculation: leaps(y) = y/4 - y/100 + y/400
+    let leaps = |y: i64| -> i64 { y / 4 - y / 100 + y / 400 };
+    let leap_days = leaps(year - 1) - leaps(1969);
+    let mut total_days: i64 = 365 * (year - 1970) + leap_days;
+
     for m in 1..month {
         total_days += days_in_months[(m - 1) as usize];
         if m == 2 && is_leap(year) {

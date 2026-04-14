@@ -36,14 +36,14 @@ fn process_instruction(
         Some((&4, _))    => FreezeWallet::process(accounts, program_id),
         // Proposal flow
         Some((&10, data)) => Propose::process(data, accounts, program_id),
-        Some((&11, data)) => Approve::process(data, accounts, program_id),
-        Some((&12, data)) => Cancel::process(data, accounts, program_id),
+        Some((&11, _)) => Approve::process(accounts, program_id),
+        Some((&12, _)) => Cancel::process(accounts, program_id),
         // Execution
         Some((&20, _))    => Execute::process(accounts, program_id),
         // Cleanup
         Some((&30, _))    => Cleanup::process(accounts, program_id),
         // Event emission (CPI from self)
-        Some((&DISC_EMIT_EVENT, _)) => EmitEvent::process(accounts, program_id),
+        Some((&DISC_EMIT_EVENT, data)) => EmitEvent::process(data, accounts, program_id),
         _ => Err(ProgramError::InvalidInstructionData),
     }
 }

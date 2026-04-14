@@ -4,6 +4,7 @@ use sha2::{Digest, Sha256};
 use std::path::Path;
 
 use crate::types::*;
+use crate::intent_utils;
 
 /// Known program definitions for Tier 1 verification
 struct KnownInstruction {
@@ -381,7 +382,7 @@ fn verify_against_idl(
     let mut matched_ix: Option<&AnchorInstruction> = None;
 
     for ix in &idl.instructions {
-        let disc_input = format!("global:{}", snake_case(&ix.name));
+        let disc_input = format!("global:{}", intent_utils::snake_case(&ix.name));
         let mut hasher = Sha256::new();
         hasher.update(disc_input.as_bytes());
         let hash = hasher.finalize();
@@ -396,7 +397,7 @@ fn verify_against_idl(
     if matched_ix.is_none() {
         // Try to find by name as fallback
         matched_ix = idl.instructions.iter().find(|ix| {
-            snake_case(&ix.name) == snake_case(&intent.instruction_name)
+            intent_utils::snake_case(&ix.name) == intent_utils::snake_case(&intent.instruction_name)
         });
         if matched_ix.is_some() {
             issues.push("Discriminator does not match SHA-256(\"global:{name}\")[..8]".to_string());
@@ -412,7 +413,7 @@ fn verify_against_idl(
     let ix = matched_ix.unwrap();
 
     // Verify name match
-    if snake_case(&ix.name) != snake_case(&intent.instruction_name) {
+    if intent_utils::snake_case(&ix.name) != intent_utils::snake_case(&intent.instruction_name) {
         warnings.push(format!(
             "Name mismatch: intent says '{}', IDL has '{}'",
             intent.instruction_name, ix.name
@@ -420,7 +421,7 @@ fn verify_against_idl(
     }
 
     // Verify discriminator = SHA-256("global:{name}")[..8]
-    let disc_input = format!("global:{}", snake_case(&ix.name));
+    let disc_input = format!("global:{}", intent_utils::snake_case(&ix.name));
     let mut hasher = Sha256::new();
     hasher.update(disc_input.as_bytes());
     let hash = hasher.finalize();
@@ -472,7 +473,7 @@ fn verify_against_idl(
         let intent_param = &intent.params[i];
         let idl_arg = &ix.args[i];
 
-        let expected_type = map_idl_type_to_param(&idl_arg.arg_type);
+        let expected_type = intent_utils::map_idl_type(&idl_arg.arg_type);
         if intent_param.param_type != expected_type {
             warnings.push(format!(
                 "Param '{}' type mismatch: intent='{}', IDL expects '{}'",
@@ -493,32 +494,3 @@ fn verify_against_idl(
     }
 }
 
-fn map_idl_type_to_param(ty: &serde_json::Value) -> String {
-    if let Some(s) = ty.as_str() {
-        match s {
-            "publicKey" | "pubkey" => "address".to_string(),
-            "u8" => "u8".to_string(),
-            "u16" => "u16".to_string(),
-            "u32" => "u32".to_string(),
-            "u64" => "u64".to_string(),
-            "u128" => "u128".to_string(),
-            "i64" => "i64".to_string(),
-            "bool" => "bool".to_string(),
-            "string" => "string".to_string(),
-            _ => "u64".to_string(),
-        }
-    } else {
-        "u64".to_string()
-    }
-}
-
-fn snake_case(s: &str) -> String {
-    let mut result = String::new();
-    for (i, c) in s.chars().enumerate() {
-        if c.is_uppercase() && i > 0 {
-            result.push('_');
-        }
-        result.push(c.to_lowercase().next().unwrap_or(c));
-    }
-    result
-}
