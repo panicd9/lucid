@@ -63,7 +63,7 @@ pub fn execute(
         anyhow::bail!("Invalid intent account data");
     }
     let ih = &intent_data[PREFIX_LEN..];
-    let intent_type = ih[42];
+    let intent_type = ih[74];
 
     // Derive vault and event authority
     let (vault_pda, _) = pda::find_vault_pda(&wallet_pubkey, &program_id);
@@ -147,13 +147,13 @@ fn build_remaining_accounts_for_custom(
     _program_id: &Pubkey,
 ) -> Result<Vec<AccountMeta>> {
     let ih = &intent_data[PREFIX_LEN..];
-    let proposer_count = ih[46] as usize;
-    let approver_count = ih[47] as usize;
-    let param_count = ih[48] as usize;
-    let account_count = ih[49] as usize;
-    let instruction_count = ih[50] as usize;
-    let data_segment_count = ih[51] as usize;
-    let seed_count = ih[52] as usize;
+    let proposer_count = ih[78] as usize;
+    let approver_count = ih[79] as usize;
+    let param_count = ih[80] as usize;
+    let account_count = ih[81] as usize;
+    let instruction_count = ih[82] as usize;
+    let data_segment_count = ih[83] as usize;
+    let seed_count = ih[84] as usize;
 
     let accounts_offset = PREFIX_LEN + INTENT_HEADER_LEN
         + (proposer_count * 32)

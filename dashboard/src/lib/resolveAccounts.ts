@@ -163,15 +163,15 @@ async function resolveCustomAccounts(
   if (!intentInfo) throw new Error('Intent account not found');
   const rawIntent = Buffer.from(intentInfo.data);
 
-  // Parse header fields
+  // Parse header fields — IntentHeader: wallet(32) + target_program(32) + timelock(4) + active_proposals(2) + byte_pool_len(2) + bump(1) + ...
   const ih = rawIntent.subarray(PREFIX_LEN);
-  const proposerCount = ih[46];
-  const approverCount = ih[47];
-  const paramCount = ih[48];
-  const accountCount = ih[49];
-  const instructionCount = ih[50];
-  const dataSegmentCount = ih[51];
-  const seedCount = ih[52];
+  const proposerCount = ih[78];
+  const approverCount = ih[79];
+  const paramCount = ih[80];
+  const accountCount = ih[81];
+  const instructionCount = ih[82];
+  const dataSegmentCount = ih[83];
+  const seedCount = ih[84];
 
   // Calculate offsets
   const accountsOffset =

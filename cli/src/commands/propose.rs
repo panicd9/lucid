@@ -128,9 +128,9 @@ fn parse_params_to_bytes(
     }
 
     let ih = &intent_data[PREFIX_LEN..];
-    let param_count = ih[48] as usize;
-    let proposer_count = ih[46] as usize;
-    let approver_count = ih[47] as usize;
+    let param_count = ih[80] as usize;
+    let proposer_count = ih[78] as usize;
+    let approver_count = ih[79] as usize;
 
     // Read param entries to get their types
     let params_offset = PREFIX_LEN + INTENT_HEADER_LEN + (proposer_count * 32) + (approver_count * 32);

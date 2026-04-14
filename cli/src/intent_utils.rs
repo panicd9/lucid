@@ -13,14 +13,15 @@ pub fn read_template_string(data: &[u8]) -> Option<String> {
         return None;
     }
     let ih = &data[PREFIX_LEN..];
-    let byte_pool_len = u16::from_le_bytes([ih[38], ih[39]]) as usize;
-    let proposer_count = ih[46] as usize;
-    let approver_count = ih[47] as usize;
-    let param_count = ih[48] as usize;
-    let account_count = ih[49] as usize;
-    let instruction_count = ih[50] as usize;
-    let data_segment_count = ih[51] as usize;
-    let seed_count = ih[52] as usize;
+    // IntentHeader: wallet(32) + target_program(32) + timelock(4) + active_proposals(2) + byte_pool_len(2) + bump(1) + ...
+    let byte_pool_len = u16::from_le_bytes([ih[70], ih[71]]) as usize;
+    let proposer_count = ih[78] as usize;
+    let approver_count = ih[79] as usize;
+    let param_count = ih[80] as usize;
+    let account_count = ih[81] as usize;
+    let instruction_count = ih[82] as usize;
+    let data_segment_count = ih[83] as usize;
+    let seed_count = ih[84] as usize;
 
     if byte_pool_len < 4 {
         return None;
@@ -57,9 +58,9 @@ pub fn render_template_with_params(template: &str, intent_data: &[u8], params_da
     }
 
     let ih = &intent_data[PREFIX_LEN..];
-    let param_count = ih[48] as usize;
-    let proposer_count = ih[46] as usize;
-    let approver_count = ih[47] as usize;
+    let param_count = ih[80] as usize;
+    let proposer_count = ih[78] as usize;
+    let approver_count = ih[79] as usize;
 
     let params_entry_offset = PREFIX_LEN + INTENT_HEADER_LEN + (proposer_count * 32) + (approver_count * 32);
 

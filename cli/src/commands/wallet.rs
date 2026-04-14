@@ -166,21 +166,23 @@ pub fn show(wallet_str: &str, url: &str) -> Result<()> {
                     continue;
                 }
                 let ih = &idata[PREFIX_LEN..];
-                let timelock = u32::from_le_bytes(ih[32..36].try_into()?);
-                let _active_proposals = u16::from_le_bytes(ih[36..38].try_into()?);
-                let _byte_pool_len = u16::from_le_bytes(ih[38..40].try_into()?);
-                let intent_index = ih[41];
-                let intent_type = ih[42];
-                let approved = ih[43];
-                let approval_threshold = ih[44];
-                let cancellation_threshold = ih[45];
-                let proposer_count = ih[46];
-                let approver_count = ih[47];
-                let _param_count = ih[48];
-                let _account_count = ih[49];
-                let _instruction_count = ih[50];
-                let _data_segment_count = ih[51];
-                let _seed_count = ih[52];
+                // IntentHeader layout: wallet(32) + target_program(32) + timelock(4) + active_proposals(2) + byte_pool_len(2) + bump(1) + ...
+                let timelock = u32::from_le_bytes(ih[64..68].try_into()?);
+                let _active_proposals = u16::from_le_bytes(ih[68..70].try_into()?);
+                let _byte_pool_len = u16::from_le_bytes(ih[70..72].try_into()?);
+                let _bump = ih[72];
+                let intent_index = ih[73];
+                let intent_type = ih[74];
+                let approved = ih[75];
+                let approval_threshold = ih[76];
+                let cancellation_threshold = ih[77];
+                let proposer_count = ih[78];
+                let approver_count = ih[79];
+                let _param_count = ih[80];
+                let _account_count = ih[81];
+                let _instruction_count = ih[82];
+                let _data_segment_count = ih[83];
+                let _seed_count = ih[84];
 
                 // Read template from byte_pool
                 let template = intent_utils::read_template_string(&idata);
