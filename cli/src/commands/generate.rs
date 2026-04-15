@@ -178,7 +178,24 @@ fn generate_intent_from_instruction(
     let mut all_seeds: Vec<SeedDef> = Vec::new();
 
     for acct in &ix.accounts {
-        let (source, source_data) = infer_account_source(acct, &params, &ix.accounts, idl_types);
+        let (mut source, source_data) = infer_account_source(acct, &params, &ix.accounts, idl_types);
+
+        // Unresolved accounts — create a synthetic address param so the
+        // proposer supplies it explicitly and the source_data index is correct.
+        let source_data = if source == "unresolved" {
+            let param_idx = params.len();
+            params.push(ParamDef {
+                name: acct.name.clone(),
+                param_type: "address".to_string(),
+                constraint_type: "none".to_string(),
+                constraint_value: 0,
+                display_decimals: 0,
+            });
+            source = "param".to_string();
+            Some(serde_json::Value::Number(serde_json::Number::from(param_idx)))
+        } else {
+            source_data
+        };
 
         // Extract seeds for PDA accounts
         let final_source_data = if source == "pda" {
@@ -469,9 +486,8 @@ fn infer_account_source(
         }
     }
 
-    // Default — warn and fall back to param
-    eprintln!("  WARNING: account '{}' could not be auto-resolved — defaulting to source \"param\" (manual fix needed)", acct.name);
-    ("param".to_string(), None)
+    // Unresolved — caller will create a synthetic param
+    ("unresolved".to_string(), None)
 }
 
 fn generate_template(ix_name: &str, args: &[NormalizedArg]) -> String {
