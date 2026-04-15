@@ -210,7 +210,8 @@ pub fn verify(intents_dir: &str, idl_path: Option<&str>) -> Result<()> {
 
         let content = std::fs::read_to_string(&path)?;
 
-        // Compute content hash for tamper detection
+        // File content hash — fingerprints the JSON source for offline tamper detection.
+        // Note: add-intents hashes the serialized on-chain bytes instead (for on-chain verification).
         let mut content_hasher = Sha256::new();
         content_hasher.update(content.as_bytes());
         let content_hash = content_hasher.finalize();

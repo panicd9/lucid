@@ -111,7 +111,7 @@ fn parse_idl(content: &str) -> Result<NormalizedIdl> {
     Ok(NormalizedIdl { name, address, instructions: normalized_ixs })
 }
 
-pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
+pub fn generate(idl_path: &str, output_dir: &str, timelock_override: Option<u32>) -> Result<()> {
     let idl_content = std::fs::read_to_string(idl_path)
         .with_context(|| format!("Failed to read IDL: {}", idl_path))?;
     let idl = parse_idl(&idl_content)?;
@@ -122,10 +122,17 @@ pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
 
     std::fs::create_dir_all(output_dir)?;
 
-    println!("Generating intents from IDL: {}", idl.name);
+    if let Some(t) = timelock_override {
+        println!("Generating intents from IDL: {} (timelock override: {}s)", idl.name, t);
+    } else {
+        println!("Generating intents from IDL: {}", idl.name);
+    }
 
     for ix in &idl.instructions {
-        let intent = generate_intent_from_instruction(ix, &idl.address, &idl_types)?;
+        let mut intent = generate_intent_from_instruction(ix, &idl.address, &idl_types)?;
+        if let Some(t) = timelock_override {
+            intent.timelock_seconds = t;
+        }
         let filename = format!("{}.json", intent_utils::snake_case(&ix.name));
         let filepath = Path::new(output_dir).join(&filename);
         let json = serde_json::to_string_pretty(&intent)?;

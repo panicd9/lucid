@@ -30,8 +30,11 @@ enum Commands {
         /// Output directory for intent JSON files
         #[arg(long)]
         output: String,
+        /// Override timelock for all intents (seconds). Bypasses risk-based classification.
+        #[arg(long)]
+        timelock: Option<u32>,
     },
-    /// Verify intent definitions
+    /// Verify intent definitions (offline, pre-deployment)
     Verify {
         /// Directory containing intent JSON files
         #[arg(long)]
@@ -39,6 +42,21 @@ enum Commands {
         /// Optional path to Anchor IDL for Tier 2 verification
         #[arg(long)]
         idl: Option<String>,
+    },
+    /// Audit on-chain intents against JSON files and/or IDL
+    Audit {
+        /// Wallet address
+        #[arg(long)]
+        wallet: String,
+        /// Directory containing intent JSON files to compare against
+        #[arg(long)]
+        intents: Option<String>,
+        /// Path to Anchor IDL for on-chain verification
+        #[arg(long)]
+        idl: Option<String>,
+        /// RPC URL
+        #[arg(long, default_value = "https://api.devnet.solana.com")]
+        url: String,
     },
     /// Create a proposal
     Propose {
@@ -258,8 +276,14 @@ fn main() {
                 )
             }
         },
-        Commands::Generate { idl, output } => commands::generate::generate(&idl, &output),
+        Commands::Generate { idl, output, timelock } => commands::generate::generate(&idl, &output, timelock),
         Commands::Verify { intents, idl } => commands::verify::verify(&intents, idl.as_deref()),
+        Commands::Audit {
+            wallet,
+            intents,
+            idl,
+            url,
+        } => commands::audit::audit(&wallet, intents.as_deref(), idl.as_deref(), &url),
         Commands::Propose {
             wallet,
             intent,

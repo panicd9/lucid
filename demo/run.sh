@@ -84,7 +84,8 @@ echo "── Step 1: Generate intents from Campfire crowdfunding IDL"
 echo ""
 $LUCID generate \
   --idl "$DEMO/crowdfunding.json" \
-  --output "$DEMO/intents"
+  --output "$DEMO/intents" \
+  --timelock 0
 echo ""
 
 # ────────────────────────────────────────────────
@@ -278,9 +279,21 @@ $LUCID wallet add-intents \
 echo ""
 
 # ────────────────────────────────────────────────
-# Step 5: Show wallet state
+# Step 5: Audit on-chain intents against JSON + IDL
 # ────────────────────────────────────────────────
-echo "── Step 5: Show wallet state"
+echo "── Step 5: Audit on-chain intents against JSON files and IDL"
+echo ""
+$LUCID audit \
+  --wallet "$WALLET_ADDR" \
+  --intents "$DEMO/intents" \
+  --idl "$DEMO/crowdfunding.json" \
+  --url "$RPC"
+echo ""
+
+# ────────────────────────────────────────────────
+# Step 6: Show wallet state
+# ────────────────────────────────────────────────
+echo "── Step 6: Show wallet state"
 echo ""
 $LUCID wallet show \
   --wallet "$WALLET_ADDR" \

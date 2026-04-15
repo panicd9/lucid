@@ -322,12 +322,6 @@ pub fn add_intents(
     for path in &file_paths {
         let content = std::fs::read_to_string(path)?;
 
-        let mut hasher = Sha256::new();
-        hasher.update(content.as_bytes());
-        let hash = hasher.finalize();
-        let hash_hex = format!("{:x}", hash);
-        let hash_short = &hash_hex[..16];
-
         let intent_def: IntentDefinition =
             serde_json::from_str(&content).with_context(|| format!("Failed to parse {}", path.display()))?;
 
@@ -338,6 +332,13 @@ pub fn add_intents(
             &final_proposer_bytes,
             &final_approver_bytes,
         )?;
+
+        // Hash the serialized byte definition (what goes on-chain), not the JSON source
+        let mut hasher = Sha256::new();
+        hasher.update(&intent_bytes);
+        let hash = hasher.finalize();
+        let hash_hex = format!("{:x}", hash);
+        let hash_short = &hash_hex[..16];
 
         let (intent_pda, _) =
             pda::find_intent_pda(&wallet_pubkey, current_intent_count, &program_id);
@@ -386,7 +387,7 @@ pub fn add_intents(
 }
 
 /// Build the on-chain byte representation of an intent (everything after the 2-byte prefix)
-fn build_intent_bytes(
+pub fn build_intent_bytes(
     def: &IntentDefinition,
     approval_threshold: u8,
     cancellation_threshold: u8,

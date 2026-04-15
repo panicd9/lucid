@@ -46,9 +46,9 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
     const now = Math.floor(Date.now() / 1000);
     const remaining = unlockTime - now;
     if (remaining > 0) {
-      timelockRemaining = formatTimelock(remaining) + ' remaining';
+      timelockRemaining = 'Locked — ' + formatTimelock(remaining) + ' until executable';
     } else {
-      timelockRemaining = 'Ready to execute';
+      timelockRemaining = 'Timelock cleared';
       canExecute = true;
     }
   } else if (proposal.status === STATUS_APPROVED && timelockSeconds === 0) {
@@ -114,9 +114,15 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
                   ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/15'
                   : 'text-amber-400 bg-amber-500/10 border border-amber-500/15'
               }`}>
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                {canExecute ? (
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                  </svg>
+                ) : (
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                )}
                 {timelockRemaining}
               </span>
             )}
