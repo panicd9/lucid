@@ -39,7 +39,7 @@ export default function App() {
       >
         <div className="min-h-screen bg-slate-950">
           <Navbar network={network} onNetworkChange={setNetwork} />
-          <main className="max-w-5xl mx-auto px-4 py-8">
+          <main className="max-w-6xl mx-auto px-6 py-8">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route

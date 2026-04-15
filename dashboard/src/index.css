@@ -5,24 +5,28 @@
 @layer base {
   body {
     @apply antialiased;
+    background-color: #050a14;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
   }
 
   /* Accessible focus rings — gold accent */
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-amber-500;
+    @apply outline-2 outline-offset-2 outline-amber-500/70;
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-slate-900;
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full;
+    @apply bg-slate-700/60 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -32,10 +36,34 @@
 
 @layer utilities {
   .text-glow-gold {
-    text-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+    text-shadow: 0 0 20px rgba(245, 158, 11, 0.5), 0 0 40px rgba(245, 158, 11, 0.2);
   }
   .text-glow-purple {
-    text-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+    text-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 0 0 40px rgba(139, 92, 246, 0.2);
+  }
+
+  /* Gradient border utility via pseudo-element */
+  .border-gradient {
+    position: relative;
+    border: 1px solid transparent;
+  }
+  .border-gradient::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(139, 92, 246, 0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Shimmer loading effect */
+  .bg-shimmer {
+    background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.04) 50%, transparent 75%);
+    background-size: 200% 100%;
   }
 }
 

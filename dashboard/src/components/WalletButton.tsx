@@ -23,23 +23,24 @@ export default function WalletButton() {
       <div ref={ref} className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/25 rounded-lg px-3 py-1.5 text-sm text-amber-300 hover:bg-amber-500/25 transition-colors cursor-pointer"
+          className="flex items-center gap-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3.5 py-2 text-sm text-amber-200 hover:bg-amber-500/15 hover:border-amber-500/30 transition-all cursor-pointer"
           aria-label="Wallet menu"
         >
-          <div className="w-2 h-2 rounded-full bg-amber-400" />
-          <span className="font-mono">{short}</span>
+          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.5)]" />
+          <span className="font-mono text-xs">{short}</span>
         </button>
         {open && (
-          <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
-            <div className="px-3 py-2 border-b border-slate-700">
-              <p className="text-xs text-slate-400 truncate font-mono">{addr}</p>
+          <div className="absolute right-0 mt-2 w-52 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-700/50">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Connected</p>
+              <p className="text-xs text-slate-300 truncate font-mono">{addr}</p>
             </div>
             <button
               onClick={() => {
                 setAccount(undefined);
                 setOpen(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-slate-700/50 transition-colors cursor-pointer"
+              className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
             >
               Disconnect
             </button>
@@ -57,44 +58,58 @@ export default function WalletButton() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg px-3 py-1.5 transition-colors cursor-pointer shadow-glow-purple"
+        className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white text-sm font-semibold rounded-lg px-4 py-2 transition-all cursor-pointer shadow-glow-purple hover:shadow-glow-purple-lg"
       >
-        Connect Wallet
+        Connect
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-72 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
           {allAccounts.length === 0 ? (
-            <div className="px-3 py-4 text-center">
+            <div className="px-4 py-6 text-center">
+              <div className="w-10 h-10 rounded-xl bg-slate-700/30 flex items-center justify-center mx-auto mb-3">
+                <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 013 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 013 6v3" />
+                </svg>
+              </div>
               <p className="text-sm text-slate-400">No wallets detected</p>
               <p className="text-xs text-slate-500 mt-1">
-                Install Phantom, Solflare, or another Solana wallet
+                Install Phantom, Solflare, or Backpack
               </p>
             </div>
           ) : (
-            allAccounts.map(({ wallet, account: acc }) => (
-              <button
-                key={`${wallet.name}-${acc.address}`}
-                onClick={() => {
-                  setAccount(acc);
-                  setOpen(false);
-                }}
-                className="w-full px-3 py-2.5 text-left hover:bg-slate-700/50 transition-colors flex items-center gap-3 border-b border-slate-700/50 last:border-0 cursor-pointer"
-              >
-                {wallet.icon && (
-                  <img
-                    src={wallet.icon}
-                    alt={wallet.name}
-                    className="w-5 h-5 rounded"
-                  />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-slate-200">{wallet.name}</p>
-                  <p className="text-xs text-slate-500 font-mono truncate">
-                    {acc.address.slice(0, 8)}...{acc.address.slice(-4)}
-                  </p>
-                </div>
-              </button>
-            ))
+            <div className="py-1">
+              <div className="px-4 py-2">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider">Select Wallet</p>
+              </div>
+              {allAccounts.map(({ wallet, account: acc }) => (
+                <button
+                  key={`${wallet.name}-${acc.address}`}
+                  onClick={() => {
+                    setAccount(acc);
+                    setOpen(false);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-slate-700/30 transition-colors flex items-center gap-3 cursor-pointer"
+                >
+                  {wallet.icon ? (
+                    <img
+                      src={wallet.icon}
+                      alt={wallet.name}
+                      className="w-6 h-6 rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-lg bg-slate-700/50 flex items-center justify-center">
+                      <span className="text-xs text-slate-400">{wallet.name[0]}</span>
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-slate-200 font-medium">{wallet.name}</p>
+                    <p className="text-xs text-slate-500 font-mono truncate">
+                      {acc.address.slice(0, 8)}...{acc.address.slice(-4)}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
           )}
         </div>
       )}

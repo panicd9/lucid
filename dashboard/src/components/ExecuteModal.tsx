@@ -53,7 +53,6 @@ export default function ExecuteModal({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [handleEscape]);
 
-  // Decode and render template for display
   let rendered = '';
   try {
     const decoded = decodeParamsData(proposal.paramsData, intentData.params, intentData.intentType);
@@ -110,16 +109,20 @@ export default function ExecuteModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="execute-modal-title">
-      <div className="bg-slate-800/90 backdrop-blur-md border border-slate-700/50 rounded-xl max-w-lg w-full shadow-2xl">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="execute-modal-title">
+      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/30 rounded-2xl max-w-lg w-full shadow-2xl">
+        {/* Gradient accent line */}
+        <div className="h-[1px] bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/50">
           <h3 id="execute-modal-title" className="text-lg font-semibold text-slate-100 font-heading tracking-wide">
-            Execute Proposal #{proposal.proposalIndex.toString()}
+            Execute
+            <span className="text-sm font-normal text-slate-500 ml-2 font-body">Proposal #{proposal.proposalIndex.toString()}</span>
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800/50"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -129,65 +132,63 @@ export default function ExecuteModal({
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4 space-y-4">
-          {/* Action summary */}
+        <div className="px-6 py-5 space-y-5">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">
+            <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
               Action
             </label>
-            <p className="text-sm text-slate-200 font-mono bg-slate-900/50 rounded px-2 py-1.5">
+            <p className="text-sm text-slate-200 font-mono bg-slate-800/40 border border-slate-800/50 rounded-lg px-3 py-2.5">
               {rendered}
             </p>
           </div>
 
-          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-            <p className="text-sm text-blue-300">
+          <div className="bg-violet-500/5 border border-violet-500/15 rounded-lg p-4">
+            <p className="text-sm text-violet-300/90">
               Execute is a permissionless crank — no offchain signature needed.
               Your wallet only signs the transaction fee.
             </p>
           </div>
 
-          {/* Status */}
           {status === 'resolving' && (
-            <div className="flex items-center gap-2 text-sm text-amber-300">
+            <div className="flex items-center gap-3 text-sm text-amber-300 bg-amber-500/5 rounded-lg px-4 py-3 border border-amber-500/10">
               <div className="w-4 h-4 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
               Resolving accounts...
             </div>
           )}
           {status === 'sending' && (
-            <div className="flex items-center gap-2 text-sm text-blue-300">
-              <div className="w-4 h-4 border-2 border-blue-300/30 border-t-blue-300 rounded-full animate-spin" />
+            <div className="flex items-center gap-3 text-sm text-violet-300 bg-violet-500/5 rounded-lg px-4 py-3 border border-violet-500/10">
+              <div className="w-4 h-4 border-2 border-violet-300/30 border-t-violet-300 rounded-full animate-spin" />
               Sending transaction...
             </div>
           )}
           {status === 'success' && (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
-              <p className="text-sm text-emerald-300 mb-1">Proposal executed</p>
+            <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-lg p-4">
+              <p className="text-sm font-medium text-emerald-300 mb-1">Proposal executed</p>
               {txSig && (
-                <p className="text-xs text-slate-400 font-mono break-all">{txSig}</p>
+                <p className="text-xs text-slate-500 font-mono break-all">{txSig}</p>
               )}
             </div>
           )}
           {status === 'error' && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+            <div className="bg-red-500/5 border border-red-500/15 rounded-lg p-4">
               <p className="text-sm text-red-300">{errorMsg}</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-700/50">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-800/50">
           <button
             onClick={onClose}
             disabled={status === 'resolving' || status === 'sending'}
-            className="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            className="px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed rounded-lg hover:bg-slate-800/50"
           >
             Close
           </button>
           <button
             onClick={handleExecute}
             disabled={!account || status !== 'idle'}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-glow-purple"
+            className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-glow-purple"
           >
             {status === 'idle'
               ? 'Execute'

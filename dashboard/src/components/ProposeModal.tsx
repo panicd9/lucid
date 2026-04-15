@@ -81,7 +81,6 @@ export default function ProposeModal({
       setStatus('signing');
       setErrorMsg('');
 
-      // Fetch current wallet to get next proposalIndex
       const connection = new Connection(RPC_ENDPOINTS[network]);
       const walletPk = new PublicKey(walletAddress);
       const walletInfo = await connection.getAccountInfo(walletPk);
@@ -89,10 +88,8 @@ export default function ProposeModal({
       const walletData = deserializeWallet(Buffer.from(walletInfo.data));
       const proposalIndex = walletData.proposalIndex;
 
-      // Encode params
       const paramsData = encodeParamsData(paramValues, intent.params);
 
-      // Build message
       const body = buildMessageBody(
         'propose',
         rendered,
@@ -102,12 +99,10 @@ export default function ProposeModal({
       );
       const envelope = buildOffchainEnvelope(body);
 
-      // Sign offchain message
       const { signature } = await signMessage({ message: envelope });
 
       setStatus('sending');
 
-      // Build instructions
       const pubkeyBytes = new Uint8Array(bs58.decode(account.address));
       const ed25519Ix = buildEd25519Instruction(
         new Uint8Array(signature),
@@ -115,7 +110,6 @@ export default function ProposeModal({
         envelope
       );
 
-      // Derive PDAs
       const [intentPda] = findIntentPDA(walletPk, intent.intentIndex);
       const [proposalPda] = findProposalPDA(intentPda, proposalIndex);
 
@@ -128,7 +122,6 @@ export default function ProposeModal({
         paramsData
       );
 
-      // Build and send transaction
       const rpc = createSolanaRpc(RPC_ENDPOINTS[network]);
       const { value: blockhash } = await rpc.getLatestBlockhash().send();
 
@@ -151,16 +144,20 @@ export default function ProposeModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="propose-modal-title">
-      <div className="bg-slate-800/90 backdrop-blur-md border border-slate-700/50 rounded-xl max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="propose-modal-title">
+      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/30 rounded-2xl max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+        {/* Gradient accent line */}
+        <div className="h-[1px] bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50 sticky top-0 bg-slate-800/90 backdrop-blur-md z-10">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/50 sticky top-0 bg-slate-900/95 backdrop-blur-xl z-10">
           <h3 id="propose-modal-title" className="text-lg font-semibold text-slate-100 font-heading tracking-wide">
-            New Proposal — Intent #{intent.intentIndex}
+            New Proposal
+            <span className="text-sm font-normal text-slate-500 ml-2 font-body">Intent #{intent.intentIndex}</span>
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800/50"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -170,13 +167,13 @@ export default function ProposeModal({
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4 space-y-4">
+        <div className="px-6 py-5 space-y-5">
           {/* Template */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">
+            <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
               Template
             </label>
-            <p className="text-sm text-slate-200 font-mono bg-slate-900 border border-slate-600 rounded-lg p-3">
+            <p className="text-sm text-slate-300 font-mono bg-slate-800/40 border border-slate-800/50 rounded-lg p-3">
               {intent.template}
             </p>
           </div>
@@ -184,9 +181,9 @@ export default function ProposeModal({
           {/* Param inputs */}
           {intent.params.map((param, i) => (
             <div key={i}>
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 {param.name || `Param {${i}}`}
-                <span className="text-slate-500 ml-2">
+                <span className="text-slate-600 ml-2 normal-case tracking-normal">
                   ({PARAM_TYPE_LABELS[param.paramType] ?? 'unknown'})
                 </span>
               </label>
@@ -202,21 +199,21 @@ export default function ProposeModal({
                     ? 'true or false'
                     : 'Value...'
                 }
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500/50 disabled:opacity-50"
+                className="w-full bg-slate-800/40 border border-slate-800/50 rounded-lg px-3 py-2.5 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 disabled:opacity-50 transition-all"
               />
             </div>
           ))}
 
           {/* Expiry */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">
+            <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
               Signature expiry
             </label>
             <select
               value={expirySeconds}
               onChange={(e) => setExpirySeconds(Number(e.target.value))}
               disabled={status !== 'form' && status !== 'preview'}
-              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 w-full focus:outline-none focus:border-amber-500/50"
+              className="bg-slate-800/40 border border-slate-800/50 rounded-lg px-3 py-2.5 text-sm text-slate-200 w-full focus:outline-none focus:border-amber-500/40 cursor-pointer"
             >
               <option value={60}>1 minute</option>
               <option value={300}>5 minutes</option>
@@ -229,10 +226,10 @@ export default function ProposeModal({
           {/* Preview */}
           {(status === 'preview' || status === 'form') && rendered && (
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">
+              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 Message preview
               </label>
-              <div className="bg-slate-900 border border-slate-600 rounded-lg p-3 text-sm text-amber-300 font-mono break-all">
+              <div className="bg-slate-800/40 border border-slate-800/50 rounded-lg p-3 text-sm text-amber-300/90 font-mono break-all">
                 {buildMessageBody('propose', rendered, walletName, '?', expiryStr)}
               </div>
             </div>
@@ -240,45 +237,45 @@ export default function ProposeModal({
 
           {/* Status */}
           {status === 'signing' && (
-            <div className="flex items-center gap-2 text-sm text-amber-300">
+            <div className="flex items-center gap-3 text-sm text-amber-300 bg-amber-500/5 rounded-lg px-4 py-3 border border-amber-500/10">
               <div className="w-4 h-4 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
               Waiting for wallet signature...
             </div>
           )}
           {status === 'sending' && (
-            <div className="flex items-center gap-2 text-sm text-blue-300">
-              <div className="w-4 h-4 border-2 border-blue-300/30 border-t-blue-300 rounded-full animate-spin" />
+            <div className="flex items-center gap-3 text-sm text-violet-300 bg-violet-500/5 rounded-lg px-4 py-3 border border-violet-500/10">
+              <div className="w-4 h-4 border-2 border-violet-300/30 border-t-violet-300 rounded-full animate-spin" />
               Sending transaction...
             </div>
           )}
           {status === 'success' && (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
-              <p className="text-sm text-emerald-300 mb-1">Proposal created</p>
+            <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-lg p-4">
+              <p className="text-sm font-medium text-emerald-300 mb-1">Proposal created</p>
               {txSig && (
-                <p className="text-xs text-slate-400 font-mono break-all">{txSig}</p>
+                <p className="text-xs text-slate-500 font-mono break-all">{txSig}</p>
               )}
             </div>
           )}
           {status === 'error' && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+            <div className="bg-red-500/5 border border-red-500/15 rounded-lg p-4">
               <p className="text-sm text-red-300">{errorMsg}</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-700/50 sticky bottom-0 bg-slate-800/90 backdrop-blur-md">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-800/50 sticky bottom-0 bg-slate-900/95 backdrop-blur-xl">
           <button
             onClick={onClose}
             disabled={status === 'signing' || status === 'sending'}
-            className="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            className="px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed rounded-lg hover:bg-slate-800/50"
           >
             Close
           </button>
           <button
             onClick={handleSubmit}
             disabled={!account || (status !== 'form' && status !== 'preview')}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-glow-purple"
+            className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-glow-purple"
           >
             {status === 'form' || status === 'preview'
               ? 'Sign & Propose'

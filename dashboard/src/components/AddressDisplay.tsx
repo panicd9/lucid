@@ -21,11 +21,11 @@ export default function AddressDisplay({ address, chars = 4, className = '' }: P
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 font-mono text-sm ${className}`}>
-      <span className="text-slate-300">{truncated}</span>
+    <span className={`inline-flex items-center gap-1.5 font-mono text-xs ${className}`}>
+      <span className="text-slate-400">{truncated}</span>
       <button
         onClick={handleCopy}
-        className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+        className="text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
         title="Copy address"
         aria-label={copied ? 'Address copied' : 'Copy address to clipboard'}
       >

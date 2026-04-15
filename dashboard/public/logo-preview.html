@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lucid Logo Options</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050a14;
+      color: #f1f5f9;
+      font-family: 'Exo 2', sans-serif;
+      min-height: 100vh;
+      padding: 60px 40px;
+    }
+    h2 {
+      font-family: 'Exo 2', sans-serif;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #64748b;
+      margin-bottom: 32px;
+    }
+    .section { margin-bottom: 80px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(51, 65, 85, 0.3);
+      border-radius: 16px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .card:hover { border-color: rgba(51, 65, 85, 0.6); }
+    .label {
+      font-size: 11px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .nav-preview {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(51, 65, 85, 0.3);
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: fit-content;
+    }
+
+    /* ========== TEXT-ONLY VARIANTS ========== */
+
+    .t1 {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 8px;
+      background: linear-gradient(135deg, #F59E0B, #fcd34d, #F59E0B);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+    .t1-nav {
+      font-family: 'Orbitron', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 5px;
+      background: linear-gradient(135deg, #F59E0B, #fcd34d, #F59E0B);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+    }
+
+    .t2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 12px;
+      background: linear-gradient(90deg, #e2e8f0, #f8fafc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      position: relative;
+    }
+    .t2::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #F59E0B, #8B5CF6);
+      border-radius: 1px;
+    }
+    .t2-nav {
+      font-family: 'Orbitron', monospace;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 6px;
+      background: linear-gradient(90deg, #e2e8f0, #f8fafc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      position: relative;
+    }
+    .t2-nav::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      right: 0;
+      height: 1.5px;
+      background: linear-gradient(90deg, #F59E0B, #8B5CF6);
+      border-radius: 1px;
+    }
+
+    .t3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      background: linear-gradient(135deg, #fbbf24, #f8fafc, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      text-shadow: none;
+      filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.3));
+    }
+    .t3-nav {
+      font-family: 'Orbitron', monospace;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, #fbbf24, #f8fafc, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.2));
+    }
+
+    .t4 {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: 16px;
+      color: #f8fafc;
+      text-transform: uppercase;
+    }
+    .t4 span { color: #F59E0B; }
+    .t4-nav {
+      font-family: 'Orbitron', monospace;
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: 8px;
+      color: #f8fafc;
+      text-transform: uppercase;
+    }
+    .t4-nav span { color: #F59E0B; }
+
+    /* ========== MONOGRAM VARIANTS ========== */
+
+    .m1 {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(139,92,246,0.15));
+      border: 1px solid rgba(245,158,11,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      background-clip: padding-box;
+      color: #fbbf24;
+    }
+    .m1-nav {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(139,92,246,0.15));
+      border: 1px solid rgba(245,158,11,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fbbf24;
+    }
+
+    .m2-wrap {
+      width: 48px; height: 48px;
+      position: relative;
+      border-radius: 12px;
+    }
+    .m2-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      padding: 1.5px;
+      background: linear-gradient(135deg, #F59E0B, #8B5CF6);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+    .m2 {
+      width: 100%; height: 100%;
+      border-radius: 12px;
+      background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      background-clip: padding-box;
+      color: #f8fafc;
+    }
+    .m2-nav-wrap {
+      width: 32px; height: 32px;
+      position: relative;
+      border-radius: 8px;
+    }
+    .m2-nav-wrap::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      padding: 1.5px;
+      background: linear-gradient(135deg, #F59E0B, #8B5CF6);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+    .m2-nav {
+      width: 100%; height: 100%;
+      border-radius: 8px;
+      background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .m3 {
+      width: 48px; height: 48px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background: linear-gradient(135deg, #F59E0B, #8B5CF6);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .m3-inner {
+      width: 44px; height: 44px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fbbf24;
+    }
+    .m3-sm {
+      width: 32px; height: 32px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background: linear-gradient(135deg, #F59E0B, #8B5CF6);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .m3-sm-inner {
+      width: 29px; height: 29px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fbbf24;
+    }
+
+    .m4 {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1.5px solid rgba(245, 158, 11, 0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      background-clip: padding-box;
+    }
+    .m4 span {
+      background: linear-gradient(135deg, #fbbf24, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .m4-nav {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1.5px solid rgba(245, 158, 11, 0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .m4-nav span {
+      background: linear-gradient(135deg, #fbbf24, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TEXT-ONLY -->
+  <div class="section">
+    <h2>Text-Only Logos</h2>
+    <div class="grid">
+
+      <div class="card">
+        <div class="label">T1 — Gold Gradient</div>
+        <div class="t1">LUCID</div>
+        <div class="nav-preview">
+          <div class="t1-nav">LUCID</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">T2 — White + Gradient Underline</div>
+        <div class="t2">LUCID</div>
+        <div style="height:8px"></div>
+        <div class="nav-preview">
+          <div class="t2-nav">LUCID</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">T3 — Gold→White→Purple Sweep</div>
+        <div class="t3">LUCID</div>
+        <div class="nav-preview">
+          <div class="t3-nav">LUCID</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">T4 — Minimal, Gold Accent L</div>
+        <div class="t4"><span>L</span>UCID</div>
+        <div class="nav-preview">
+          <div class="t4-nav"><span>L</span>UCID</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MONOGRAM -->
+  <div class="section">
+    <h2>Monogram Logos</h2>
+    <div class="grid">
+
+      <div class="card">
+        <div class="label">M1 — Gradient Square</div>
+        <div class="m1">L</div>
+        <div class="nav-preview">
+          <div class="m1-nav">L</div>
+          <span style="font-family:'Orbitron',monospace; font-size:17px; font-weight:700; letter-spacing:4px; background:linear-gradient(135deg,#fbbf24,#f8fafc); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">LUCID</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">M2 — Gradient Border Square</div>
+        <div class="m2-wrap"><div class="m2">L</div></div>
+        <div class="nav-preview">
+          <div class="m2-nav-wrap"><div class="m2-nav">L</div></div>
+          <span style="font-family:'Orbitron',monospace; font-size:17px; font-weight:600; letter-spacing:4px; color:#f8fafc;">LUCID</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">M3 — Hexagon</div>
+        <div class="m3"><div class="m3-inner">L</div></div>
+        <div class="nav-preview">
+          <div class="m3-sm"><div class="m3-sm-inner">L</div></div>
+          <span style="font-family:'Orbitron',monospace; font-size:17px; font-weight:700; letter-spacing:4px; color:#fbbf24;">LUCID</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">M4 — Circle + Gradient Letter</div>
+        <div class="m4"><span>L</span></div>
+        <div class="nav-preview">
+          <div class="m4-nav"><span>L</span></div>
+          <span style="font-family:'Orbitron',monospace; font-size:17px; font-weight:600; letter-spacing:5px; background:linear-gradient(135deg,#fbbf24,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">LUCID</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

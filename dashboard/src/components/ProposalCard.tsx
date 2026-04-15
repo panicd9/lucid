@@ -90,74 +90,88 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
     }
   }
 
+  const isActive = proposal.status === STATUS_ACTIVE || proposal.status === STATUS_APPROVED;
+
   return (
     <>
-      <div className="border border-slate-700/50 bg-slate-800/40 backdrop-blur-sm rounded-lg p-4 hover:border-slate-600/60 transition-all">
-        {/* Top row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-mono text-slate-400">
-              #{proposal.proposalIndex.toString()}
-            </span>
-            <ProposalStatusBadge status={proposal.status} />
-          </div>
-          {timelockRemaining && (
-            <span className="text-xs text-amber-400 flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {timelockRemaining}
-            </span>
-          )}
-        </div>
-
-        {/* Rendered template */}
-        {renderedTemplate && (
-          <p className="text-sm text-slate-200 mb-3 font-mono bg-slate-900/50 rounded px-2 py-1.5">
-            {renderedTemplate}
-          </p>
-        )}
-
-        {/* Approval progress */}
-        <div className="mb-3">
-          <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-slate-400">
-              Approvals: {approvalCount}/{threshold}
-              {totalApprovers > 0 && (
-                <span className="text-slate-500"> ({totalApprovers} total)</span>
-              )}
-            </span>
-            {cancellationCount > 0 && (
-              <span className="text-red-400">
-                {cancellationCount}/{cancelThreshold} cancellation{cancellationCount !== 1 ? 's' : ''}
+      <div className={`rounded-xl transition-all ${
+        isActive
+          ? 'bg-slate-900/50 border-gradient hover:shadow-glow-gold'
+          : 'bg-slate-900/30 border border-slate-800/50 hover:border-slate-700/50'
+      }`}>
+        <div className="p-5">
+          {/* Top row */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-mono text-slate-500 font-heading">
+                #{proposal.proposalIndex.toString()}
+              </span>
+              <ProposalStatusBadge status={proposal.status} />
+            </div>
+            {timelockRemaining && (
+              <span className={`text-xs flex items-center gap-1.5 px-2.5 py-1 rounded-full ${
+                canExecute
+                  ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/15'
+                  : 'text-amber-400 bg-amber-500/10 border border-amber-500/15'
+              }`}>
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {timelockRemaining}
               </span>
             )}
           </div>
-          <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-amber-500 rounded-full transition-all"
-              style={{ width: `${Math.min(approvalPct, 100)}%` }}
-            />
-          </div>
-        </div>
 
-        {/* Details row */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mb-3">
-          <div className="flex items-center gap-1">
-            <span>Proposer:</span>
-            <AddressDisplay address={proposal.proposer.toBase58()} chars={4} />
+          {/* Rendered template */}
+          {renderedTemplate && (
+            <div className="mb-4 bg-slate-800/30 border border-slate-800/50 rounded-lg px-3 py-2.5">
+              <p className="text-sm text-slate-200 font-mono break-all">{renderedTemplate}</p>
+            </div>
+          )}
+
+          {/* Approval progress */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-slate-400">
+                Approvals: <span className="text-amber-300 font-semibold">{approvalCount}</span>/{threshold}
+                {totalApprovers > 0 && (
+                  <span className="text-slate-600 ml-1">({totalApprovers} total)</span>
+                )}
+              </span>
+              {cancellationCount > 0 && (
+                <span className="text-red-400/80">
+                  {cancellationCount}/{cancelThreshold} cancel
+                </span>
+              )}
+            </div>
+            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all bg-gradient-to-r from-amber-500 to-amber-400"
+                style={{ width: `${Math.min(approvalPct, 100)}%` }}
+              />
+            </div>
           </div>
-          {proposedDate && <span>Proposed: {proposedDate}</span>}
-          {approvedDate && <span>Approved: {approvedDate}</span>}
+
+          {/* Details row */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5">
+              <svg className="w-3 h-3 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <AddressDisplay address={proposal.proposer.toBase58()} chars={4} />
+            </div>
+            {proposedDate && <span>{proposedDate}</span>}
+            {approvedDate && <span className="text-emerald-500/50">Approved {approvedDate}</span>}
+          </div>
         </div>
 
         {/* Action buttons */}
         {(canApprove || canCancel || canExecute) && (
-          <div className="flex gap-2 pt-2 border-t border-slate-700/50">
+          <div className="flex gap-2 px-5 py-3 border-t border-slate-800/40">
             {canApprove && (
               <button
                 onClick={() => setSigningAction('approve')}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all cursor-pointer"
               >
                 Approve
               </button>
@@ -165,14 +179,14 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
             {canCancel && (
               <button
                 onClick={() => setSigningAction('cancel')}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-red-500/15 text-red-300 border border-red-500/20 hover:bg-red-500/25 transition-all cursor-pointer"
               >
                 Cancel
               </button>
             )}
             {canExecute && (
               <button
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 text-white hover:from-violet-500 hover:to-violet-400 transition-all cursor-pointer shadow-glow-purple"
                 onClick={() => setShowExecute(true)}
               >
                 Execute
