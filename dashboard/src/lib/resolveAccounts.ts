@@ -198,7 +198,10 @@ async function resolveCustomAccounts(
 
   for (let a = 0; a < accountCount; a++) {
     const entryOffset = accountsOffset + a * ACCOUNT_ENTRY_SIZE;
-    if (entryOffset + ACCOUNT_ENTRY_SIZE > rawIntent.length) break;
+    if (entryOffset + ACCOUNT_ENTRY_SIZE > rawIntent.length) {
+      console.warn(`Execute: intent buffer truncated at account ${a}/${accountCount}`);
+      break;
+    }
 
     const source = rawIntent[entryOffset];
     const writable = rawIntent[entryOffset + 1] === 1;
@@ -236,8 +239,20 @@ async function resolveCustomAccounts(
       case SOURCE_VAULT:
         resolved = vaultPda.toBase58();
         break;
+      case SOURCE_HAS_ONE: {
+        const srcIdx = sourceData[0];
+        const dataOff = sourceData[1] | (sourceData[2] << 8);
+        if (srcIdx < results.length) {
+          const srcAddr = results[srcIdx].address;
+          const srcInfo = await connection.getAccountInfo(new PublicKey(srcAddr));
+          if (srcInfo && dataOff + 32 <= srcInfo.data.length) {
+            const pk = new PublicKey(srcInfo.data.subarray(dataOff, dataOff + 32));
+            resolved = pk.toBase58();
+          }
+        }
+        break;
+      }
       case SOURCE_PDA:
-      case SOURCE_HAS_ONE:
         skippedPDA = true;
         continue;
       default:
@@ -257,7 +272,7 @@ async function resolveCustomAccounts(
 
   if (skippedPDA) {
     console.warn(
-      'Execute: skipped SOURCE_PDA/SOURCE_HAS_ONE accounts — not yet supported'
+      'Execute: skipped SOURCE_PDA accounts — not yet supported'
     );
   }
 

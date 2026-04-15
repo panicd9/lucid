@@ -53,19 +53,19 @@ export function useProposals(
 
             // Try recent proposal indices
             for (let pi = startIdx; pi < total; pi++) {
-              try {
-                const [proposalPda] = findProposalPDA(intentPda, pi);
-                const info = await connection.getAccountInfo(proposalPda);
-                if (info) {
+              const [proposalPda] = findProposalPDA(intentPda, pi);
+              const info = await connection.getAccountInfo(proposalPda);
+              if (info) {
+                try {
                   const proposal = deserializeProposal(Buffer.from(info.data));
                   results.push({
                     ...proposal,
                     address: proposalPda,
                     intentData: intent,
                   });
+                } catch (e) {
+                  console.warn(`Failed to deserialize proposal ${pi} for intent ${intent.intentIndex}:`, e);
                 }
-              } catch {
-                // Proposal doesn't exist for this intent+index combo
               }
             }
           }

@@ -55,57 +55,57 @@ fn param_type_size_u128() {
 
 #[test]
 fn param_type_from_str_address() {
-    assert_eq!(param_type_from_str("address"), PARAM_TYPE_ADDRESS); // 0
+    assert_eq!(param_type_from_str("address"), Some(PARAM_TYPE_ADDRESS)); // 0
 }
 
 #[test]
 fn param_type_from_str_public_key_alias() {
-    assert_eq!(param_type_from_str("publicKey"), PARAM_TYPE_ADDRESS);
+    assert_eq!(param_type_from_str("publicKey"), Some(PARAM_TYPE_ADDRESS));
 }
 
 #[test]
 fn param_type_from_str_u64() {
-    assert_eq!(param_type_from_str("u64"), PARAM_TYPE_U64); // 1
+    assert_eq!(param_type_from_str("u64"), Some(PARAM_TYPE_U64)); // 1
 }
 
 #[test]
 fn param_type_from_str_i64() {
-    assert_eq!(param_type_from_str("i64"), PARAM_TYPE_I64); // 2
+    assert_eq!(param_type_from_str("i64"), Some(PARAM_TYPE_I64)); // 2
 }
 
 #[test]
 fn param_type_from_str_string() {
-    assert_eq!(param_type_from_str("string"), PARAM_TYPE_STRING); // 3
+    assert_eq!(param_type_from_str("string"), Some(PARAM_TYPE_STRING)); // 3
 }
 
 #[test]
 fn param_type_from_str_bool() {
-    assert_eq!(param_type_from_str("bool"), PARAM_TYPE_BOOL); // 4
+    assert_eq!(param_type_from_str("bool"), Some(PARAM_TYPE_BOOL)); // 4
 }
 
 #[test]
 fn param_type_from_str_u8() {
-    assert_eq!(param_type_from_str("u8"), PARAM_TYPE_U8); // 5
+    assert_eq!(param_type_from_str("u8"), Some(PARAM_TYPE_U8)); // 5
 }
 
 #[test]
 fn param_type_from_str_u16() {
-    assert_eq!(param_type_from_str("u16"), PARAM_TYPE_U16); // 6
+    assert_eq!(param_type_from_str("u16"), Some(PARAM_TYPE_U16)); // 6
 }
 
 #[test]
 fn param_type_from_str_u32() {
-    assert_eq!(param_type_from_str("u32"), PARAM_TYPE_U32); // 7
+    assert_eq!(param_type_from_str("u32"), Some(PARAM_TYPE_U32)); // 7
 }
 
 #[test]
 fn param_type_from_str_u128() {
-    assert_eq!(param_type_from_str("u128"), PARAM_TYPE_U128); // 8
+    assert_eq!(param_type_from_str("u128"), Some(PARAM_TYPE_U128)); // 8
 }
 
 #[test]
-fn param_type_from_str_unknown_defaults_to_u64() {
-    assert_eq!(param_type_from_str("banana"), PARAM_TYPE_U64);
+fn param_type_from_str_unknown_returns_none() {
+    assert_eq!(param_type_from_str("banana"), None);
 }
 
 // ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ fn param_type_from_str_unknown_defaults_to_u64() {
 fn param_type_round_trip_all_types() {
     let names = ["address", "u64", "i64", "string", "bool", "u8", "u16", "u32", "u128"];
     for name in names {
-        let numeric = param_type_from_str(name);
+        let numeric = param_type_from_str(name).unwrap();
         let back = param_type_to_str(numeric);
         assert_eq!(
             back, name,

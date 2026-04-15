@@ -25,6 +25,7 @@ struct NormalizedAccount {
     is_signer: bool,
     pda: Option<serde_json::Value>,
     address: Option<String>,
+    relations: Vec<String>,
 }
 
 struct NormalizedArg {
@@ -73,12 +74,17 @@ fn parse_idl(content: &str) -> Result<NormalizedIdl> {
                     (acct["isMut"].as_bool().unwrap_or(false),
                      acct["isSigner"].as_bool().unwrap_or(false))
                 };
+                let relations = acct.get("relations")
+                    .and_then(|r| r.as_array())
+                    .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                    .unwrap_or_default();
                 accounts.push(NormalizedAccount {
                     name: acct_name,
                     is_mut,
                     is_signer,
                     pda: acct.get("pda").cloned(),
                     address: acct.get("address").and_then(|a| a.as_str()).map(|s| s.to_string()),
+                    relations,
                 });
             }
         }
@@ -110,12 +116,16 @@ pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
         .with_context(|| format!("Failed to read IDL: {}", idl_path))?;
     let idl = parse_idl(&idl_content)?;
 
+    // Parse types for has_one offset calculation
+    let raw: serde_json::Value = serde_json::from_str(&idl_content)?;
+    let idl_types = raw.get("types").cloned().unwrap_or(serde_json::Value::Array(vec![]));
+
     std::fs::create_dir_all(output_dir)?;
 
     println!("Generating intents from IDL: {}", idl.name);
 
     for ix in &idl.instructions {
-        let intent = generate_intent_from_instruction(ix, &idl.address)?;
+        let intent = generate_intent_from_instruction(ix, &idl.address, &idl_types)?;
         let filename = format!("{}.json", intent_utils::snake_case(&ix.name));
         let filepath = Path::new(output_dir).join(&filename);
         let json = serde_json::to_string_pretty(&intent)?;
@@ -137,6 +147,7 @@ pub fn generate(idl_path: &str, output_dir: &str) -> Result<()> {
 fn generate_intent_from_instruction(
     ix: &NormalizedInstruction,
     program_id: &str,
+    idl_types: &serde_json::Value,
 ) -> Result<IntentDefinition> {
     // Use pre-computed discriminator if available, otherwise compute from name
     let discriminator = if let Some(disc) = &ix.discriminator {
@@ -167,7 +178,7 @@ fn generate_intent_from_instruction(
     let mut all_seeds: Vec<SeedDef> = Vec::new();
 
     for acct in &ix.accounts {
-        let (source, source_data) = infer_account_source(acct, &params);
+        let (source, source_data) = infer_account_source(acct, &params, &ix.accounts, idl_types);
 
         // Extract seeds for PDA accounts
         let final_source_data = if source == "pda" {
@@ -345,9 +356,55 @@ fn extract_pda_seeds(
     }
 }
 
+fn snake_to_pascal(s: &str) -> String {
+    s.split('_').map(|w| {
+        let mut c = w.chars();
+        match c.next() {
+            None => String::new(),
+            Some(f) => f.to_uppercase().chain(c).collect(),
+        }
+    }).collect()
+}
+
+fn idl_type_size(ty: &serde_json::Value) -> Option<u16> {
+    if let Some(s) = ty.as_str() {
+        return match s {
+            "bool" | "u8" | "i8" => Some(1),
+            "u16" | "i16" => Some(2),
+            "u32" | "i32" => Some(4),
+            "u64" | "i64" => Some(8),
+            "u128" | "i128" => Some(16),
+            "pubkey" => Some(32),
+            _ => None,
+        };
+    }
+    if let Some(obj) = ty.as_object() {
+        if let Some(inner) = obj.get("option") {
+            return idl_type_size(inner).map(|s| 1 + s);
+        }
+    }
+    None
+}
+
+fn idl_field_offset(types: &serde_json::Value, type_name: &str, field_name: &str) -> Option<u16> {
+    let types_arr = types.as_array()?;
+    let type_def = types_arr.iter().find(|t| t["name"].as_str() == Some(type_name))?;
+    let fields = type_def["type"]["fields"].as_array()?;
+    let mut offset: u16 = 8; // Anchor discriminator
+    for field in fields {
+        if field["name"].as_str() == Some(field_name) {
+            return Some(offset);
+        }
+        offset += idl_type_size(&field["type"])?;
+    }
+    None
+}
+
 fn infer_account_source(
     acct: &NormalizedAccount,
     params: &[ParamDef],
+    all_accounts: &[NormalizedAccount],
+    idl_types: &serde_json::Value,
 ) -> (String, Option<serde_json::Value>) {
     let name_lower = acct.name.to_lowercase();
 
@@ -398,7 +455,22 @@ fn infer_account_source(
         }
     }
 
-    // Default to param (user will need to fix)
+    // If account has relations, try has_one
+    if !acct.relations.is_empty() {
+        let related_name = &acct.relations[0];
+        if let Some(related_idx) = all_accounts.iter().position(|a| &a.name == related_name) {
+            let type_name = snake_to_pascal(related_name);
+            if let Some(offset) = idl_field_offset(idl_types, &type_name, &acct.name) {
+                let mut sd = serde_json::Map::new();
+                sd.insert("sourceAccountIndex".into(), related_idx.into());
+                sd.insert("dataOffset".into(), serde_json::Value::Number(serde_json::Number::from(offset)));
+                return ("has_one".to_string(), Some(serde_json::Value::Object(sd)));
+            }
+        }
+    }
+
+    // Default — warn and fall back to param
+    eprintln!("  WARNING: account '{}' could not be auto-resolved — defaulting to source \"param\" (manual fix needed)", acct.name);
     ("param".to_string(), None)
 }
 

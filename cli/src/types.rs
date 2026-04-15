@@ -99,6 +99,7 @@ pub const SOURCE_STATIC: u8 = 0;
 pub const SOURCE_PARAM: u8 = 1;
 pub const SOURCE_VAULT: u8 = 2;
 pub const SOURCE_PDA: u8 = 3;
+pub const SOURCE_HAS_ONE: u8 = 4;
 
 /// Data segment type constants
 pub const SEGMENT_LITERAL: u8 = 0;
@@ -133,18 +134,18 @@ pub const INSTRUCTION_ENTRY_SIZE: usize = 8;
 pub const DATA_SEGMENT_ENTRY_SIZE: usize = 6;
 pub const SEED_ENTRY_SIZE: usize = 6;
 
-pub fn param_type_from_str(s: &str) -> u8 {
+pub fn param_type_from_str(s: &str) -> Option<u8> {
     match s {
-        "address" | "publicKey" => PARAM_TYPE_ADDRESS,
-        "u64" => PARAM_TYPE_U64,
-        "i64" => PARAM_TYPE_I64,
-        "string" => PARAM_TYPE_STRING,
-        "bool" => PARAM_TYPE_BOOL,
-        "u8" => PARAM_TYPE_U8,
-        "u16" => PARAM_TYPE_U16,
-        "u32" => PARAM_TYPE_U32,
-        "u128" => PARAM_TYPE_U128,
-        _ => PARAM_TYPE_U64,
+        "address" | "publicKey" => Some(PARAM_TYPE_ADDRESS),
+        "u64" => Some(PARAM_TYPE_U64),
+        "i64" => Some(PARAM_TYPE_I64),
+        "string" => Some(PARAM_TYPE_STRING),
+        "bool" => Some(PARAM_TYPE_BOOL),
+        "u8" => Some(PARAM_TYPE_U8),
+        "u16" => Some(PARAM_TYPE_U16),
+        "u32" => Some(PARAM_TYPE_U32),
+        "u128" => Some(PARAM_TYPE_U128),
+        _ => None,
     }
 }
 

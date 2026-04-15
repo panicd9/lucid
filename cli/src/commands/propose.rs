@@ -184,10 +184,8 @@ fn parse_params_to_bytes(
                 let v: u128 = value.parse().context("Invalid u128 param")?;
                 result.extend_from_slice(&v.to_le_bytes());
             }
-            _ => {
-                // Default to raw bytes
-                let v: u64 = value.parse().unwrap_or(0);
-                result.extend_from_slice(&v.to_le_bytes());
+            other => {
+                anyhow::bail!("Unknown param type {} at index {}", other, i);
             }
         }
     }

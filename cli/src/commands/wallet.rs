@@ -591,7 +591,8 @@ fn build_intent_bytes(
     // Param entries
     let _lit_seg_idx = 0;
     for (i, param) in def.params.iter().enumerate() {
-        let pt = param_type_from_str(&param.param_type);
+        let pt = param_type_from_str(&param.param_type)
+            .ok_or_else(|| anyhow::anyhow!("Unknown param type '{}' for param '{}'", param.param_type, param.name))?;
         let (name_off, name_len) = if i < param_name_offsets.len() {
             param_name_offsets[i]
         } else {
@@ -620,7 +621,8 @@ fn build_intent_bytes(
             "param" => SOURCE_PARAM,
             "vault" => SOURCE_VAULT,
             "pda" => SOURCE_PDA,
-            _ => SOURCE_STATIC,
+            "has_one" => SOURCE_HAS_ONE,
+            other => anyhow::bail!("Unknown account source '{}' for account '{}'", other, acct.name),
         };
         // AccountEntry: source:u8, writable:u8, is_signer:u8, pad:u8, source_data:[u8;4]
         result.push(source);
@@ -658,6 +660,21 @@ fn build_intent_bytes(
                         result.push(seed_start);
                         result.push(seed_count);
                         result.extend_from_slice(&prog_off.to_le_bytes());
+                    } else {
+                        result.extend_from_slice(&[0u8; 4]);
+                    }
+                } else {
+                    result.extend_from_slice(&[0u8; 4]);
+                }
+            }
+            SOURCE_HAS_ONE => {
+                if let Some(sd) = &acct.source_data {
+                    if let Some(obj) = sd.as_object() {
+                        let src_idx = obj.get("sourceAccountIndex").and_then(|v| v.as_u64()).unwrap_or(0) as u8;
+                        let data_off = obj.get("dataOffset").and_then(|v| v.as_u64()).unwrap_or(0) as u16;
+                        result.push(src_idx);
+                        result.extend_from_slice(&data_off.to_le_bytes());
+                        result.push(0); // unused byte
                     } else {
                         result.extend_from_slice(&[0u8; 4]);
                     }
@@ -719,9 +736,7 @@ fn build_intent_bytes(
                 result.push(pi);
                 result.extend_from_slice(&[0u8; 3]);
             }
-            _ => {
-                result.extend_from_slice(&[0u8; 6]);
-            }
+            other => anyhow::bail!("Unknown data segment type '{}'", other),
         }
     }
 
@@ -755,9 +770,7 @@ fn build_intent_bytes(
                 result.push(ai);
                 result.extend_from_slice(&[0u8; 3]);
             }
-            _ => {
-                result.extend_from_slice(&[0u8; 6]);
-            }
+            other => anyhow::bail!("Unknown seed type '{}'", other),
         }
     }
 
