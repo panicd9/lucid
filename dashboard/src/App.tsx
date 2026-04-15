@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { SolanaProvider } from '@solana/react-hooks';
-import { createClient, autoDiscover } from '@solana/client';
+import { createClient, autoDiscover, backpack, phantom, solflare } from '@solana/client';
 import { SelectedWalletAccountContextProvider } from '@solana/react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -22,7 +22,7 @@ export default function App() {
     () =>
       createClient({
         endpoint: RPC_ENDPOINTS[network],
-        walletConnectors: autoDiscover(),
+        walletConnectors: [...autoDiscover(), ...backpack(), ...phantom(), ...solflare()],
       }),
     [network]
   );
@@ -30,7 +30,7 @@ export default function App() {
   return (
     <SolanaProvider client={client}>
       <SelectedWalletAccountContextProvider
-        filterWallets={(w) => w.accounts.length > 0}
+        filterWallets={() => true}
         stateSync={{
           getSelectedWallet: () => localStorage.getItem('lucid-wallet'),
           storeSelectedWallet: (k) => localStorage.setItem('lucid-wallet', k),

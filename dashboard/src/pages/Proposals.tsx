@@ -77,12 +77,13 @@ export default function Proposals({ network }: Props) {
             <Link
               to={`/wallet/${address}`}
               className="text-slate-400 hover:text-slate-200 transition-colors"
+              aria-label="Back to constitution"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 className="text-2xl font-bold text-slate-100">
+            <h1 className="text-2xl font-bold text-slate-100 font-heading tracking-wide">
               Proposals
             </h1>
           </div>

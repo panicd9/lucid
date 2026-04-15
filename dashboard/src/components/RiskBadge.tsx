@@ -7,11 +7,11 @@ const styles: Record<RiskLevel, string> = {
   low: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
 };
 
-const icons: Record<RiskLevel, string> = {
-  critical: '\u{1F534}',
-  high: '\u{1F7E0}',
-  medium: '\u{1F7E1}',
-  low: '\u{1F7E2}',
+const dotStyles: Record<RiskLevel, string> = {
+  critical: 'bg-red-400',
+  high: 'bg-orange-400',
+  medium: 'bg-yellow-400',
+  low: 'bg-emerald-400',
 };
 
 interface Props {
@@ -22,9 +22,9 @@ interface Props {
 export default function RiskBadge({ level, className = '' }: Props) {
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded border ${styles[level]} ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded border ${styles[level]} ${className}`}
     >
-      <span>{icons[level]}</span>
+      <span className={`w-2 h-2 rounded-full ${dotStyles[level]}`} aria-hidden="true" />
       {level.toUpperCase()}
     </span>
   );

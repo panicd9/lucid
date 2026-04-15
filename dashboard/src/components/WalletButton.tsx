@@ -23,7 +23,8 @@ export default function WalletButton() {
       <div ref={ref} className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-500/30 transition-colors"
+          className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-500/30 transition-colors cursor-pointer"
+          aria-label="Wallet menu"
         >
           <div className="w-2 h-2 rounded-full bg-emerald-400" />
           <span className="font-mono">{short}</span>
@@ -38,7 +39,7 @@ export default function WalletButton() {
                 setAccount(undefined);
                 setOpen(false);
               }}
-              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-slate-700/50 transition-colors"
+              className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-slate-700/50 transition-colors cursor-pointer"
             >
               Disconnect
             </button>
@@ -56,7 +57,7 @@ export default function WalletButton() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg px-3 py-1.5 transition-colors"
+        className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg px-3 py-1.5 transition-colors cursor-pointer"
       >
         Connect Wallet
       </button>
@@ -77,7 +78,7 @@ export default function WalletButton() {
                   setAccount(acc);
                   setOpen(false);
                 }}
-                className="w-full px-3 py-2.5 text-left hover:bg-slate-700/50 transition-colors flex items-center gap-3 border-b border-slate-700/50 last:border-0"
+                className="w-full px-3 py-2.5 text-left hover:bg-slate-700/50 transition-colors flex items-center gap-3 border-b border-slate-700/50 last:border-0 cursor-pointer"
               >
                 {wallet.icon && (
                   <img

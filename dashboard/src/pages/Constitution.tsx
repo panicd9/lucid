@@ -63,14 +63,14 @@ export default function Constitution({ network }: Props) {
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-slate-100">{wallet.name}</h1>
+              <h1 className="text-2xl font-bold text-slate-100 font-heading tracking-wide">{wallet.name}</h1>
               <FrozenStatusBadge frozen={wallet.frozen} />
             </div>
             <AddressDisplay address={data.address.toBase58()} chars={8} />
           </div>
           <Link
             to={`/wallet/${address}/proposals`}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition-colors cursor-pointer"
           >
             View Proposals
           </Link>

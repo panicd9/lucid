@@ -29,7 +29,7 @@ export default function Navbar({ network, onNetworkChange }: Props) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
-          <span className="text-lg font-bold text-slate-100">Lucid</span>
+          <span className="text-lg font-bold text-slate-100 font-heading tracking-wider">Lucid</span>
         </Link>
 
         {/* Search */}
@@ -48,6 +48,7 @@ export default function Navbar({ network, onNetworkChange }: Props) {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Wallet address or name..."
+              aria-label="Search by wallet address or name"
               className="w-full pl-10 pr-4 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/25 transition-colors"
             />
           </div>
@@ -57,6 +58,7 @@ export default function Navbar({ network, onNetworkChange }: Props) {
         <select
           value={network}
           onChange={(e) => onNetworkChange(e.target.value)}
+          aria-label="Select network"
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-emerald-500/50 cursor-pointer"
         >
           <option value="localhost">Localhost</option>

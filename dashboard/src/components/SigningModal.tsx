@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSelectedWalletAccount, useSignMessage, useWalletAccountTransactionSendingSigner } from '@solana/react';
 import {
   pipe,
@@ -52,6 +52,15 @@ export default function SigningModal({
   // These hooks are safe to call with account — the modal only renders when account exists.
   const signMessage = useSignMessage(account!);
   const signer = useWalletAccountTransactionSendingSigner(account!, chain);
+
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && status !== 'signing' && status !== 'sending') onClose();
+  }, [status, onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [handleEscape]);
 
   // Decode and render the message preview
   const decoded = decodeParamsData(proposal.paramsData, intentData.params, intentData.intentType);
@@ -121,16 +130,17 @@ export default function SigningModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="signing-modal-title">
       <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-100 capitalize">
+          <h3 id="signing-modal-title" className="text-lg font-semibold text-slate-100 capitalize font-heading tracking-wide">
             {action} Proposal #{proposal.proposalIndex.toString()}
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors"
+            className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -202,14 +212,14 @@ export default function SigningModal({
           <button
             onClick={onClose}
             disabled={status === 'signing' || status === 'sending'}
-            className="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!account || status !== 'idle'}
-            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed ${
               action === 'approve'
                 ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
                 : 'bg-red-500 hover:bg-red-600 text-white'

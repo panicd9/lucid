@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSelectedWalletAccount, useSignMessage, useWalletAccountTransactionSendingSigner } from '@solana/react';
 import {
   pipe,
@@ -52,6 +52,15 @@ export default function ProposeModal({
   const chain = CHAIN_MAP[network] ?? 'solana:localnet';
   const signMessage = useSignMessage(account!);
   const signer = useWalletAccountTransactionSendingSigner(account!, chain);
+
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && status !== 'signing' && status !== 'sending') onClose();
+  }, [status, onClose]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [handleEscape]);
 
   const updateParam = (index: number, value: string) => {
     setParamValues((prev) => {
@@ -142,16 +151,17 @@ export default function ProposeModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="propose-modal-title">
       <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700 sticky top-0 bg-slate-800 z-10">
-          <h3 className="text-lg font-semibold text-slate-100">
+          <h3 id="propose-modal-title" className="text-lg font-semibold text-slate-100 font-heading tracking-wide">
             New Proposal — Intent #{intent.intentIndex}
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors"
+            className="text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -261,14 +271,14 @@ export default function ProposeModal({
           <button
             onClick={onClose}
             disabled={status === 'signing' || status === 'sending'}
-            className="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm text-slate-300 hover:text-slate-100 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
           >
             Close
           </button>
           <button
             onClick={handleSubmit}
             disabled={!account || (status !== 'form' && status !== 'preview')}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
           >
             {status === 'form' || status === 'preview'
               ? 'Sign & Propose'

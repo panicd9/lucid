@@ -29,7 +29,7 @@ export default function WalletDisambiguation({ name, candidates, pathSuffix = ''
             <button
               key={addr}
               onClick={() => navigate(`/wallet/${addr}${pathSuffix}`)}
-              className="w-full text-left px-4 py-4 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-slate-600 hover:bg-slate-800 transition-colors group"
+              className="w-full text-left px-4 py-4 bg-slate-800/50 border border-slate-700 rounded-lg hover:border-slate-600 hover:bg-slate-800 transition-colors group cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div>

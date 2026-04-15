@@ -38,7 +38,9 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
       {/* Header — always visible */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full text-left px-4 py-3 flex items-center gap-3"
+        className="w-full text-left px-4 py-3 flex items-center gap-3 cursor-pointer"
+        aria-expanded={expanded}
+        aria-label={`${intent.template || `Intent #${intent.intentIndex}`} — ${expanded ? 'collapse' : 'expand'} details`}
       >
         {/* Index badge */}
         <span className="shrink-0 w-8 h-8 rounded-lg bg-slate-700/50 flex items-center justify-center text-sm font-mono text-slate-400">
@@ -69,14 +71,20 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
         </div>
 
         {/* Verification status */}
-        <span className="shrink-0 text-sm">
+        <span className="shrink-0 text-sm inline-flex items-center gap-1">
           {intent.approved ? (
-            <span className="text-emerald-400" title="Verified">
-              &#x2713; Verified
+            <span className="text-emerald-400 inline-flex items-center gap-1" title="Verified">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Verified
             </span>
           ) : (
-            <span className="text-amber-400" title="Unverified">
-              &#x26A0; Unverified
+            <span className="text-amber-400 inline-flex items-center gap-1" title="Unverified">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              Unverified
             </span>
           )}
         </span>
@@ -255,7 +263,7 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
             <div className="pt-2 border-t border-slate-700/50">
               <button
                 onClick={() => setShowProposeModal(true)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors cursor-pointer"
               >
                 New Proposal
               </button>

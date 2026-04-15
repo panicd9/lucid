@@ -157,7 +157,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
             {canApprove && (
               <button
                 onClick={() => setSigningAction('approve')}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors cursor-pointer"
               >
                 Approve
               </button>
@@ -165,14 +165,14 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
             {canCancel && (
               <button
                 onClick={() => setSigningAction('cancel')}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
             )}
             {canExecute && (
               <button
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition-colors cursor-pointer"
                 onClick={() => setShowExecute(true)}
               >
                 Execute
