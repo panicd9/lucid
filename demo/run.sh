@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# solana-test-validator \
+#   --bpf-program LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR target/deploy/lucid.so \
+#   --bpf-program Ab1nTbMuFjcfoRJWWAdxPAVotYz2kzPxS18Yzie2iiQt demo/crowdfunding_programs/crowdfunding.so \
+#   --bpf-program 2hNiHwyEh9VJaBKdKAPhw1c9q6wcc5Jgmc1YBTbPNr8M demo/crowdfunding_programs/issuance.so \
+#   --bpf-program 6N4KJsm6TPooxvGMrp8PVLXXcp5vMEZJpffzRS29rG6h demo/crowdfunding_programs/rwa_transfer_hook.so \
+#   --reset
+
+
 # Lucid Demo Script — runs on solana-test-validator
 #
 # Prerequisites:
