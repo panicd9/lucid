@@ -23,3 +23,5 @@ test-ledger/
 
 # Demo wallets (ephemeral keypairs)
 demo/wallets/
+
+.claude/
