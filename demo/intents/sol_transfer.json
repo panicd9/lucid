@@ -49,7 +49,7 @@
   "seeds": [],
   "template": "transfer {amount} SOL to {to}",
   "riskLevel": "HIGH",
-  "timelockSeconds": 3600,
+  "timelockSeconds": 0,
   "verification": {
     "tier": 1,
     "programName": "System Program",
