@@ -19,11 +19,21 @@ fn wallet_with_named_template_intent(
     wallet_with_template(svm, name, b"transfer {amount} SOL to {destination}")
 }
 
-/// Shared: create wallet + add a custom intent with the given template
+/// Shared: create wallet + add a custom intent with the given template (display_decimals=0)
 fn wallet_with_template(
     svm: &mut litesvm::LiteSVM,
     name: &[u8],
     template: &[u8],
+) -> (setup::WalletSetup, solana_address::Address) {
+    wallet_with_template_decimals(svm, name, template, 0)
+}
+
+/// Shared: create wallet + add a custom intent with configurable display_decimals on the amount param
+fn wallet_with_template_decimals(
+    svm: &mut litesvm::LiteSVM,
+    name: &[u8],
+    template: &[u8],
+    amount_display_decimals: u8,
 ) -> (setup::WalletSetup, solana_address::Address) {
     let ws = setup::create_test_wallet(svm, name, 1, 2, 2, 1, 0);
 
@@ -42,7 +52,7 @@ fn wallet_with_template(
         param_type: helpers::PARAM_TYPE_U64,
         constraint_type: 0,
         constraint_value: 0,
-        display_decimals: 0,
+        display_decimals: amount_display_decimals,
         name: b"amount".to_vec(),
     });
     builder.params.push(helpers::intent::ParamDef {
@@ -73,10 +83,27 @@ fn build_transfer_params(amount: u64, destination: &[u8; 32]) -> Vec<u8> {
     params
 }
 
-/// Build the rendered template string for message verification
+/// Build the rendered template string for message verification (display_decimals=0)
 fn render_transfer(amount: u64, destination: &[u8; 32]) -> String {
     let dest_b58 = bs58_encode(destination);
     format!("transfer {} SOL to {}", amount, dest_b58)
+}
+
+/// Build rendered template for display_decimals=9 (SOL-style).
+/// Matches on-chain u64_to_decimal_scaled: 1_500_000_000 → "1.5", 1_000_000_000 → "1"
+fn render_transfer_decimals(amount: u64, destination: &[u8; 32], decimals: u32) -> String {
+    let dest_b58 = bs58_encode(destination);
+    let divisor = 10u64.pow(decimals);
+    let whole = amount / divisor;
+    let frac = amount % divisor;
+    if frac == 0 {
+        format!("transfer {} SOL to {}", whole, dest_b58)
+    } else {
+        // Format with leading zeros, strip trailing zeros (matches on-chain)
+        let frac_str = format!("{:0>width$}", frac, width = decimals as usize);
+        let trimmed = frac_str.trim_end_matches('0');
+        format!("transfer {}.{} SOL to {}", whole, trimmed, dest_b58)
+    }
 }
 
 fn bs58_encode(bytes: &[u8]) -> String {
@@ -393,4 +420,86 @@ fn test_cancel_with_named_template() {
     assert!(result.is_ok(), "Cancel with named template failed: {:?}", result.err());
 
     assert_eq!(setup::read_proposal(&svm, &proposal_pda).status, helpers::STATUS_CANCELLED);
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// display_decimals — message rendering must match on-chain formatting
+// ────────────────────────────────────────────────────────────────────────
+
+#[test]
+fn test_propose_display_decimals_whole() {
+    // 1_000_000_000 lamports with decimals=9 → "1" (no fractional part)
+    let mut svm = setup::new_svm();
+    let (ws, intent_pda) = wallet_with_template_decimals(
+        &mut svm, b"dec-whole", b"transfer {0} SOL to {1}", 9,
+    );
+
+    let dest = [42u8; 32];
+    let amount = 1_000_000_000u64;
+    let params = build_transfer_params(amount, &dest);
+    let rendered = render_transfer_decimals(amount, &dest, 9);
+    assert_eq!(rendered, format!("transfer 1 SOL to {}", bs58_encode(&dest)));
+
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = ed25519::future_expiry();
+    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, 0);
+
+    let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
+    let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
+    let propose_ix = instructions::propose(&ws.wallet, &intent_pda, 0, &params, &ws.payer.pubkey());
+
+    let result = setup::send_tx(&mut svm, &[ed25519_ix, propose_ix], &ws.payer, &[&ws.payer]);
+    assert!(result.is_ok(), "Propose with display_decimals=9 (whole) failed: {:?}", result.err());
+}
+
+#[test]
+fn test_propose_display_decimals_fractional() {
+    // 1_500_000_000 lamports with decimals=9 → "1.5"
+    let mut svm = setup::new_svm();
+    let (ws, intent_pda) = wallet_with_template_decimals(
+        &mut svm, b"dec-frac", b"transfer {0} SOL to {1}", 9,
+    );
+
+    let dest = [99u8; 32];
+    let amount = 1_500_000_000u64;
+    let params = build_transfer_params(amount, &dest);
+    let rendered = render_transfer_decimals(amount, &dest, 9);
+    assert_eq!(rendered, format!("transfer 1.5 SOL to {}", bs58_encode(&dest)));
+
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = ed25519::future_expiry();
+    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, 0);
+
+    let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
+    let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
+    let propose_ix = instructions::propose(&ws.wallet, &intent_pda, 0, &params, &ws.payer.pubkey());
+
+    let result = setup::send_tx(&mut svm, &[ed25519_ix, propose_ix], &ws.payer, &[&ws.payer]);
+    assert!(result.is_ok(), "Propose with display_decimals=9 (fractional) failed: {:?}", result.err());
+}
+
+#[test]
+fn test_propose_display_decimals_small_amount() {
+    // 100_000 lamports with decimals=9 → "0.0001"
+    let mut svm = setup::new_svm();
+    let (ws, intent_pda) = wallet_with_template_decimals(
+        &mut svm, b"dec-small", b"transfer {0} SOL to {1}", 9,
+    );
+
+    let dest = [77u8; 32];
+    let amount = 100_000u64;
+    let params = build_transfer_params(amount, &dest);
+    let rendered = render_transfer_decimals(amount, &dest, 9);
+    assert_eq!(rendered, format!("transfer 0.0001 SOL to {}", bs58_encode(&dest)));
+
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = ed25519::future_expiry();
+    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, 0);
+
+    let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
+    let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
+    let propose_ix = instructions::propose(&ws.wallet, &intent_pda, 0, &params, &ws.payer.pubkey());
+
+    let result = setup::send_tx(&mut svm, &[ed25519_ix, propose_ix], &ws.payer, &[&ws.payer]);
+    assert!(result.is_ok(), "Propose with display_decimals=9 (small amount) failed: {:?}", result.err());
 }
