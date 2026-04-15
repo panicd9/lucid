@@ -16,20 +16,14 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center pt-20 pb-16">
-      {/* Hero */}
-      <div className="relative mb-8">
-        {/* Glow backdrop */}
+      {/* Hero — T2 Logo */}
+      <div className="relative mb-6">
         <div className="absolute inset-0 -m-8 bg-gradient-radial from-amber-500/10 via-violet-500/5 to-transparent rounded-full blur-2xl" />
-        <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500/15 to-violet-500/15 border border-amber-500/20 flex items-center justify-center animate-float shadow-glow-gold-lg">
-          <svg className="w-10 h-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
+        <div className="relative inline-block" style={{ fontFamily: "'Orbitron', monospace", fontSize: '48px', fontWeight: 600, letterSpacing: '12px', background: 'linear-gradient(90deg, #e2e8f0, #f8fafc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase' as const }}>
+          LUCID
+          <span className="absolute bottom-[-6px] left-0 right-0 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, #F59E0B, #8B5CF6)' }} />
         </div>
       </div>
-
-      <h1 className="text-5xl font-bold font-heading tracking-wider mb-3 bg-gradient-to-r from-amber-300 via-amber-100 to-violet-300 bg-clip-text text-transparent">
-        Lucid
-      </h1>
       <p className="text-lg text-slate-400 mb-4">Intent-Based Multisig Protocol</p>
 
       {/* Feature pills */}

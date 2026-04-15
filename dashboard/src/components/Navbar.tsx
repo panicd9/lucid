@@ -26,15 +26,9 @@ export default function Navbar({ network, onNetworkChange }: Props) {
       <div className="bg-slate-900/70 backdrop-blur-xl border-b border-slate-800/50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-5">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/20 to-violet-500/20 border border-amber-500/20 flex items-center justify-center group-hover:shadow-glow-gold transition-shadow">
-              <svg className="w-4.5 h-4.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <span className="text-lg font-bold font-heading tracking-wider bg-gradient-to-r from-amber-300 to-amber-100 bg-clip-text text-transparent">
-              Lucid
-            </span>
+          <Link to="/" className="shrink-0 relative" style={{ fontFamily: "'Orbitron', monospace", fontSize: '17px', fontWeight: 600, letterSpacing: '6px', background: 'linear-gradient(90deg, #e2e8f0, #f8fafc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase' as const }}>
+            LUCID
+            <span className="absolute bottom-[-4px] left-0 right-0 h-[1.5px] rounded-full" style={{ background: 'linear-gradient(90deg, #F59E0B, #8B5CF6)' }} />
           </Link>
 
           {/* Search */}
