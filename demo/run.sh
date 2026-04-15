@@ -175,7 +175,7 @@ echo "── Step 3: Create 'treasury' multisig wallet (2-of-3)"
 echo ""
 CREATE_OUTPUT=$($LUCID wallet create \
   --name treasury \
-  --proposers "$PAYER" \
+  --proposers "$PAYER,$WALLET1" \
   --approvers "$WALLET1,$WALLET2,$WALLET3" \
   --approval-threshold 2 \
   --cancellation-threshold 1 \
