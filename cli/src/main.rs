@@ -136,6 +136,9 @@ enum WalletAction {
         /// Timelock in seconds
         #[arg(long, default_value = "0")]
         timelock: u32,
+        /// Fixed create key (base58 pubkey) for deterministic PDA. Random if omitted.
+        #[arg(long)]
+        create_key: Option<String>,
         /// Path to keypair file
         #[arg(long, default_value = "~/.config/solana/id.json")]
         keypair: String,
@@ -208,6 +211,7 @@ fn main() {
                 approval_threshold,
                 cancellation_threshold,
                 timelock,
+                create_key,
                 keypair,
                 url,
             } => commands::wallet::create(
@@ -217,6 +221,7 @@ fn main() {
                 approval_threshold,
                 cancellation_threshold,
                 timelock,
+                create_key.as_deref(),
                 &keypair,
                 &url,
             ),

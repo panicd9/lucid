@@ -1,17 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSelectedWalletAccount, useWalletAccountTransactionSendingSigner } from '@solana/react';
+import { useSelectedWalletAccount, useWalletAccountTransactionSigner } from '@solana/react';
 import {
   pipe,
   createTransactionMessage,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
   appendTransactionMessageInstruction,
-  signAndSendTransactionMessageWithSigners,
+  signTransactionMessageWithSigners,
+  getBase64EncodedWireTransaction,
   createSolanaRpc,
 } from '@solana/kit';
 import { PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { buildExecuteInstruction } from '../lib/instructions';
+import { ROLE_READONLY_SIGNER, ROLE_WRITABLE_SIGNER } from '../lib/constants';
 import { buildExecuteContext } from '../lib/resolveAccounts';
 import { decodeParamsData, renderTemplate } from '../lib/params';
 import { RPC_ENDPOINTS } from '../lib/constants';
@@ -42,7 +44,7 @@ export default function ExecuteModal({
 
   const [account] = useSelectedWalletAccount();
   const chain = CHAIN_MAP[network] ?? 'solana:localnet';
-  const signer = useWalletAccountTransactionSendingSigner(account!, chain);
+  const signer = useWalletAccountTransactionSigner(account!, chain);
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && status !== 'resolving' && status !== 'sending') onClose();
@@ -79,13 +81,20 @@ export default function ExecuteModal({
 
       setStatus('sending');
 
+      const signerAccounts = ctx.remainingAccounts.map((acc) =>
+        (acc.role === ROLE_WRITABLE_SIGNER || acc.role === ROLE_READONLY_SIGNER) &&
+        acc.address === signer.address
+          ? { ...acc, signer }
+          : acc
+      );
+
       const executeIx = buildExecuteInstruction(
         ctx.walletAddress,
         ctx.vaultAddress,
         ctx.intentAddress,
         ctx.proposalAddress,
         ctx.eventAuthority,
-        ctx.remainingAccounts
+        signerAccounts
       );
 
       const rpc = createSolanaRpc(RPC_ENDPOINTS[network]);
@@ -98,7 +107,9 @@ export default function ExecuteModal({
         (m) => appendTransactionMessageInstruction(executeIx as any, m),
       );
 
-      const sig = await signAndSendTransactionMessageWithSigners(message);
+      const signedTx = await signTransactionMessageWithSigners(message);
+      const encodedTx = getBase64EncodedWireTransaction(signedTx);
+      const sig = await rpc.sendTransaction(encodedTx, { encoding: 'base64' }).send();
       setTxSig(typeof sig === 'string' ? sig : bs58.encode(sig as any));
       setStatus('success');
       setTimeout(onSuccess, 2000);

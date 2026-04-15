@@ -22,6 +22,8 @@ WALLETS="$DEMO/wallets"
 KEYPAIR="${KEYPAIR:-$HOME/.config/solana/id.json}"
 RPC="http://127.0.0.1:8899"
 LUCID="cargo run -q -p lucid-cli --"
+# Fixed create key so treasury wallet PDA is deterministic across runs
+TREASURY_CREATE_KEY="uKJfh8tGiWcaCVSysUeny6DrT4Rz4xyYtG8hYWTXxQA"
 
 # Generate demo wallet keypairs if missing
 mkdir -p "$WALLETS"
@@ -179,6 +181,7 @@ CREATE_OUTPUT=$($LUCID wallet create \
   --approvers "$WALLET1,$WALLET2,$WALLET3" \
   --approval-threshold 2 \
   --cancellation-threshold 1 \
+  --create-key "$TREASURY_CREATE_KEY" \
   --keypair "$KEYPAIR" \
   --url "$RPC" 2>&1)
 echo "$CREATE_OUTPUT"

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSelectedWalletAccount, useSignMessage, useWalletAccountTransactionSendingSigner } from '@solana/react';
+import { useSelectedWalletAccount, useSignMessage, useWalletAccountTransactionSigner } from '@solana/react';
 import {
   pipe,
   createTransactionMessage,
   setTransactionMessageFeePayerSigner,
   setTransactionMessageLifetimeUsingBlockhash,
   appendTransactionMessageInstruction,
-  signAndSendTransactionMessageWithSigners,
+  signTransactionMessageWithSigners,
+  getBase64EncodedWireTransaction,
   createSolanaRpc,
 } from '@solana/kit';
 import bs58 from 'bs58';
@@ -49,7 +50,7 @@ export default function SigningModal({
   const [account] = useSelectedWalletAccount();
   const chain = CHAIN_MAP[network] ?? 'solana:localnet';
   const signMessage = useSignMessage(account!);
-  const signer = useWalletAccountTransactionSendingSigner(account!, chain);
+  const signer = useWalletAccountTransactionSigner(account!, chain);
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && status !== 'signing' && status !== 'sending') onClose();
@@ -110,7 +111,9 @@ export default function SigningModal({
         (m) => appendTransactionMessageInstruction(actionIx as any, m),
       );
 
-      const sig = await signAndSendTransactionMessageWithSigners(message);
+      const signedTx = await signTransactionMessageWithSigners(message);
+      const encodedTx = getBase64EncodedWireTransaction(signedTx);
+      const sig = await rpc.sendTransaction(encodedTx, { encoding: 'base64' }).send();
       setTxSig(typeof sig === 'string' ? sig : bs58.encode(sig as any));
       setStatus('success');
       setTimeout(onSuccess, 2000);

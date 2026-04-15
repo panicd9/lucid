@@ -10,8 +10,8 @@ import Proposals from './pages/Proposals';
 import { RPC_ENDPOINTS } from './lib/constants';
 
 export const CHAIN_MAP: Record<string, `solana:${string}`> = {
-  // Use devnet chain for localhost so browser wallets (Solflare, Backpack)
-  // discover accounts — they don't advertise on solana:localnet
+  // Wallet connects on devnet chain (for account discovery), but we send
+  // transactions to localhost RPC ourselves to avoid blockhash mismatch.
   localhost: 'solana:devnet',
   devnet: 'solana:devnet',
   mainnet: 'solana:mainnet',

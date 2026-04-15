@@ -22,6 +22,7 @@ pub fn create(
     approval_threshold: u8,
     cancellation_threshold: u8,
     timelock: u32,
+    create_key_str: Option<&str>,
     keypair_path: &str,
     url: &str,
 ) -> Result<()> {
@@ -51,8 +52,11 @@ pub fn create(
         anyhow::bail!("Approver count must be 1-16");
     }
 
-    // Generate a random create_key for unique PDA derivation
-    let create_key = Keypair::new().pubkey();
+    // Use provided create_key or generate a random one
+    let create_key = match create_key_str {
+        Some(s) => Pubkey::from_str(s).context("Invalid create-key pubkey")?,
+        None => Keypair::new().pubkey(),
+    };
 
     // Build instruction data: [disc=0, create_key(32), name_len, name_bytes, proposer_count,
     //   proposer_pubkeys, approver_count, approver_pubkeys, approval_threshold,

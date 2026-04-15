@@ -261,10 +261,12 @@ async function resolveCustomAccounts(
 
     if (!resolved) continue;
 
+    // Vault/PDA sources sign via invoke_signed in CPI, not at the transaction level
+    const txSigner = isSigner && source !== SOURCE_VAULT;
     let role: number;
-    if (writable && isSigner) role = ROLE_WRITABLE_SIGNER;
+    if (writable && txSigner) role = ROLE_WRITABLE_SIGNER;
     else if (writable) role = ROLE_WRITABLE;
-    else if (isSigner) role = ROLE_READONLY_SIGNER;
+    else if (txSigner) role = ROLE_READONLY_SIGNER;
     else role = ROLE_READONLY;
 
     results.push({ address: address(resolved), role });
