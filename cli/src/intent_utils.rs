@@ -43,8 +43,10 @@ pub struct IntentHeaderInfo {
     #[allow(dead_code)]
     pub target_program: Pubkey,
     pub timelock_seconds: u32,
+    #[allow(dead_code)]
     pub active_proposal_count: u16,
     pub byte_pool_len: u16,
+    #[allow(dead_code)]
     pub bump: u8,
     pub intent_index: u8,
     pub intent_type: u8,

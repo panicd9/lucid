@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
+use sha2::{Digest, Sha256};
 use solana_sdk::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
@@ -228,7 +229,7 @@ pub fn freeze(wallet_str: &str, keypair_path: &str, url: &str) -> Result<()> {
 
 pub fn add_intents(
     wallet_str: &str,
-    intents_dir: &str,
+    intents_path: &str,
     proposers_str: Option<&str>,
     approvers_str: Option<&str>,
     approval_threshold: Option<u8>,
@@ -243,20 +244,27 @@ pub fn add_intents(
     let wallet_pubkey = Pubkey::from_str(wallet_str)
         .context("Wallet must be a base58 address")?;
 
-    // Read all intent JSON files from directory
-    let mut entries: Vec<_> = std::fs::read_dir(intents_dir)?
-        .filter_map(|e| e.ok())
-        .filter(|e| {
-            e.path()
-                .extension()
-                .map(|ext| ext == "json")
-                .unwrap_or(false)
-        })
-        .collect();
-    entries.sort_by_key(|e| e.file_name());
+    // Collect intent file paths — single file or directory
+    let path = std::path::Path::new(intents_path);
+    let file_paths: Vec<std::path::PathBuf> = if path.is_file() {
+        vec![path.to_path_buf()]
+    } else {
+        let mut entries: Vec<_> = std::fs::read_dir(intents_path)?
+            .filter_map(|e| e.ok())
+            .filter(|e| {
+                e.path()
+                    .extension()
+                    .map(|ext| ext == "json")
+                    .unwrap_or(false)
+            })
+            .map(|e| e.path())
+            .collect();
+        entries.sort();
+        entries
+    };
 
-    if entries.is_empty() {
-        anyhow::bail!("No JSON files found in {}", intents_dir);
+    if file_paths.is_empty() {
+        anyhow::bail!("No JSON files found in {}", intents_path);
     }
 
     // Fetch current wallet to get intent_count
@@ -301,15 +309,21 @@ pub fn add_intents(
     let final_cancellation_threshold = cancellation_threshold.unwrap_or(mh.cancellation_threshold);
 
     println!(
-        "Adding {} intents to wallet {} (current count: {})",
-        entries.len(),
+        "Adding {} intent(s) to wallet {} (current count: {})",
+        file_paths.len(),
         wallet_pubkey,
         current_intent_count
     );
 
-    for entry in &entries {
-        let path = entry.path();
-        let content = std::fs::read_to_string(&path)?;
+    for path in &file_paths {
+        let content = std::fs::read_to_string(path)?;
+
+        let mut hasher = Sha256::new();
+        hasher.update(content.as_bytes());
+        let hash = hasher.finalize();
+        let hash_hex = format!("{:x}", hash);
+        let hash_short = &hash_hex[..16];
+
         let intent_def: IntentDefinition =
             serde_json::from_str(&content).with_context(|| format!("Failed to parse {}", path.display()))?;
 
@@ -347,10 +361,11 @@ pub fn add_intents(
 
         let sig = rpc::send_and_confirm(&client, &tx)?;
         println!(
-            "  {} Added intent [{}] {} - {}",
+            "  {} Added intent [{}] {} (sha256:{}) - {}",
             "OK".green(),
             current_intent_count,
             intent_def.instruction_name,
+            hash_short,
             sig
         );
 
@@ -359,7 +374,7 @@ pub fn add_intents(
 
     println!(
         "{}",
-        format!("Successfully added {} intents", entries.len())
+        format!("Successfully added {} intent(s)", file_paths.len())
             .green()
             .bold()
     );

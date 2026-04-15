@@ -209,6 +209,14 @@ pub fn verify(intents_dir: &str, idl_path: Option<&str>) -> Result<()> {
         let filename = path.file_name().unwrap_or_default().to_string_lossy();
 
         let content = std::fs::read_to_string(&path)?;
+
+        // Compute content hash for tamper detection
+        let mut content_hasher = Sha256::new();
+        content_hasher.update(content.as_bytes());
+        let content_hash = content_hasher.finalize();
+        let hash_hex = format!("{:x}", content_hash);
+        let hash_short = &hash_hex[..16];
+
         let intent: IntentDefinition = match serde_json::from_str(&content) {
             Ok(i) => i,
             Err(e) => {
@@ -262,22 +270,24 @@ pub fn verify(intents_dir: &str, idl_path: Option<&str>) -> Result<()> {
 
         if issues.is_empty() && warnings.is_empty() {
             println!(
-                "  {} {} - {} [{}] ({})",
+                "  {} {} - {} [{}] ({}) sha256:{}",
                 "PASS".green().bold(),
                 filename,
                 intent.instruction_name,
                 intent.risk_level,
-                tier_label
+                tier_label,
+                hash_short.dimmed()
             );
             pass_count += 1;
         } else if issues.is_empty() {
             println!(
-                "  {} {} - {} [{}] ({})",
+                "  {} {} - {} [{}] ({}) sha256:{}",
                 "WARN".yellow().bold(),
                 filename,
                 intent.instruction_name,
                 intent.risk_level,
-                tier_label
+                tier_label,
+                hash_short.dimmed()
             );
             for w in &warnings {
                 println!("       {} {}", "!".yellow(), w);
@@ -285,12 +295,13 @@ pub fn verify(intents_dir: &str, idl_path: Option<&str>) -> Result<()> {
             warn_count += 1;
         } else {
             println!(
-                "  {} {} - {} [{}] ({})",
+                "  {} {} - {} [{}] ({}) sha256:{}",
                 "FAIL".red().bold(),
                 filename,
                 intent.instruction_name,
                 intent.risk_level,
-                tier_label
+                tier_label,
+                hash_short.dimmed()
             );
             for i in &issues {
                 println!("       {} {}", "x".red(), i);
@@ -412,10 +423,10 @@ fn verify_against_idl(
 
     let ix = matched_ix.unwrap();
 
-    // Verify name match
+    // Verify name match — a name mismatch means the intent is disguising its real action
     if intent_utils::snake_case(&ix.name) != intent_utils::snake_case(&intent.instruction_name) {
-        warnings.push(format!(
-            "Name mismatch: intent says '{}', IDL has '{}'",
+        issues.push(format!(
+            "Name mismatch: intent claims '{}', but discriminator maps to '{}'",
             intent.instruction_name, ix.name
         ));
     }
@@ -434,7 +445,13 @@ fn verify_against_idl(
     }
 
     // Verify account count and flags
-    if intent.accounts.len() != ix.accounts.len() {
+    if intent.accounts.len() < ix.accounts.len() {
+        issues.push(format!(
+            "Too few accounts: intent has {}, IDL requires {}",
+            intent.accounts.len(),
+            ix.accounts.len()
+        ));
+    } else if intent.accounts.len() != ix.accounts.len() {
         warnings.push(format!(
             "Account count: intent has {}, IDL has {}",
             intent.accounts.len(),
@@ -447,29 +464,30 @@ fn verify_against_idl(
         let idl_acct = &ix.accounts[i];
 
         if intent_acct.writable != idl_acct.is_mut() {
-            warnings.push(format!(
+            issues.push(format!(
                 "Account '{}' writable mismatch: intent={}, IDL={}",
                 idl_acct.name, intent_acct.writable, idl_acct.is_mut()
             ));
         }
         if intent_acct.is_signer != idl_acct.is_signer() {
-            warnings.push(format!(
+            issues.push(format!(
                 "Account '{}' signer mismatch: intent={}, IDL={}",
                 idl_acct.name, intent_acct.is_signer, idl_acct.is_signer()
             ));
         }
     }
 
-    // Verify arg types match param types
-    if intent.params.len() != ix.args.len() {
+    // Verify arg types match param types.
+    // Intent params may include synthetic address params for account sources
+    // beyond the IDL instruction args, so only warn if fewer than expected.
+    if intent.params.len() < ix.args.len() {
         warnings.push(format!(
-            "Param count: intent has {}, IDL has {} args",
+            "Param count: intent has {}, IDL has {} args (too few)",
             intent.params.len(),
             ix.args.len()
         ));
     }
-    let param_check = intent.params.len().min(ix.args.len());
-    for i in 0..param_check {
+    for i in 0..ix.args.len().min(intent.params.len()) {
         let intent_param = &intent.params[i];
         let idl_arg = &ix.args[i];
 

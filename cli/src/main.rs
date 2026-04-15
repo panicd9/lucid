@@ -164,14 +164,17 @@ enum WalletAction {
         #[arg(long, default_value = "https://api.devnet.solana.com")]
         url: String,
     },
-    /// Add intents from a directory of JSON files
+    /// Add intents from a directory or single JSON file
     AddIntents {
         /// Wallet address
         #[arg(long)]
         wallet: String,
+        /// Single intent JSON file
+        #[arg(long, conflicts_with = "intents")]
+        intent: Option<String>,
         /// Directory containing intent JSON files
-        #[arg(long)]
-        intents: String,
+        #[arg(long, conflicts_with = "intent")]
+        intents: Option<String>,
         /// Proposer pubkeys (comma-separated). Omit to inherit from wallet.
         #[arg(long)]
         proposers: Option<String>,
@@ -225,6 +228,7 @@ fn main() {
             } => commands::wallet::freeze(&wallet, &keypair, &url),
             WalletAction::AddIntents {
                 wallet,
+                intent,
                 intents,
                 proposers,
                 approvers,
@@ -232,16 +236,22 @@ fn main() {
                 cancellation_threshold,
                 keypair,
                 url,
-            } => commands::wallet::add_intents(
-                &wallet,
-                &intents,
-                proposers.as_deref(),
-                approvers.as_deref(),
-                approval_threshold,
-                cancellation_threshold,
-                &keypair,
-                &url,
-            ),
+            } => {
+                let source = intent.or(intents).unwrap_or_else(|| {
+                    eprintln!("Error: provide either --intent <file> or --intents <dir>");
+                    std::process::exit(1);
+                });
+                commands::wallet::add_intents(
+                    &wallet,
+                    &source,
+                    proposers.as_deref(),
+                    approvers.as_deref(),
+                    approval_threshold,
+                    cancellation_threshold,
+                    &keypair,
+                    &url,
+                )
+            }
         },
         Commands::Generate { idl, output } => commands::generate::generate(&idl, &output),
         Commands::Verify { intents, idl } => commands::verify::verify(&intents, idl.as_deref()),
