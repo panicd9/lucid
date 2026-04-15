@@ -21,6 +21,9 @@ import { deserializeWallet } from '../lib/deserialize';
 import { CHAIN_MAP } from '../App';
 import type { IntentAccount } from '../lib/deserialize';
 
+const TOKEN_PROGRAM_LEGACY = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+const TOKEN_PROGRAM_2022 = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
+
 type Status = 'form' | 'preview' | 'signing' | 'sending' | 'success' | 'error';
 
 interface Props {
@@ -187,20 +190,43 @@ export default function ProposeModal({
                   ({PARAM_TYPE_LABELS[param.paramType] ?? 'unknown'})
                 </span>
               </label>
-              <input
-                type="text"
-                value={paramValues[i]}
-                onChange={(e) => updateParam(i, e.target.value)}
-                disabled={status !== 'form' && status !== 'preview'}
-                placeholder={
-                  param.paramType === PARAM_TYPE_ADDRESS
-                    ? 'Base58 address...'
-                    : param.paramType === PARAM_TYPE_BOOL
-                    ? 'true or false'
-                    : 'Value...'
-                }
-                className="w-full bg-slate-800/40 border border-slate-800/50 rounded-lg px-3 py-2.5 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 disabled:opacity-50 transition-all"
-              />
+              {param.name === 'token_program' ? (
+                <div className="flex rounded-lg border border-slate-800/50 bg-slate-800/40 p-1 gap-1">
+                  {[
+                    { label: 'Token Program (Legacy)', value: TOKEN_PROGRAM_LEGACY },
+                    { label: 'Token Program 2022', value: TOKEN_PROGRAM_2022 },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      disabled={status !== 'form' && status !== 'preview'}
+                      onClick={() => updateParam(i, opt.value)}
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${
+                        paramValues[i] === opt.value
+                          ? 'bg-violet-600 text-white shadow-md shadow-violet-500/20'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={paramValues[i]}
+                  onChange={(e) => updateParam(i, e.target.value)}
+                  disabled={status !== 'form' && status !== 'preview'}
+                  placeholder={
+                    param.paramType === PARAM_TYPE_ADDRESS
+                      ? 'Base58 address...'
+                      : param.paramType === PARAM_TYPE_BOOL
+                      ? 'true or false'
+                      : 'Value...'
+                  }
+                  className="w-full bg-slate-800/40 border border-slate-800/50 rounded-lg px-3 py-2.5 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 disabled:opacity-50 transition-all"
+                />
+              )}
             </div>
           ))}
 
