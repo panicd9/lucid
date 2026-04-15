@@ -60,6 +60,15 @@ if (( $(echo "$BALANCE < 5" | bc -l 2>/dev/null || echo 1) )); then
   echo ""
 fi
 
+# Fund approver wallets (they need SOL for tx fees when signing approvals)
+for i in 1 2 3 4 5; do
+  WK="$WALLETS/wallet$i.json"
+  BAL=$(solana balance -k "$WK" --url "$RPC" 2>/dev/null | awk '{print $1}')
+  if (( $(echo "$BAL < 1" | bc -l 2>/dev/null || echo 1) )); then
+    solana airdrop 2 --url "$RPC" -k "$WK" 2>/dev/null || true
+  fi
+done
+
 # Clean up tampered intents from previous runs
 rm -f "$DEMO/intents"/*_TAMPERED.json
 

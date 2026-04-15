@@ -190,18 +190,15 @@ fn build_remaining_accounts_for_custom(
             _ => continue,
         };
 
+        // Vault and PDA accounts are signed by the on-chain program via CPI,
+        // not by the outer transaction. Only mark as signer if the keypair
+        // is actually available (i.e. source is param or static).
+        let outer_signer = is_signer && source != SOURCE_VAULT && source != SOURCE_PDA;
+
         if writable {
-            if is_signer {
-                remaining.push(AccountMeta::new(address, true));
-            } else {
-                remaining.push(AccountMeta::new(address, false));
-            }
+            remaining.push(AccountMeta::new(address, outer_signer));
         } else {
-            if is_signer {
-                remaining.push(AccountMeta::new_readonly(address, true));
-            } else {
-                remaining.push(AccountMeta::new_readonly(address, false));
-            }
+            remaining.push(AccountMeta::new_readonly(address, outer_signer));
         }
     }
 

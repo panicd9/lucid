@@ -26,8 +26,57 @@ pub fn send_and_confirm(
 ) -> Result<Signature> {
     let sig = client
         .send_and_confirm_transaction(transaction)
-        .with_context(|| "Failed to send and confirm transaction")?;
+        .map_err(|e| {
+            let msg = e.to_string();
+            // Try to extract "custom program error: 0xNN" and decode it
+            if let Some(hex_start) = msg.find("custom program error: 0x") {
+                let hex_str = &msg[hex_start + 24..];
+                let hex_end = hex_str.find(|c: char| !c.is_ascii_hexdigit()).unwrap_or(hex_str.len());
+                if let Ok(code) = u32::from_str_radix(&hex_str[..hex_end], 16) {
+                    if let Some(name) = decode_program_error(code) {
+                        return anyhow::anyhow!("{} (error {}/0x{:x})\n\nRaw: {}", name, code, code, msg);
+                    }
+                }
+            }
+            anyhow::anyhow!("Failed to send and confirm transaction: {}", msg)
+        })?;
     Ok(sig)
+}
+
+fn decode_program_error(code: u32) -> Option<&'static str> {
+    match code {
+        100 => Some("Intent is deactivated"),
+        101 => Some("Wallet is frozen"),
+        102 => Some("Proposal index mismatch"),
+        103 => Some("Proposal is not active"),
+        104 => Some("Already approved by this signer"),
+        105 => Some("Already cancelled by this signer"),
+        106 => Some("Proposal is not approved"),
+        107 => Some("Timelock not reached — proposal was approved too recently"),
+        108 => Some("Signing message mismatch — CLI and on-chain rendered different messages"),
+        109 => Some("Signer not found in intent's proposer/approver list"),
+        110 => Some("Account mismatch — resolved account doesn't match expected"),
+        111 => Some("Parameter constraint violated"),
+        112 => Some("Invalid Ed25519 instruction"),
+        113 => Some("Proposal has expired"),
+        114 => Some("Wallet name too long"),
+        115 => Some("No signers provided"),
+        116 => Some("Invalid threshold"),
+        117 => Some("Wallet is not frozen"),
+        118 => Some("Active proposals exist — cannot modify"),
+        119 => Some("Wallet is already frozen"),
+        120 => Some("Batch too large"),
+        121 => Some("Intent is already active"),
+        122 => Some("Invalid intent type"),
+        123 => Some("Proposal has expired"),
+        124 => Some("Invalid offchain message header"),
+        125 => Some("Arithmetic overflow"),
+        126 => Some("Operation only allowed during setup phase"),
+        127 => Some("Recursion depth exceeded"),
+        128 => Some("Program ID mismatch"),
+        129 => Some("Too many signers"),
+        _ => None,
+    }
 }
 
 /// Build an Ed25519 precompile instruction using the solana keypair
