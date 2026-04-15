@@ -5,7 +5,8 @@
  * - SOURCE_STATIC: read pubkey from byte pool
  * - SOURCE_PARAM: read pubkey from params_data
  * - SOURCE_VAULT: use vault PDA
- * - SOURCE_PDA / SOURCE_HAS_ONE: skipped (same as CLI)
+ * - SOURCE_PDA: derive PDA from seed entries + program in byte pool
+ * - SOURCE_HAS_ONE: read pubkey from referenced account's data
  *
  * For meta-intents (add/remove/update), returns the fixed accounts.
  */
@@ -27,6 +28,9 @@ import {
   SOURCE_VAULT,
   SOURCE_PDA,
   SOURCE_HAS_ONE,
+  SEED_LITERAL,
+  SEED_PARAM,
+  SEED_ACCOUNT,
   ROLE_READONLY,
   ROLE_WRITABLE,
   ROLE_READONLY_SIGNER,
@@ -181,7 +185,7 @@ async function resolveCustomAccounts(
     approverCount * 32 +
     paramCount * PARAM_ENTRY_SIZE;
 
-  const bytePoolOffset =
+  const seedsOffset =
     PREFIX_LEN +
     INTENT_HEADER_SIZE +
     proposerCount * 32 +
@@ -189,12 +193,12 @@ async function resolveCustomAccounts(
     paramCount * PARAM_ENTRY_SIZE +
     accountCount * ACCOUNT_ENTRY_SIZE +
     instructionCount * INSTRUCTION_ENTRY_SIZE +
-    dataSegmentCount * DATA_SEGMENT_ENTRY_SIZE +
-    seedCount * SEED_ENTRY_SIZE;
+    dataSegmentCount * DATA_SEGMENT_ENTRY_SIZE;
+
+  const bytePoolOffset = seedsOffset + seedCount * SEED_ENTRY_SIZE;
 
   const paramsData = proposal.paramsData;
   const results: ResolvedAccount[] = [];
-  let skippedPDA = false;
 
   for (let a = 0; a < accountCount; a++) {
     const entryOffset = accountsOffset + a * ACCOUNT_ENTRY_SIZE;
@@ -252,9 +256,57 @@ async function resolveCustomAccounts(
         }
         break;
       }
-      case SOURCE_PDA:
-        skippedPDA = true;
-        continue;
+      case SOURCE_PDA: {
+        const seedStart = sourceData[0];
+        const pdaSeedCount = sourceData[1];
+        const progOff = sourceData[2] | (sourceData[3] << 8);
+
+        // Read program address from byte pool
+        const progPubkey = new PublicKey(
+          rawIntent.subarray(bytePoolOffset + progOff, bytePoolOffset + progOff + 32)
+        );
+
+        // Resolve each seed
+        const seeds: Buffer[] = [];
+        for (let s = 0; s < pdaSeedCount; s++) {
+          const seOffset = seedsOffset + (seedStart + s) * SEED_ENTRY_SIZE;
+          const seedType = rawIntent[seOffset];
+          const seedData = rawIntent.subarray(seOffset + 2, seOffset + 6);
+
+          switch (seedType) {
+            case SEED_LITERAL: {
+              const litOff = seedData[0] | (seedData[1] << 8);
+              const litLen = seedData[2] | (seedData[3] << 8);
+              seeds.push(Buffer.from(rawIntent.subarray(
+                bytePoolOffset + litOff,
+                bytePoolOffset + litOff + litLen
+              )));
+              break;
+            }
+            case SEED_PARAM: {
+              const pi = seedData[0];
+              const paramBytes = readParamBytes(
+                rawIntent, paramsData, pi,
+                proposerCount, approverCount, paramCount
+              );
+              if (paramBytes) seeds.push(Buffer.from(paramBytes));
+              break;
+            }
+            case SEED_ACCOUNT: {
+              // Resolve the referenced account's address and use as seed
+              const ai = seedData[0];
+              if (ai < results.length) {
+                seeds.push(Buffer.from(new PublicKey(results[ai].address).toBytes()));
+              }
+              break;
+            }
+          }
+        }
+
+        const [pda] = PublicKey.findProgramAddressSync(seeds, progPubkey);
+        resolved = pda.toBase58();
+        break;
+      }
       default:
         continue;
     }
@@ -270,12 +322,6 @@ async function resolveCustomAccounts(
     else role = ROLE_READONLY;
 
     results.push({ address: address(resolved), role });
-  }
-
-  if (skippedPDA) {
-    console.warn(
-      'Execute: skipped SOURCE_PDA accounts — not yet supported'
-    );
   }
 
   return results;
@@ -316,4 +362,54 @@ function readParamAddress(
 
   if (offset + 32 > paramsData.length) return null;
   return new PublicKey(paramsData.slice(offset, offset + 32));
+}
+
+/**
+ * Walk params_data to get raw bytes for param at `paramIdx`.
+ * Mirrors on-chain read_param_bytes().
+ */
+function readParamBytes(
+  rawIntent: Buffer,
+  paramsData: Uint8Array,
+  paramIdx: number,
+  proposerCount: number,
+  approverCount: number,
+  paramCount: number
+): Uint8Array | null {
+  const paramsEntryOffset =
+    PREFIX_LEN +
+    INTENT_HEADER_SIZE +
+    proposerCount * 32 +
+    approverCount * 32;
+
+  let offset = 0;
+  for (let i = 0; i < paramIdx; i++) {
+    const entryOff = paramsEntryOffset + i * PARAM_ENTRY_SIZE;
+    if (entryOff + PARAM_ENTRY_SIZE > rawIntent.length) return null;
+    const pt = rawIntent[entryOff + 12]; // paramType byte
+    const size = paramTypeSize(pt);
+    if (size === 0) {
+      if (offset + 2 > paramsData.length) return null;
+      const slen = paramsData[offset] | (paramsData[offset + 1] << 8);
+      offset += 2 + slen;
+    } else {
+      offset += size;
+    }
+  }
+
+  if (paramIdx >= paramCount) return null;
+  const entryOff = paramsEntryOffset + paramIdx * PARAM_ENTRY_SIZE;
+  if (entryOff + PARAM_ENTRY_SIZE > rawIntent.length) return null;
+  const pt = rawIntent[entryOff + 12];
+  const size = paramTypeSize(pt);
+  if (size === 0) {
+    // String: u16 len prefix + bytes
+    if (offset + 2 > paramsData.length) return null;
+    const slen = paramsData[offset] | (paramsData[offset + 1] << 8);
+    if (offset + 2 + slen > paramsData.length) return null;
+    return paramsData.slice(offset, offset + 2 + slen);
+  } else {
+    if (offset + size > paramsData.length) return null;
+    return paramsData.slice(offset, offset + size);
+  }
 }

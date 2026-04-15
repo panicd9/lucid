@@ -162,7 +162,7 @@ export function buildExecuteInstruction(
     accounts: [
       { address: wallet, role: ROLE_WRITABLE },
       { address: vault, role: ROLE_READONLY },
-      { address: intent, role: ROLE_READONLY },
+      { address: intent, role: ROLE_WRITABLE },
       { address: proposal, role: ROLE_WRITABLE },
       { address: eventAuthority, role: ROLE_READONLY },
       { address: LUCID_PROGRAM_ADDR, role: ROLE_READONLY },
