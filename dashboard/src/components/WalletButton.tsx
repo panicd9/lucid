@@ -23,10 +23,10 @@ export default function WalletButton() {
       <div ref={ref} className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-lg px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-500/30 transition-colors cursor-pointer"
+          className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/25 rounded-lg px-3 py-1.5 text-sm text-amber-300 hover:bg-amber-500/25 transition-colors cursor-pointer"
           aria-label="Wallet menu"
         >
-          <div className="w-2 h-2 rounded-full bg-emerald-400" />
+          <div className="w-2 h-2 rounded-full bg-amber-400" />
           <span className="font-mono">{short}</span>
         </button>
         {open && (
@@ -57,7 +57,7 @@ export default function WalletButton() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg px-3 py-1.5 transition-colors cursor-pointer"
+        className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg px-3 py-1.5 transition-colors cursor-pointer shadow-glow-purple"
       >
         Connect Wallet
       </button>

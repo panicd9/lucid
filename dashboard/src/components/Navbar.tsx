@@ -24,12 +24,12 @@ export default function Navbar({ network, onNetworkChange }: Props) {
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-            <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+            <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
           </div>
-          <span className="text-lg font-bold text-slate-100 font-heading tracking-wider">Lucid</span>
+          <span className="text-lg font-bold text-amber-100 font-heading tracking-wider text-glow-gold">Lucid</span>
         </Link>
 
         {/* Search */}
@@ -49,7 +49,7 @@ export default function Navbar({ network, onNetworkChange }: Props) {
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Wallet address or name..."
               aria-label="Search by wallet address or name"
-              className="w-full pl-10 pr-4 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/25 transition-colors"
+              className="w-full pl-10 pr-4 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/25 transition-colors"
             />
           </div>
         </form>
@@ -59,7 +59,7 @@ export default function Navbar({ network, onNetworkChange }: Props) {
           value={network}
           onChange={(e) => onNetworkChange(e.target.value)}
           aria-label="Select network"
-          className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-emerald-500/50 cursor-pointer"
+          className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-amber-500/50 cursor-pointer"
         >
           <option value="localhost">Localhost</option>
           <option value="devnet">Devnet</option>

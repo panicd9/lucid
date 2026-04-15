@@ -30,7 +30,7 @@ export default function AddressDisplay({ address, chars = 4, className = '' }: P
         aria-label={copied ? 'Address copied' : 'Copy address to clipboard'}
       >
         {copied ? (
-          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         ) : (

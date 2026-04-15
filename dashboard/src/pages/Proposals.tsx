@@ -38,7 +38,7 @@ export default function Proposals({ network }: Props) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-4" />
+        <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mb-4" />
         <p className="text-sm text-slate-400">Loading proposals...</p>
       </div>
     );

@@ -13,7 +13,13 @@ export default {
           gold: '#F59E0B',
           'gold-light': '#FBBF24',
           purple: '#8B5CF6',
+          'purple-light': '#A78BFA',
         },
+      },
+      boxShadow: {
+        'glow-gold': '0 0 20px rgba(245, 158, 11, 0.15)',
+        'glow-purple': '0 0 20px rgba(139, 92, 246, 0.15)',
+        'glow-gold-lg': '0 0 40px rgba(245, 158, 11, 0.2)',
       },
       animation: {
         'spin-slow': 'spin 2s linear infinite',

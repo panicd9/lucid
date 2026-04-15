@@ -34,7 +34,7 @@ export default function WalletDisambiguation({ name, candidates, pathSuffix = ''
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-medium text-slate-200 group-hover:text-emerald-400 transition-colors">
+                    <p className="text-sm font-medium text-slate-200 group-hover:text-amber-400 transition-colors">
                       {c.name}
                     </p>
                     {c.frozen && (

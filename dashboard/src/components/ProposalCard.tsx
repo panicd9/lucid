@@ -92,7 +92,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
 
   return (
     <>
-      <div className="border border-slate-700 bg-slate-800/50 rounded-lg p-4 hover:border-slate-600 transition-colors">
+      <div className="border border-slate-700/50 bg-slate-800/40 backdrop-blur-sm rounded-lg p-4 hover:border-slate-600/60 transition-all">
         {/* Top row */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -135,7 +135,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
           </div>
           <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-500 rounded-full transition-all"
+              className="h-full bg-amber-500 rounded-full transition-all"
               style={{ width: `${Math.min(approvalPct, 100)}%` }}
             />
           </div>
@@ -172,7 +172,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
             )}
             {canExecute && (
               <button
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors cursor-pointer"
                 onClick={() => setShowExecute(true)}
               >
                 Execute

@@ -111,9 +111,9 @@ export default function ExecuteModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="execute-modal-title">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full shadow-2xl">
+      <div className="bg-slate-800/90 backdrop-blur-md border border-slate-700/50 rounded-xl max-w-lg w-full shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">
           <h3 id="execute-modal-title" className="text-lg font-semibold text-slate-100 font-heading tracking-wide">
             Execute Proposal #{proposal.proposalIndex.toString()}
           </h3>
@@ -176,7 +176,7 @@ export default function ExecuteModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-700">
+        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-700/50">
           <button
             onClick={onClose}
             disabled={status === 'resolving' || status === 'sending'}
@@ -187,7 +187,7 @@ export default function ExecuteModal({
           <button
             onClick={handleExecute}
             disabled={!account || status !== 'idle'}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 hover:bg-blue-600 text-white transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-violet-600 hover:bg-violet-500 text-white transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-glow-purple"
           >
             {status === 'idle'
               ? 'Execute'

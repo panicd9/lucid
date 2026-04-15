@@ -29,10 +29,10 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
 
   return (
     <div
-      className={`border rounded-lg transition-colors ${
+      className={`border rounded-lg transition-all ${
         expanded
-          ? 'border-slate-600 bg-slate-800/80'
-          : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+          ? 'border-slate-600/60 bg-slate-800/60 backdrop-blur-sm shadow-glow-gold'
+          : 'border-slate-700/50 bg-slate-800/40 backdrop-blur-sm hover:border-slate-600/60'
       }`}
     >
       {/* Header — always visible */}
@@ -263,7 +263,7 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
             <div className="pt-2 border-t border-slate-700/50">
               <button
                 onClick={() => setShowProposeModal(true)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-violet-500/20 text-violet-300 border border-violet-500/30 hover:bg-violet-500/30 transition-colors cursor-pointer"
               >
                 New Proposal
               </button>

@@ -131,9 +131,9 @@ export default function SigningModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="signing-modal-title">
-      <div className="bg-slate-800 border border-slate-700 rounded-xl max-w-lg w-full shadow-2xl">
+      <div className="bg-slate-800/90 backdrop-blur-md border border-slate-700/50 rounded-xl max-w-lg w-full shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">
           <h3 id="signing-modal-title" className="text-lg font-semibold text-slate-100 capitalize font-heading tracking-wide">
             {action} Proposal #{proposal.proposalIndex.toString()}
           </h3>
@@ -155,7 +155,7 @@ export default function SigningModal({
             <label className="block text-xs font-medium text-slate-400 mb-1">
               Message to sign (displayed on Ledger)
             </label>
-            <div className="bg-slate-900 border border-slate-600 rounded-lg p-3 text-sm text-emerald-300 font-mono break-all">
+            <div className="bg-slate-900 border border-slate-600 rounded-lg p-3 text-sm text-amber-300 font-mono break-all">
               {messageBody}
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function SigningModal({
               value={expirySeconds}
               onChange={(e) => setExpirySeconds(Number(e.target.value))}
               disabled={status !== 'idle'}
-              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 w-full focus:outline-none focus:border-emerald-500/50"
+              className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-200 w-full focus:outline-none focus:border-amber-500/50"
             >
               <option value={60}>1 minute</option>
               <option value={300}>5 minutes</option>
@@ -208,7 +208,7 @@ export default function SigningModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-700">
+        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-700/50">
           <button
             onClick={onClose}
             disabled={status === 'signing' || status === 'sending'}

@@ -22,7 +22,7 @@ export default function Constitution({ network }: Props) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mb-4" />
+        <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mb-4" />
         <p className="text-sm text-slate-400">Loading wallet...</p>
       </div>
     );
@@ -59,7 +59,7 @@ export default function Constitution({ network }: Props) {
   return (
     <div>
       {/* Header */}
-      <div className="border border-slate-700 bg-slate-800/50 rounded-xl p-6 mb-6">
+      <div className="border border-slate-700/50 bg-slate-800/40 backdrop-blur-sm rounded-xl p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -70,7 +70,7 @@ export default function Constitution({ network }: Props) {
           </div>
           <Link
             to={`/wallet/${address}/proposals`}
-            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+            className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer shadow-glow-purple"
           >
             View Proposals
           </Link>
