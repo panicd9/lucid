@@ -48,10 +48,16 @@ pub fn propose(
 
     // Fetch intent to read template for message rendering
     let intent_data = rpc::fetch_account(&client, &intent_pda)?;
+    let h = intent_utils::deserialize_intent_header(&intent_data)?;
     let template = intent_utils::read_template_string(&intent_data);
 
-    // Render template with params for display
-    let rendered = render_template_simple(&template.unwrap_or_default(), params_str);
+    // Render template with params matching on-chain format (display_decimals, base58, etc.)
+    let rendered = intent_utils::render_template_with_params(
+        &template.unwrap_or_default(),
+        &intent_data,
+        &params_data,
+        h.intent_type,
+    );
 
     // Build the offchain message
     let body = format!(
@@ -193,25 +199,3 @@ fn parse_params_to_bytes(
     Ok(result)
 }
 
-fn render_template_simple(template: &str, params_str: Option<&str>) -> String {
-    if let Some(ps) = params_str {
-        let values: Vec<&str> = ps.split(',').collect();
-        let mut result = template.to_string();
-        for (i, val) in values.iter().enumerate() {
-            let (key, value) = if let Some((k, v)) = val.split_once('=') {
-                (Some(k.trim()), v.trim())
-            } else {
-                (None, val.trim())
-            };
-            // Replace by numeric index {0}, {1}, ...
-            result = result.replace(&format!("{{{}}}", i), value);
-            // Replace by param name {amount}, {to}, ...
-            if let Some(k) = key {
-                result = result.replace(&format!("{{{}}}", k), value);
-            }
-        }
-        result
-    } else {
-        template.to_string()
-    }
-}
