@@ -1,5 +1,41 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSelectedWalletAccount } from '@solana/react';
+import { useConnect } from '@wallet-standard/react';
+import type { UiWallet, UiWalletAccount } from '@wallet-standard/ui';
+
+function ConnectWalletRow({ wallet, onSelect }: { wallet: UiWallet; onSelect: (account: UiWalletAccount) => void }) {
+  const [isConnecting, connect] = useConnect(wallet);
+
+  return (
+    <button
+      disabled={isConnecting}
+      onClick={async () => {
+        const accounts = await connect();
+        if (accounts.length > 0) {
+          onSelect(accounts[0]);
+        }
+      }}
+      className="w-full px-4 py-3 text-left hover:bg-slate-700/30 transition-colors flex items-center gap-3 cursor-pointer disabled:opacity-50"
+    >
+      {wallet.icon ? (
+        <img
+          src={wallet.icon}
+          alt={wallet.name}
+          className="w-6 h-6 rounded-lg"
+        />
+      ) : (
+        <div className="w-6 h-6 rounded-lg bg-slate-700/50 flex items-center justify-center">
+          <span className="text-xs text-slate-400">{wallet.name[0]}</span>
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-slate-200 font-medium">
+          {isConnecting ? `Connecting to ${wallet.name}...` : wallet.name}
+        </p>
+      </div>
+    </button>
+  );
+}
 
 export default function WalletButton() {
   const [account, setAccount, wallets] = useSelectedWalletAccount();
@@ -50,7 +86,16 @@ export default function WalletButton() {
     );
   }
 
-  const allAccounts = wallets.flatMap((w) =>
+  // Deduplicate wallets by name (Backpack registers multiple times)
+  const seen = new Set<string>();
+  const uniqueWallets = wallets.filter((w) => {
+    if (seen.has(w.name)) return false;
+    seen.add(w.name);
+    return true;
+  });
+
+  // Split into wallets with pre-authorized accounts vs those needing connect
+  const withAccounts = wallets.flatMap((w) =>
     w.accounts.map((a) => ({ wallet: w, account: a }))
   );
 
@@ -64,7 +109,7 @@ export default function WalletButton() {
       </button>
       {open && (
         <div className="absolute right-0 mt-2 w-72 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
-          {allAccounts.length === 0 ? (
+          {uniqueWallets.length === 0 ? (
             <div className="px-4 py-6 text-center">
               <div className="w-10 h-10 rounded-xl bg-slate-700/30 flex items-center justify-center mx-auto mb-3">
                 <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -81,7 +126,8 @@ export default function WalletButton() {
               <div className="px-4 py-2">
                 <p className="text-[10px] text-slate-500 uppercase tracking-wider">Select Wallet</p>
               </div>
-              {allAccounts.map(({ wallet, account: acc }) => (
+              {/* Show pre-authorized accounts first */}
+              {withAccounts.map(({ wallet, account: acc }) => (
                 <button
                   key={`${wallet.name}-${acc.address}`}
                   onClick={() => {
@@ -91,11 +137,7 @@ export default function WalletButton() {
                   className="w-full px-4 py-3 text-left hover:bg-slate-700/30 transition-colors flex items-center gap-3 cursor-pointer"
                 >
                   {wallet.icon ? (
-                    <img
-                      src={wallet.icon}
-                      alt={wallet.name}
-                      className="w-6 h-6 rounded-lg"
-                    />
+                    <img src={wallet.icon} alt={wallet.name} className="w-6 h-6 rounded-lg" />
                   ) : (
                     <div className="w-6 h-6 rounded-lg bg-slate-700/50 flex items-center justify-center">
                       <span className="text-xs text-slate-400">{wallet.name[0]}</span>
@@ -109,6 +151,19 @@ export default function WalletButton() {
                   </div>
                 </button>
               ))}
+              {/* Show wallets that need connecting */}
+              {uniqueWallets
+                .filter((w) => w.accounts.length === 0)
+                .map((wallet) => (
+                  <ConnectWalletRow
+                    key={wallet.name}
+                    wallet={wallet}
+                    onSelect={(acc) => {
+                      setAccount(acc);
+                      setOpen(false);
+                    }}
+                  />
+                ))}
             </div>
           )}
         </div>

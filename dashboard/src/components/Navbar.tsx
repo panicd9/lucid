@@ -60,7 +60,7 @@ export default function Navbar({ network, onNetworkChange }: Props) {
           </form>
 
           {/* Network selector */}
-          <div className="flex items-center gap-1.5">
+          <div className="ml-auto flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full ${
               network === 'mainnet' ? 'bg-emerald-400' : network === 'devnet' ? 'bg-amber-400' : 'bg-slate-400'
             }`} />

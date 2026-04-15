@@ -10,7 +10,9 @@ import Proposals from './pages/Proposals';
 import { RPC_ENDPOINTS } from './lib/constants';
 
 export const CHAIN_MAP: Record<string, `solana:${string}`> = {
-  localhost: 'solana:localnet',
+  // Use devnet chain for localhost so browser wallets (Solflare, Backpack)
+  // discover accounts — they don't advertise on solana:localnet
+  localhost: 'solana:devnet',
   devnet: 'solana:devnet',
   mainnet: 'solana:mainnet',
 };
@@ -18,13 +20,16 @@ export const CHAIN_MAP: Record<string, `solana:${string}`> = {
 export default function App() {
   const [network, setNetwork] = useState('localhost');
 
+  const cluster = network === 'mainnet' ? 'mainnet' : 'devnet';
+
   const client = useMemo(
     () =>
       createClient({
+        cluster,
         endpoint: RPC_ENDPOINTS[network],
         walletConnectors: [...autoDiscover(), ...backpack(), ...phantom(), ...solflare()],
       }),
-    [network]
+    [network, cluster]
   );
 
   return (
@@ -33,7 +38,7 @@ export default function App() {
         filterWallets={() => true}
         stateSync={{
           getSelectedWallet: () => localStorage.getItem('lucid-wallet'),
-          storeSelectedWallet: (k) => localStorage.setItem('lucid-wallet', k),
+          storeSelectedWallet: (k: string) => localStorage.setItem('lucid-wallet', k),
           deleteSelectedWallet: () => localStorage.removeItem('lucid-wallet'),
         }}
       >
