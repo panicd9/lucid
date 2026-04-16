@@ -137,6 +137,6 @@ export const RPC_ENDPOINTS: Record<string, string> = {
 export const DEMO_WALLETS = [
   {
     name: 'treasury',
-    description: 'Demo treasury multisig with 2-of-3 approval',
+    description: 'Demo treasury multisig wallet',
   },
 ];
