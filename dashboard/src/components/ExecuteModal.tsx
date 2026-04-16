@@ -114,6 +114,9 @@ export default function ExecuteModal({
       setStatus('success');
       setTimeout(onSuccess, 2000);
     } catch (err: any) {
+      console.error('[Execute] Transaction failed:', err);
+      if (err?.logs) console.error('[Execute] Program logs:', err.logs);
+      if (err?.context) console.error('[Execute] Context:', err.context);
       setStatus('error');
       setErrorMsg(err?.message ?? String(err));
     }

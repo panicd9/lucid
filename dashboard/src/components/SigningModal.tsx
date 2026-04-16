@@ -118,6 +118,9 @@ export default function SigningModal({
       setStatus('success');
       setTimeout(onSuccess, 2000);
     } catch (err: any) {
+      console.error('[Sign] Transaction failed:', err);
+      if (err?.logs) console.error('[Sign] Program logs:', err.logs);
+      if (err?.context) console.error('[Sign] Context:', err.context);
       setStatus('error');
       setErrorMsg(err?.message ?? String(err));
     }

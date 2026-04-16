@@ -8,7 +8,8 @@
       "name": "amount",
       "paramType": "u64",
       "constraintType": "none",
-      "constraintValue": 0
+      "constraintValue": 0,
+      "decimalsParam": 2
     },
     {
       "name": "decimals",
@@ -100,7 +101,7 @@
       "accountIndex": 1
     }
   ],
-  "template": "transfer {amount} tokens (decimals: {decimals}) to {destination}",
+  "template": "transfer {amount} {mint} to {destination}",
   "riskLevel": "HIGH",
   "timelockSeconds": 3600,
   "verification": {

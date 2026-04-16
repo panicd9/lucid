@@ -183,6 +183,18 @@ pub fn render_template_with_params(template: &str, intent_data: &[u8], params_da
         }
         let pt = intent_data[entry_offset + 12];
         let display_decimals = intent_data[entry_offset + 14];
+        let decimals_param = intent_data[entry_offset + 15];
+
+        // Resolve effective decimals: static takes priority, then dynamic param ref
+        let effective_decimals = if display_decimals > 0 {
+            display_decimals
+        } else if decimals_param > 0 {
+            let ref_idx = (decimals_param - 1) as usize;
+            peek_u8_param(params_data, intent_data, params_entry_offset, param_count, ref_idx)
+        } else {
+            0
+        };
+
         let size = param_type_size(pt);
 
         let value_str = if size == 0 {
@@ -214,7 +226,7 @@ pub fn render_template_with_params(template: &str, intent_data: &[u8], params_da
             match pt {
                 PARAM_TYPE_U64 => {
                     let val = u64::from_le_bytes(bytes.try_into().unwrap_or([0; 8]));
-                    format_with_decimals(val, display_decimals)
+                    format_with_decimals(val, effective_decimals)
                 }
                 PARAM_TYPE_I64 => i64::from_le_bytes(bytes.try_into().unwrap_or([0; 8])).to_string(),
                 PARAM_TYPE_BOOL => (bytes[0] != 0).to_string(),
@@ -308,6 +320,38 @@ pub fn find_proposal_for_wallet(
     }
 
     Ok((intent_pda, proposal_pda, proposal_data))
+}
+
+/// Peek into params_data to read a u8 param value at a given param index.
+/// Walks the param entries sequentially to compute the byte offset.
+fn peek_u8_param(params_data: &[u8], intent_data: &[u8], params_entry_offset: usize, param_count: usize, target_idx: usize) -> u8 {
+    let mut offset = 0usize;
+    for i in 0..param_count {
+        let entry_offset = params_entry_offset + (i * PARAM_ENTRY_SIZE);
+        if entry_offset + PARAM_ENTRY_SIZE > intent_data.len() {
+            return 0;
+        }
+        let pt = intent_data[entry_offset + 12];
+        let size = param_type_size(pt);
+        if i == target_idx {
+            if size == 1 && offset < params_data.len() {
+                return params_data[offset];
+            }
+            return 0;
+        }
+        if size == 0 {
+            // String: u16 len prefix + content
+            if offset + 2 <= params_data.len() {
+                let slen = u16::from_le_bytes([params_data[offset], params_data[offset + 1]]) as usize;
+                offset += 2 + slen;
+            } else {
+                return 0;
+            }
+        } else {
+            offset += size;
+        }
+    }
+    0
 }
 
 /// Format a u64 with display_decimals scaling (e.g., 1500000000 with decimals=9 → "1.5").

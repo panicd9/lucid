@@ -177,6 +177,7 @@ fn generate_intent_from_instruction(
             constraint_type: "none".to_string(),
             constraint_value: 0,
             display_decimals: 0,
+            decimals_param: 0,
         });
     }
 
@@ -197,6 +198,7 @@ fn generate_intent_from_instruction(
                 constraint_type: "none".to_string(),
                 constraint_value: 0,
                 display_decimals: 0,
+                decimals_param: 0,
             });
             source = "param".to_string();
             Some(serde_json::Value::Number(serde_json::Number::from(param_idx)))

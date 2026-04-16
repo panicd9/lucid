@@ -69,6 +69,7 @@ export interface ParamEntry {
   paramType: number;
   constraintType: number;
   displayDecimals: number;
+  decimalsParam: number;   // 1-indexed param ref for dynamic decimals (0 = unused)
   name: string; // resolved from byte_pool
 }
 
@@ -212,6 +213,7 @@ export function deserializeIntent(data: Buffer): IntentAccount {
     const paramType = data[offset + 12];
     const constraintType = data[offset + 13];
     const displayDecimals = data[offset + 14];
+    const decimalsParam = data[offset + 15];
     params.push({
       constraintValue,
       nameOffset,
@@ -219,6 +221,7 @@ export function deserializeIntent(data: Buffer): IntentAccount {
       paramType,
       constraintType,
       displayDecimals,
+      decimalsParam,
       name: '', // resolved below
     });
     offset += PARAM_ENTRY_SIZE;

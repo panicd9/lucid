@@ -58,6 +58,7 @@ pub fn audit(
     };
 
     let mut pass_count = 0;
+    let mut info_count = 0;
     let mut fail_count = 0;
     let mut warn_count = 0;
 
@@ -105,6 +106,7 @@ pub fn audit(
 
         let mut issues: Vec<String> = Vec::new();
         let mut warnings: Vec<String> = Vec::new();
+        let mut infos: Vec<String> = Vec::new();
 
         // Match against JSON files by discriminator
         if !json_intents.is_empty() {
@@ -161,12 +163,25 @@ pub fn audit(
 
         // Verify against IDL if provided
         if let Some(ref idl_val) = idl {
-            verify_onchain_against_idl(onchain_bytes, &header, idl_val, &mut issues, &mut warnings);
+            verify_onchain_against_idl(onchain_bytes, &header, idl_val, &mut issues, &mut warnings, &mut infos);
         }
 
         // Print result
         let type_str = intent_type_to_str(header.intent_type);
-        if issues.is_empty() && warnings.is_empty() {
+        if issues.is_empty() && warnings.is_empty() && !infos.is_empty() {
+            println!(
+                "  {} Intent [{}] {} — \"{}\" sha256:{}",
+                "INFO".cyan().bold(),
+                i,
+                type_str.yellow(),
+                template,
+                hash_short.dimmed()
+            );
+            for info in &infos {
+                println!("       {} {}", "ℹ".cyan(), info);
+            }
+            info_count += 1;
+        } else if issues.is_empty() && warnings.is_empty() {
             println!(
                 "  {} Intent [{}] {} — \"{}\" sha256:{}",
                 "PASS".green().bold(),
@@ -210,8 +225,9 @@ pub fn audit(
 
     println!();
     println!(
-        "Results: {} passed, {} warnings, {} failed",
+        "Results: {} passed, {} info, {} warnings, {} failed",
         pass_count.to_string().green(),
+        info_count.to_string().cyan(),
         warn_count.to_string().yellow(),
         fail_count.to_string().red()
     );
@@ -433,12 +449,26 @@ pub fn identify_region(offset: usize, header: &intent_utils::IntentHeaderInfo) -
 }
 
 /// Verify on-chain intent against IDL: check discriminator and account flags.
+fn known_program_name(id: &str) -> Option<&'static str> {
+    match id {
+        "11111111111111111111111111111111" => Some("System Program"),
+        "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" => Some("SPL Token"),
+        "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb" => Some("SPL Token 2022"),
+        "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL" => Some("Associated Token Account"),
+        "ComputeBudget111111111111111111111111111111" => Some("Compute Budget"),
+        "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr" => Some("Memo v2"),
+        "Memo1UhkJBfCR6MNB4Gk8tWWgs6EYGQWFHB627jovWp" => Some("Memo v1"),
+        _ => None,
+    }
+}
+
 fn verify_onchain_against_idl(
     onchain_bytes: &[u8],
     header: &intent_utils::IntentHeaderInfo,
     idl: &serde_json::Value,
     issues: &mut Vec<String>,
     warnings: &mut Vec<String>,
+    infos: &mut Vec<String>,
 ) {
     // Only verify custom intents against IDL
     if header.intent_type != INTENT_TYPE_CUSTOM {
@@ -451,10 +481,17 @@ fn verify_onchain_against_idl(
         .unwrap_or("");
     let target = header.target_program.to_string();
     if idl_addr != target {
-        warnings.push(format!(
-            "IDL program ({}) doesn't match intent target ({})",
-            idl_addr, target
-        ));
+        if let Some(name) = known_program_name(&target) {
+            infos.push(format!(
+                "Targets {} ({}) — no IDL verification needed",
+                name, target
+            ));
+        } else {
+            warnings.push(format!(
+                "Targets unknown program ({}) with no IDL — cannot verify",
+                target
+            ));
+        }
         return;
     }
 

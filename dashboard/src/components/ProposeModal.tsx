@@ -15,7 +15,7 @@ import { PublicKey, Connection } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { buildEd25519Instruction, buildProposeInstruction } from '../lib/instructions';
 import { buildMessageBody, buildOffchainEnvelope, formatExpiry } from '../lib/message';
-import { encodeParamsData, renderTemplate } from '../lib/params';
+import { encodeParamsData, renderTemplate, normalizeDecimal, resolveDecimals } from '../lib/params';
 import { RPC_ENDPOINTS, PARAM_TYPE_LABELS, PARAM_TYPE_ADDRESS, PARAM_TYPE_BOOL } from '../lib/constants';
 import { findProposalPDA, findIntentPDA } from '../lib/pda';
 import { deserializeWallet } from '../lib/deserialize';
@@ -94,9 +94,16 @@ export default function ProposeModal({
 
       const paramsData = encodeParamsData(paramValues, intent.params);
 
+      // Normalize values to match on-chain rendering (e.g., "1.50" → "1.5")
+      const normalized = paramValues.map((v, i) => {
+        const d = resolveDecimals(intent.params[i], paramValues);
+        return d ? normalizeDecimal(v, d) : v;
+      });
+      const signedRendered = renderTemplate(intent.template, normalized, intent.params);
+
       const body = buildMessageBody(
         'propose',
-        rendered,
+        signedRendered,
         walletName,
         proposalIndex,
         expiryStr
@@ -144,6 +151,9 @@ export default function ProposeModal({
       setStatus('success');
       setTimeout(onSuccess, 2000);
     } catch (err: any) {
+      console.error('[Propose] Transaction failed:', err);
+      if (err?.logs) console.error('[Propose] Program logs:', err.logs);
+      if (err?.context) console.error('[Propose] Context:', err.context);
       setStatus('error');
       setErrorMsg(err?.message ?? String(err));
     }

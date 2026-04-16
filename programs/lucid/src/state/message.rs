@@ -142,7 +142,17 @@ fn format_param_into(
 ) -> Result<(), ProgramError> {
     let entry = read_param_entry(intent_data, intent, param_index)?;
     let bytes = read_param_bytes(intent_data, intent, params_data, param_index)?;
-    let decimals = entry.display_decimals;
+
+    // Resolve effective decimals: static field takes priority, then dynamic param ref
+    let decimals = if entry.display_decimals > 0 {
+        entry.display_decimals
+    } else if entry.decimals_param > 0 {
+        let ref_index = entry.decimals_param - 1;
+        let ref_bytes = read_param_bytes(intent_data, intent, params_data, ref_index)?;
+        ref_bytes[0]
+    } else {
+        0
+    };
 
     match entry.param_type {
         PARAM_TYPE_ADDRESS => {

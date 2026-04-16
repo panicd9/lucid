@@ -53,6 +53,7 @@ fn wallet_with_template_decimals(
         constraint_type: 0,
         constraint_value: 0,
         display_decimals: amount_display_decimals,
+        decimals_param: 0,
         name: b"amount".to_vec(),
     });
     builder.params.push(helpers::intent::ParamDef {
@@ -60,6 +61,7 @@ fn wallet_with_template_decimals(
         constraint_type: 0,
         constraint_value: 0,
         display_decimals: 0,
+        decimals_param: 0,
         name: b"destination".to_vec(),
     });
 
@@ -68,6 +70,64 @@ fn wallet_with_template_decimals(
     let ix = instructions::add_intent(&ws.wallet, 3, &intent_data, &ws.payer.pubkey());
     let result = setup::send_tx(svm, &[ix], &ws.payer, &[&ws.payer]);
     assert!(result.is_ok(), "AddIntent failed: {:?}", result.err());
+
+    let pid = helpers::program_id();
+    let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 3, &pid);
+
+    (ws, intent_pda)
+}
+
+/// Create wallet + add intent with dynamic decimals_param (SPL-style).
+/// Params: [0] amount (u64, decimals_param=2), [1] decimals (u8), [2] destination (address)
+fn wallet_with_dynamic_decimals_intent(
+    svm: &mut litesvm::LiteSVM,
+    name: &[u8],
+) -> (setup::WalletSetup, solana_address::Address) {
+    let ws = setup::create_test_wallet(svm, name, 1, 2, 2, 1, 0);
+
+    let mut builder = helpers::intent::IntentDataBuilder::new();
+    builder.intent_type = helpers::INTENT_TYPE_CUSTOM;
+    builder.approval_threshold = 2;
+    builder.cancellation_threshold = 1;
+    builder.timelock_seconds = 0;
+    builder.template = b"transfer {amount} tokens to {destination}".to_vec();
+    builder.proposers.push(ws.proposers[0].pubkey().to_bytes());
+    builder.approvers.push(ws.approvers[0].pubkey().to_bytes());
+    builder.approvers.push(ws.approvers[1].pubkey().to_bytes());
+
+    // Param 0: amount (u64, decimals_param=2 → reads param[1] for decimals)
+    builder.params.push(helpers::intent::ParamDef {
+        param_type: helpers::PARAM_TYPE_U64,
+        constraint_type: 0,
+        constraint_value: 0,
+        display_decimals: 0,
+        decimals_param: 2, // 1-indexed → param[1]
+        name: b"amount".to_vec(),
+    });
+    // Param 1: decimals (u8)
+    builder.params.push(helpers::intent::ParamDef {
+        param_type: helpers::PARAM_TYPE_U8,
+        constraint_type: 0,
+        constraint_value: 0,
+        display_decimals: 0,
+        decimals_param: 0,
+        name: b"decimals".to_vec(),
+    });
+    // Param 2: destination (address)
+    builder.params.push(helpers::intent::ParamDef {
+        param_type: helpers::PARAM_TYPE_ADDRESS,
+        constraint_type: 0,
+        constraint_value: 0,
+        display_decimals: 0,
+        decimals_param: 0,
+        name: b"destination".to_vec(),
+    });
+
+    let intent_data = builder.build();
+
+    let ix = instructions::add_intent(&ws.wallet, 3, &intent_data, &ws.payer.pubkey());
+    let result = setup::send_tx(svm, &[ix], &ws.payer, &[&ws.payer]);
+    assert!(result.is_ok(), "AddIntent with decimals_param failed: {:?}", result.err());
 
     let pid = helpers::program_id();
     let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 3, &pid);
@@ -502,4 +562,109 @@ fn test_propose_display_decimals_small_amount() {
 
     let result = setup::send_tx(&mut svm, &[ed25519_ix, propose_ix], &ws.payer, &[&ws.payer]);
     assert!(result.is_ok(), "Propose with display_decimals=9 (small amount) failed: {:?}", result.err());
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Dynamic decimals_param
+// ────────────────────────────────────────────────────────────────────────
+
+/// Build params_data for dynamic decimals intent: u64 amount + u8 decimals + address destination
+fn build_dynamic_decimals_params(amount: u64, decimals: u8, destination: &[u8; 32]) -> Vec<u8> {
+    let mut params = Vec::new();
+    params.extend_from_slice(&amount.to_le_bytes());
+    params.push(decimals);
+    params.extend_from_slice(destination);
+    params
+}
+
+/// Render template for dynamic decimals: "transfer {amount} tokens to {destination}"
+/// where amount is formatted using the given decimals value.
+fn render_dynamic_decimals(amount: u64, decimals: u8, destination: &[u8; 32]) -> String {
+    let dest_b58 = bs58_encode(destination);
+    if decimals == 0 {
+        format!("transfer {} tokens to {}", amount, dest_b58)
+    } else {
+        let divisor = 10u64.pow(decimals as u32);
+        let whole = amount / divisor;
+        let frac = amount % divisor;
+        if frac == 0 {
+            format!("transfer {} tokens to {}", whole, dest_b58)
+        } else {
+            let frac_str = format!("{:0>width$}", frac, width = decimals as usize);
+            let trimmed = frac_str.trim_end_matches('0');
+            format!("transfer {}.{} tokens to {}", whole, trimmed, dest_b58)
+        }
+    }
+}
+
+#[test]
+fn test_propose_dynamic_decimals_6() {
+    let mut svm = setup::new_svm();
+    let (ws, intent_pda) = wallet_with_dynamic_decimals_intent(&mut svm, b"dyn-dec6");
+
+    let dest = [55u8; 32];
+    let amount = 1_500_000u64; // 1.5 with 6 decimals (USDC-style)
+    let decimals = 6u8;
+    let params = build_dynamic_decimals_params(amount, decimals, &dest);
+    let rendered = render_dynamic_decimals(amount, decimals, &dest);
+    assert_eq!(rendered, format!("transfer 1.5 tokens to {}", bs58_encode(&dest)));
+
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = ed25519::future_expiry();
+    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, 0);
+
+    let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
+    let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
+    let propose_ix = instructions::propose(&ws.wallet, &intent_pda, 0, &params, &ws.payer.pubkey());
+
+    let result = setup::send_tx(&mut svm, &[ed25519_ix, propose_ix], &ws.payer, &[&ws.payer]);
+    assert!(result.is_ok(), "Propose with decimals_param (6 decimals) failed: {:?}", result.err());
+}
+
+#[test]
+fn test_propose_dynamic_decimals_9() {
+    let mut svm = setup::new_svm();
+    let (ws, intent_pda) = wallet_with_dynamic_decimals_intent(&mut svm, b"dyn-dec9");
+
+    let dest = [66u8; 32];
+    let amount = 2_000_000_000u64; // 2.0 with 9 decimals (wrapped SOL-style)
+    let decimals = 9u8;
+    let params = build_dynamic_decimals_params(amount, decimals, &dest);
+    let rendered = render_dynamic_decimals(amount, decimals, &dest);
+    assert_eq!(rendered, format!("transfer 2 tokens to {}", bs58_encode(&dest)));
+
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = ed25519::future_expiry();
+    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, 0);
+
+    let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
+    let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
+    let propose_ix = instructions::propose(&ws.wallet, &intent_pda, 0, &params, &ws.payer.pubkey());
+
+    let result = setup::send_tx(&mut svm, &[ed25519_ix, propose_ix], &ws.payer, &[&ws.payer]);
+    assert!(result.is_ok(), "Propose with decimals_param (9 decimals) failed: {:?}", result.err());
+}
+
+#[test]
+fn test_propose_dynamic_decimals_0() {
+    let mut svm = setup::new_svm();
+    let (ws, intent_pda) = wallet_with_dynamic_decimals_intent(&mut svm, b"dyn-dec0");
+
+    let dest = [88u8; 32];
+    let amount = 42u64; // 42 with 0 decimals (no fractional, e.g. NFT count)
+    let decimals = 0u8;
+    let params = build_dynamic_decimals_params(amount, decimals, &dest);
+    let rendered = render_dynamic_decimals(amount, decimals, &dest);
+    assert_eq!(rendered, format!("transfer 42 tokens to {}", bs58_encode(&dest)));
+
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = ed25519::future_expiry();
+    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, 0);
+
+    let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
+    let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
+    let propose_ix = instructions::propose(&ws.wallet, &intent_pda, 0, &params, &ws.payer.pubkey());
+
+    let result = setup::send_tx(&mut svm, &[ed25519_ix, propose_ix], &ws.payer, &[&ws.payer]);
+    assert!(result.is_ok(), "Propose with decimals_param (0 decimals) failed: {:?}", result.err());
 }

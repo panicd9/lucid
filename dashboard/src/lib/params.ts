@@ -39,6 +39,37 @@ function formatWithDecimals(val: bigint, decimals: number): string {
   return `${whole}.${fracStr}`;
 }
 
+/** Normalize a decimal string to match on-chain rendering (strips trailing zeros).
+ *  e.g., "1.50" with decimals=9 → "1.5" */
+export function normalizeDecimal(val: string, decimals: number): string {
+  if (decimals === 0) return BigInt(val).toString();
+  return formatWithDecimals(parseScaledBigInt(val, decimals), decimals);
+}
+
+/** Resolve the effective decimals for a param.
+ *  Static displayDecimals takes priority, then dynamic decimalsParam ref. */
+export function resolveDecimals(param: ParamEntry, allValues: string[]): number {
+  if (param.displayDecimals > 0) return param.displayDecimals;
+  if (param.decimalsParam > 0) {
+    return parseInt(allValues[param.decimalsParam - 1] || '0', 10);
+  }
+  return 0;
+}
+
+/** Parse a human-readable decimal string and scale by displayDecimals.
+ *  e.g., "1.5" with decimals=9 → 1500000000n */
+function parseScaledBigInt(val: string, decimals: number): bigint {
+  if (decimals === 0) return BigInt(val);
+  const parts = val.split('.');
+  const whole = parts[0] || '0';
+  let frac = parts[1] || '';
+  if (frac.length > decimals) {
+    throw new Error(`Too many decimal places (max ${decimals})`);
+  }
+  frac = frac.padEnd(decimals, '0');
+  return BigInt(whole) * 10n ** BigInt(decimals) + BigInt(frac);
+}
+
 const INTENT_HEADER_DATA_LEN = 88;
 
 /**
@@ -119,6 +150,29 @@ export function paramTypeSize(paramType: number): number {
   }
 }
 
+/** Peek into binary params_data to read a u8 param at a given index. */
+function peekU8Param(paramsData: Uint8Array, intentParams: ParamEntry[], targetIdx: number): number {
+  let off = 0;
+  for (let i = 0; i < intentParams.length; i++) {
+    const size = paramTypeSize(intentParams[i].paramType);
+    if (i === targetIdx) {
+      return size === 1 && off < paramsData.length ? paramsData[off] : 0;
+    }
+    if (size === 0) {
+      // String: u16 len prefix + content
+      if (off + 2 <= paramsData.length) {
+        const slen = paramsData[off] | (paramsData[off + 1] << 8);
+        off += 2 + slen;
+      } else {
+        return 0;
+      }
+    } else {
+      off += size;
+    }
+  }
+  return 0;
+}
+
 /**
  * Decode raw params_data bytes into an array of display strings.
  * Index-aligned with the intent's params array.
@@ -146,13 +200,21 @@ export function decodeParamsData(
       }
       case PARAM_TYPE_U64: {
         const val = view.getBigUint64(offset, true);
-        values.push(formatWithDecimals(val, param.displayDecimals));
+        let d = param.displayDecimals;
+        if (d === 0 && param.decimalsParam > 0) {
+          d = peekU8Param(paramsData, intentParams, param.decimalsParam - 1);
+        }
+        values.push(formatWithDecimals(val, d));
         offset += 8;
         break;
       }
       case PARAM_TYPE_I64: {
         const val = view.getBigInt64(offset, true);
-        values.push(val.toString());
+        let d = param.displayDecimals;
+        if (d === 0 && param.decimalsParam > 0) {
+          d = peekU8Param(paramsData, intentParams, param.decimalsParam - 1);
+        }
+        values.push(d > 0 ? formatWithDecimals(val, d) : val.toString());
         offset += 8;
         break;
       }
@@ -228,13 +290,15 @@ export function encodeParamsData(
       }
       case PARAM_TYPE_U64: {
         const buf = new ArrayBuffer(8);
-        new DataView(buf).setBigUint64(0, BigInt(val), true);
+        const d = resolveDecimals(param, values);
+        new DataView(buf).setBigUint64(0, parseScaledBigInt(val, d), true);
         parts.push(new Uint8Array(buf));
         break;
       }
       case PARAM_TYPE_I64: {
         const buf = new ArrayBuffer(8);
-        new DataView(buf).setBigInt64(0, BigInt(val), true);
+        const d = resolveDecimals(param, values);
+        new DataView(buf).setBigInt64(0, parseScaledBigInt(val, d), true);
         parts.push(new Uint8Array(buf));
         break;
       }
