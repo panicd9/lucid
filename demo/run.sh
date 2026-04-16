@@ -24,6 +24,7 @@ RPC="http://127.0.0.1:8899"
 LUCID="cargo run -q -p lucid-cli --"
 # Fixed create key so treasury wallet PDA is deterministic across runs
 TREASURY_CREATE_KEY="uKJfh8tGiWcaCVSysUeny6DrT4Rz4xyYtG8hYWTXxQA"
+LEDGER="CVZS7aVJKfVzjEN279h8Nog1KjMUyX5x2mrzprPefM1G"
 
 # Generate demo wallet keypairs if missing
 mkdir -p "$WALLETS"
@@ -51,6 +52,7 @@ echo "  Wallet 2: $WALLET2"
 echo "  Wallet 3: $WALLET3"
 echo "  Wallet 4: $WALLET4"
 echo "  Wallet 5: $WALLET5"
+echo "  Ledger:   $LEDGER"
 echo "  RPC:      $RPC"
 echo ""
 
@@ -70,6 +72,13 @@ for i in 1 2 3 4 5; do
     solana airdrop 2 --url "$RPC" -k "$WK" 2>/dev/null || true
   fi
 done
+
+# Fund Ledger wallet
+LEDGER_BAL=$(solana balance "$LEDGER" --url "$RPC" 2>/dev/null | awk '{print $1}')
+if (( $(echo "$LEDGER_BAL < 1" | bc -l 2>/dev/null || echo 1) )); then
+  echo "  Airdropping SOL to Ledger..."
+  solana airdrop 2 --url "$RPC" "$LEDGER" 2>/dev/null || true
+fi
 
 # Clean up tampered intents from previous runs
 rm -f "$DEMO/intents"/*_TAMPERED.json
@@ -178,8 +187,8 @@ echo "── Step 3: Create 'treasury' multisig wallet (2-of-3)"
 echo ""
 CREATE_OUTPUT=$($LUCID wallet create \
   --name treasury \
-  --proposers "$PAYER,$WALLET1" \
-  --approvers "$WALLET1,$WALLET2,$WALLET3" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$WALLET2,$LEDGER" \
   --approval-threshold 2 \
   --cancellation-threshold 1 \
   --create-key "$TREASURY_CREATE_KEY" \
@@ -198,81 +207,89 @@ echo ""
 echo "── Step 4: Add intents with varying approver sets"
 echo ""
 
-echo "  [HIGH]     SOL transfer          — 2-of-3 (W1, W2, W3)"
+echo "  [HIGH]     SOL transfer          — 2-of-3 (W1, W2, Ledger)"
 $LUCID wallet add-intents \
   --wallet "$WALLET_ADDR" \
   --intent "$DEMO/intents/sol_transfer.json" \
-  --approvers "$WALLET1,$WALLET2,$WALLET3" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$WALLET2,$LEDGER" \
   --approval-threshold 2 \
   --keypair "$KEYPAIR" \
   --url "$RPC"
 echo ""
 
-echo "  [HIGH]     SPL transfer          — 2-of-3 (W1, W2, W3)"
+echo "  [HIGH]     SPL transfer          — 2-of-3 (W1, W2, Ledger)"
 $LUCID wallet add-intents \
   --wallet "$WALLET_ADDR" \
   --intent "$DEMO/intents/spl_transfer.json" \
-  --approvers "$WALLET1,$WALLET2,$WALLET3" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$WALLET2,$LEDGER" \
   --approval-threshold 2 \
   --keypair "$KEYPAIR" \
   --url "$RPC"
 echo ""
 
-echo "  [MEDIUM]   initialize_global_config — 1-of-2 (W1, W2)"
+echo "  [MEDIUM]   initialize_global_config — 1-of-2 (W1, Ledger)"
 $LUCID wallet add-intents \
   --wallet "$WALLET_ADDR" \
   --intent "$DEMO/intents/initialize_global_config.json" \
-  --approvers "$WALLET1,$WALLET2" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$LEDGER" \
   --approval-threshold 1 \
   --keypair "$KEYPAIR" \
   --url "$RPC"
 echo ""
 
-echo "  [LOW]      create_pool           — 1-of-2 (W1, W2)"
+echo "  [LOW]      create_pool           — 1-of-2 (W1, Ledger)"
 $LUCID wallet add-intents \
   --wallet "$WALLET_ADDR" \
   --intent "$DEMO/intents/create_pool.json" \
-  --approvers "$WALLET1,$WALLET2" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$LEDGER" \
   --approval-threshold 1 \
   --keypair "$KEYPAIR" \
   --url "$RPC"
 echo ""
 
-echo "  [HIGH]     deposit               — 3-of-5 (W1, W2, W3, W4, W5)"
+echo "  [HIGH]     deposit               — 2-of-3 (W1, W2, Ledger)"
 $LUCID wallet add-intents \
   --wallet "$WALLET_ADDR" \
   --intent "$DEMO/intents/deposit.json" \
-  --approvers "$WALLET1,$WALLET2,$WALLET3,$WALLET4,$WALLET5" \
-  --approval-threshold 3 \
-  --keypair "$KEYPAIR" \
-  --url "$RPC"
-echo ""
-
-echo "  [HIGH]     withdraw              — 3-of-5 (W1, W2, W3, W4, W5)"
-$LUCID wallet add-intents \
-  --wallet "$WALLET_ADDR" \
-  --intent "$DEMO/intents/withdraw.json" \
-  --approvers "$WALLET1,$WALLET2,$WALLET3,$WALLET4,$WALLET5" \
-  --approval-threshold 3 \
-  --keypair "$KEYPAIR" \
-  --url "$RPC"
-echo ""
-
-echo "  [CRITICAL] propose_admin         — 2-of-2 (W1, W4)"
-$LUCID wallet add-intents \
-  --wallet "$WALLET_ADDR" \
-  --intent "$DEMO/intents/propose_admin.json" \
-  --approvers "$WALLET1,$WALLET4" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$WALLET2,$LEDGER" \
   --approval-threshold 2 \
   --keypair "$KEYPAIR" \
   --url "$RPC"
 echo ""
 
-echo "  [CRITICAL] accept_admin          — 2-of-2 (W1, W4)"
+echo "  [HIGH]     withdraw              — 2-of-3 (W1, W2, Ledger)"
+$LUCID wallet add-intents \
+  --wallet "$WALLET_ADDR" \
+  --intent "$DEMO/intents/withdraw.json" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$WALLET2,$LEDGER" \
+  --approval-threshold 2 \
+  --keypair "$KEYPAIR" \
+  --url "$RPC"
+echo ""
+
+echo "  [CRITICAL] propose_admin         — 2-of-2 (W1, Ledger)"
+$LUCID wallet add-intents \
+  --wallet "$WALLET_ADDR" \
+  --intent "$DEMO/intents/propose_admin.json" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$LEDGER" \
+  --approval-threshold 2 \
+  --keypair "$KEYPAIR" \
+  --url "$RPC"
+echo ""
+
+echo "  [CRITICAL] accept_admin          — 2-of-2 (W1, Ledger)"
 $LUCID wallet add-intents \
   --wallet "$WALLET_ADDR" \
   --intent "$DEMO/intents/accept_admin.json" \
-  --approvers "$WALLET1,$WALLET4" \
+  --proposers "$WALLET1,$LEDGER" \
+  --approvers "$WALLET1,$LEDGER" \
   --approval-threshold 2 \
   --keypair "$KEYPAIR" \
   --url "$RPC"
