@@ -15,6 +15,28 @@ import Solana from '@ledgerhq/hw-app-solana';
 import bs58 from 'bs58';
 import { OFFCHAIN_HEADER_LEN_LEGACY, buildV0Envelope } from './message';
 
+/** Map Ledger status codes to user-friendly messages. */
+function friendlyLedgerError(err: unknown): Error {
+  if (err instanceof Error && 'statusCode' in err) {
+    const code = (err as { statusCode: number }).statusCode;
+    let msg: string | undefined;
+    if (code >= 0x6500 && code <= 0x65ff) {
+      msg = 'Please open the Solana app on your Ledger.';
+    } else if (code === 0x6a81) {
+      msg = 'Your Ledger Solana app does not support off-chain message signing. Update to v1.12+.';
+    } else if (code === 0x6985 || code === 0x6986) {
+      msg = 'Signing was rejected on the Ledger device.';
+    } else if (code === 0x6b0c) {
+      msg = 'Ledger is locked. Please unlock it and open the Solana app.';
+    }
+    if (msg) {
+      err.message = msg;
+      return err;
+    }
+  }
+  return err instanceof Error ? err : new Error(String(err));
+}
+
 const MAX_ACCOUNT_SCAN = 10;
 const LEDGER_CLA = 0xe0;
 const INS_SIGN_OFFCHAIN = 0x07;
@@ -28,7 +50,6 @@ function derivationPath(accountIndex: number): string {
   return `44'/501'/${accountIndex}'`;
 }
 
-/** Build BIP32 path buffer: [pathLen, ...components(4 bytes BE each)] */
 function buildPathBuffer(path: string): Buffer {
   const parts = path.split('/').map((p) => {
     const hardened = p.endsWith("'");
@@ -62,12 +83,36 @@ async function sendChunked(
   return transport.send(LEDGER_CLA, ins, p1, p2, lastChunk);
 }
 
+/** Open a WebHID transport, reusing an already-open device if possible. */
+async function openTransport(): Promise<TransportWebHID> {
+  // If a device is already open (e.g. from a previous call or another wallet),
+  // close all stale connections first to avoid "The device is already open".
+  try {
+    const existing = await TransportWebHID.openConnected();
+    if (existing) return existing as unknown as TransportWebHID;
+  } catch {
+    // openConnected can throw if the device is in a bad state — ignore
+  }
+
+  // Close any lingering HID devices before requesting a fresh connection
+  const hid = (navigator as unknown as { hid?: { getDevices(): Promise<Array<{ opened: boolean; close(): Promise<void> }>> } }).hid;
+  if (hid) {
+    const devices = await hid.getDevices();
+    for (const d of devices) {
+      if (d.opened) await d.close().catch(() => {});
+    }
+  }
+
+  return TransportWebHID.create() as Promise<TransportWebHID>;
+}
+
 export async function signWithLedger(
   legacyEnvelope: Uint8Array,
   expectedAddress: string
 ): Promise<{ signature: Uint8Array; publicKey: Uint8Array; v0Envelope: Uint8Array }> {
-  const transport = await TransportWebHID.create();
+  let transport: TransportWebHID | null = null;
   try {
+    transport = await openTransport();
     const solana = new Solana(transport);
 
     const config = await solana.getAppConfiguration();
@@ -97,10 +142,8 @@ export async function signWithLedger(
 
     const body = legacyEnvelope.slice(OFFCHAIN_HEADER_LEN_LEGACY);
 
-    // Build V0 envelope (what Ledger app v1.12+ expects)
     const v0Envelope = buildV0Envelope(body, pubkeyBytes);
 
-    // Build APDU payload: [1(numSigners), pathBuffer, v0Envelope]
     const pathBuf = buildPathBuffer(matchedPath);
     const numSigners = Buffer.from([1]);
     const payload = Buffer.concat([numSigners, pathBuf, Buffer.from(v0Envelope)]);
@@ -108,10 +151,8 @@ export async function signWithLedger(
     console.log('[Ledger] V0 envelope:', v0Envelope.length, 'bytes | APDU payload:', payload.length, 'bytes');
     console.log('[Ledger] Path:', matchedPath, '| Body:', body.length, 'bytes');
 
-    // Send via INS 0x07 with chunking
     const response = await sendChunked(transport, INS_SIGN_OFFCHAIN, P1_CONFIRM, payload);
 
-    // Last 2 bytes are status word
     const sw = response.readUInt16BE(response.length - 2);
     console.log('[Ledger] Response status: 0x' + sw.toString(16));
 
@@ -127,7 +168,9 @@ export async function signWithLedger(
       publicKey: pubkeyBytes,
       v0Envelope,
     };
+  } catch (err) {
+    throw friendlyLedgerError(err);
   } finally {
-    await transport.close().catch(() => {});
+    await transport?.close().catch(() => {});
   }
 }
