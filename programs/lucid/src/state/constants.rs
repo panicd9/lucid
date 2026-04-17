@@ -87,10 +87,17 @@ pub const INSTRUCTIONS_SYSVAR_ID: [u8; 32] = [
     0xdb, 0xba, 0xcb, 0x5f, 0x08, 0x00, 0x00, 0x00,
 ];
 
-/// Solana offchain message header (20 bytes)
+/// Solana offchain message header
 /// \xffsolana offchain (16) + version u8 (0) + format u8 (0 = ASCII) + length u16 LE
 pub const OFFCHAIN_HEADER_PREFIX: &[u8] = b"\xffsolana offchain";
-pub const OFFCHAIN_HEADER_LEN: usize = 20; // 16 prefix + 1 version + 1 format + 2 length
+pub const OFFCHAIN_HEADER_LEN_LEGACY: usize = 20; // 16 prefix + 1 version + 1 format + 2 length
+/// V0 offchain message header (85 bytes)
+/// 16 prefix + 1 version + 32 appDomain + 1 format + 1 numSigners + 32 signerPubkey + 2 length
+pub const OFFCHAIN_HEADER_LEN_V0: usize = 85;
+/// V0 numSigners field offset: 16 prefix + 1 version + 32 appDomain + 1 format = 50
+pub const V0_NUM_SIGNERS_OFFSET: usize = 50;
+/// V0 body length field offset: 50 + 1 numSigners + 32 signerPubkey = 83
+pub const V0_BODY_LEN_OFFSET: usize = 83;
 
 /// Event tag (Anchor-compatible)
 pub const EVENT_IX_TAG: u64 = 0x1d9acb512ea545e4;

@@ -10,6 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ledgerhq/hw-app-solana": "^7.10.0",
+    "@ledgerhq/hw-transport-webhid": "^6.35.0",
     "@solana-program/system": "^0.12.0",
     "@solana/client": "^1.7.0",
     "@solana/kit": "^6.8.0",

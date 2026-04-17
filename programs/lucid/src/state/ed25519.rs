@@ -184,7 +184,11 @@ pub fn extract_and_verify_ed25519_for_propose(
         proposal_index, intent, intent_data, params_data,
     )?;
 
-    if expected_len != ed25519_ix.message_len || expected[..expected_len] != *message {
+    // Compare body only — the Ed25519 precompile already verified the signature
+    // over the full envelope, so we only need to confirm the body content matches.
+    // This supports both legacy (20-byte header) and V0 (85-byte header) envelopes.
+    let expected_body = &expected[OFFCHAIN_HEADER_LEN_LEGACY..expected_len];
+    if expected_body != body {
         return Err(ProgramError::Custom(ERR_MESSAGE_MISMATCH));
     }
 
@@ -216,19 +220,33 @@ pub fn extract_and_verify_ed25519(
         proposal.proposal_index, intent, intent_data, params,
     )?;
 
-    if expected_len != ed25519_ix.message_len || expected[..expected_len] != *message {
+    let expected_body = &expected[OFFCHAIN_HEADER_LEN_LEGACY..expected_len];
+    if expected_body != body {
         return Err(ProgramError::Custom(ERR_MESSAGE_MISMATCH));
     }
 
     Ok((ed25519_ix.pubkey, approver_index))
 }
 
+/// Extract body from an offchain message, supporting both legacy (20-byte header)
+/// and V0 (85-byte header with appDomain + signer pubkey) envelope formats.
 fn extract_message_body(message: &[u8]) -> Result<&[u8], ProgramError> {
-    if message.len() < OFFCHAIN_HEADER_LEN {
+    if message.len() < OFFCHAIN_HEADER_LEN_LEGACY {
         return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
     }
     if &message[..16] != OFFCHAIN_HEADER_PREFIX {
         return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
     }
-    Ok(&message[OFFCHAIN_HEADER_LEN..])
+
+    // Detect V0: numSigners byte must be 0x01 (in legacy messages this offset is
+    // body text — printable ASCII, always > 0x1F — so this can never false-positive),
+    // and body length at V0 offset must be consistent with total message length.
+    if message.len() >= OFFCHAIN_HEADER_LEN_V0 && message[V0_NUM_SIGNERS_OFFSET] == 0x01 {
+        let v0_body_len = u16::from_le_bytes([message[V0_BODY_LEN_OFFSET], message[V0_BODY_LEN_OFFSET + 1]]) as usize;
+        if v0_body_len + OFFCHAIN_HEADER_LEN_V0 == message.len() {
+            return Ok(&message[OFFCHAIN_HEADER_LEN_V0..]);
+        }
+    }
+
+    Ok(&message[OFFCHAIN_HEADER_LEN_LEGACY..])
 }

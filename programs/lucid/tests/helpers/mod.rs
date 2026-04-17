@@ -52,7 +52,7 @@ pub const SEGMENT_PARAM: u8 = 1;
 
 /// Offchain message constants
 pub const OFFCHAIN_HEADER_PREFIX: &[u8] = b"\xffsolana offchain";
-pub const OFFCHAIN_HEADER_LEN: usize = 20;
+pub const OFFCHAIN_HEADER_LEN_LEGACY: usize = 20;
 
 /// Struct sizes (must match on-chain)
 pub const WALLET_DATA_LEN: usize = 80;

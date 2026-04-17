@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelectedWalletAccount, useSignMessage, useWalletAccountTransactionSigner } from '@solana/react';
 import {
   pipe,
@@ -14,18 +14,27 @@ import {
 import { PublicKey, Connection } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { buildEd25519Instruction, buildProposeInstruction } from '../lib/instructions';
-import { buildMessageBody, buildOffchainEnvelope, formatExpiry } from '../lib/message';
+import { buildMessageBody, buildOffchainEnvelope, buildV0Envelope, formatExpiry, OFFCHAIN_HEADER_LEN_LEGACY } from '../lib/message';
 import { encodeParamsData, renderTemplate, normalizeDecimal, resolveDecimals } from '../lib/params';
 import { RPC_ENDPOINTS, PARAM_TYPE_LABELS, PARAM_TYPE_ADDRESS, PARAM_TYPE_BOOL } from '../lib/constants';
 import { findProposalPDA, findIntentPDA } from '../lib/pda';
 import { deserializeWallet } from '../lib/deserialize';
+import { signWithLedger } from '../lib/ledger';
 import { CHAIN_MAP } from '../App';
 import type { IntentAccount } from '../lib/deserialize';
 
 const TOKEN_PROGRAM_LEGACY = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const TOKEN_PROGRAM_2022 = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
 
-type Status = 'form' | 'preview' | 'signing' | 'sending' | 'success' | 'error';
+type Status = 'form' | 'preview' | 'signing' | 'ledger-needed' | 'sending' | 'success' | 'error';
+
+/** Data prepared before signing, stored so Ledger retry can skip re-fetching. */
+interface PreparedData {
+  envelope: Uint8Array;
+  paramsData: Uint8Array;
+  proposalIndex: bigint;
+  walletPk: PublicKey;
+}
 
 interface Props {
   intent: IntentAccount;
@@ -57,6 +66,9 @@ export default function ProposeModal({
   const signMessage = useSignMessage(account!);
   const signer = useWalletAccountTransactionSigner(account!, chain);
 
+  // Prepared data for Ledger retry (avoids re-fetching after signMessage fails)
+  const preparedRef = useRef<PreparedData | null>(null);
+
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && status !== 'signing' && status !== 'sending') onClose();
   }, [status, onClose]);
@@ -78,6 +90,78 @@ export default function ProposeModal({
   const rendered = renderTemplate(intent.template, paramValues, intent.params);
   const expiryStr = formatExpiry(expirySeconds);
 
+  /** Prepare envelope + on-chain data. Shared by both signing paths. */
+  const prepareData = async (): Promise<PreparedData> => {
+    const connection = new Connection(RPC_ENDPOINTS[network]);
+    const walletPk = new PublicKey(walletAddress);
+    const walletInfo = await connection.getAccountInfo(walletPk);
+    if (!walletInfo) throw new Error('Wallet account not found');
+    const walletData = deserializeWallet(Buffer.from(walletInfo.data));
+    const proposalIndex = walletData.proposalIndex;
+
+    const paramsData = encodeParamsData(paramValues, intent.params);
+
+    const normalized = paramValues.map((v, i) => {
+      const d = resolveDecimals(intent.params[i], paramValues);
+      return d ? normalizeDecimal(v, d) : v;
+    });
+    const signedRendered = renderTemplate(intent.template, normalized, intent.params);
+
+    const body = buildMessageBody(
+      'propose',
+      signedRendered,
+      walletName,
+      proposalIndex,
+      expiryStr
+    );
+    const envelope = buildOffchainEnvelope(body);
+
+    return { envelope, paramsData, proposalIndex, walletPk };
+  };
+
+  /** Send the transaction given a signature + pubkey over the envelope. */
+  const submitTransaction = async (
+    sigBytes: Uint8Array,
+    pubkeyBytes: Uint8Array,
+    data: PreparedData,
+    envelopeForEd25519: Uint8Array,
+  ) => {
+    setStatus('sending');
+
+    const ed25519Ix = buildEd25519Instruction(sigBytes, pubkeyBytes, envelopeForEd25519);
+
+    const [intentPda] = findIntentPDA(data.walletPk, intent.intentIndex);
+    const [proposalPda] = findProposalPDA(intentPda, data.proposalIndex);
+
+    const proposeIx = buildProposeInstruction(
+      address(walletAddress),
+      address(intentPda.toBase58()),
+      address(proposalPda.toBase58()),
+      address(account!.address),
+      data.proposalIndex,
+      data.paramsData
+    );
+
+    const rpc = createSolanaRpc(RPC_ENDPOINTS[network]);
+    const { value: blockhash } = await rpc.getLatestBlockhash().send();
+
+    const message = pipe(
+      createTransactionMessage({ version: 0 }),
+      (m) => setTransactionMessageFeePayerSigner(signer, m),
+      (m) => setTransactionMessageLifetimeUsingBlockhash(blockhash, m),
+      (m) => appendTransactionMessageInstruction(ed25519Ix as any, m),
+      (m) => appendTransactionMessageInstruction(proposeIx as any, m),
+    );
+
+    const signedTx = await signTransactionMessageWithSigners(message);
+    const encodedTx = getBase64EncodedWireTransaction(signedTx);
+    const sig = await rpc.sendTransaction(encodedTx, { encoding: 'base64' }).send();
+    setTxSig(typeof sig === 'string' ? sig : bs58.encode(sig as any));
+    setStatus('success');
+    setTimeout(onSuccess, 2000);
+  };
+
+  /** Primary flow: try wallet signMessage with V0 envelope, fall back to Ledger. */
   const handleSubmit = async () => {
     if (!account) return;
 
@@ -85,75 +169,55 @@ export default function ProposeModal({
       setStatus('signing');
       setErrorMsg('');
 
-      const connection = new Connection(RPC_ENDPOINTS[network]);
-      const walletPk = new PublicKey(walletAddress);
-      const walletInfo = await connection.getAccountInfo(walletPk);
-      if (!walletInfo) throw new Error('Wallet account not found');
-      const walletData = deserializeWallet(Buffer.from(walletInfo.data));
-      const proposalIndex = walletData.proposalIndex;
-
-      const paramsData = encodeParamsData(paramValues, intent.params);
-
-      // Normalize values to match on-chain rendering (e.g., "1.50" → "1.5")
-      const normalized = paramValues.map((v, i) => {
-        const d = resolveDecimals(intent.params[i], paramValues);
-        return d ? normalizeDecimal(v, d) : v;
-      });
-      const signedRendered = renderTemplate(intent.template, normalized, intent.params);
-
-      const body = buildMessageBody(
-        'propose',
-        signedRendered,
-        walletName,
-        proposalIndex,
-        expiryStr
-      );
-      const envelope = buildOffchainEnvelope(body);
-
-      const { signature } = await signMessage({ message: envelope });
-
-      setStatus('sending');
+      const data = await prepareData();
+      preparedRef.current = data;
 
       const pubkeyBytes = new Uint8Array(bs58.decode(account.address));
-      const ed25519Ix = buildEd25519Instruction(
-        new Uint8Array(signature),
-        pubkeyBytes,
-        envelope
-      );
+      const body = data.envelope.slice(OFFCHAIN_HEADER_LEN_LEGACY);
+      const v0Envelope = buildV0Envelope(body, pubkeyBytes);
 
-      const [intentPda] = findIntentPDA(walletPk, intent.intentIndex);
-      const [proposalPda] = findProposalPDA(intentPda, proposalIndex);
+      console.log('[Propose] Trying wallet signMessage with V0 envelope...');
+      const { signature } = await signMessage({ message: v0Envelope });
+      console.log('[Propose] V0 wallet signMessage succeeded');
 
-      const proposeIx = buildProposeInstruction(
-        address(walletAddress),
-        address(intentPda.toBase58()),
-        address(proposalPda.toBase58()),
-        address(account.address),
-        proposalIndex,
-        paramsData
-      );
-
-      const rpc = createSolanaRpc(RPC_ENDPOINTS[network]);
-      const { value: blockhash } = await rpc.getLatestBlockhash().send();
-
-      const message = pipe(
-        createTransactionMessage({ version: 0 }),
-        (m) => setTransactionMessageFeePayerSigner(signer, m),
-        (m) => setTransactionMessageLifetimeUsingBlockhash(blockhash, m),
-        (m) => appendTransactionMessageInstruction(ed25519Ix as any, m),
-        (m) => appendTransactionMessageInstruction(proposeIx as any, m),
-      );
-
-      const signedTx = await signTransactionMessageWithSigners(message);
-      const encodedTx = getBase64EncodedWireTransaction(signedTx);
-      const sig = await rpc.sendTransaction(encodedTx, { encoding: 'base64' }).send();
-      setTxSig(typeof sig === 'string' ? sig : bs58.encode(sig as any));
-      setStatus('success');
-      setTimeout(onSuccess, 2000);
+      await submitTransaction(new Uint8Array(signature), pubkeyBytes, data, v0Envelope);
     } catch (err: any) {
+      const msg = err?.message ?? String(err);
+      const isSignMessageBlocked =
+        msg.includes('sign solana transactions using sign message') ||
+        msg.includes('Transaction canceled') ||
+        msg.includes('cancelled') ||
+        err?.code === -32000;
+
+      if (isSignMessageBlocked && preparedRef.current) {
+        // Wallet can't sign off-chain messages — show Ledger button
+        setStatus('ledger-needed');
+        setErrorMsg('');
+        return;
+      }
+
       console.error('[Propose] Transaction failed:', err);
       if (err?.logs) console.error('[Propose] Program logs:', err.logs);
-      if (err?.context) console.error('[Propose] Context:', err.context);
+      setStatus('error');
+      setErrorMsg(msg);
+    }
+  };
+
+  /** Ledger flow: called from a fresh click (user gesture required for WebHID). */
+  const handleLedgerSign = async () => {
+    if (!account || !preparedRef.current) return;
+
+    try {
+      setStatus('signing');
+      setErrorMsg('');
+
+      const data = preparedRef.current;
+      const result = await signWithLedger(data.envelope, account.address);
+
+      // Ledger signs V0 envelope — pass it so Ed25519 precompile gets the right bytes
+      await submitTransaction(result.signature, result.publicKey, data, result.v0Envelope);
+    } catch (err: any) {
+      console.error('[Propose] Ledger signing failed:', err);
       setStatus('error');
       setErrorMsg(err?.message ?? String(err));
     }
@@ -278,7 +342,20 @@ export default function ProposeModal({
           {status === 'signing' && (
             <div className="flex items-center gap-3 text-sm text-amber-300 bg-amber-500/5 rounded-lg px-4 py-3 border border-amber-500/10">
               <div className="w-4 h-4 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
-              Waiting for wallet signature...
+              Waiting for signature...
+            </div>
+          )}
+          {status === 'ledger-needed' && (
+            <div className="space-y-3">
+              <div className="text-sm text-amber-300 bg-amber-500/5 rounded-lg px-4 py-3 border border-amber-500/10">
+                Your wallet doesn't support off-chain message signing. Connect your Ledger directly to sign.
+              </div>
+              <button
+                onClick={handleLedgerSign}
+                className="w-full px-5 py-3 text-sm font-semibold rounded-lg bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white transition-all cursor-pointer shadow-glow-purple"
+              >
+                Sign with Ledger
+              </button>
             </div>
           )}
           {status === 'sending' && (
@@ -311,17 +388,19 @@ export default function ProposeModal({
           >
             Close
           </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!account || (status !== 'form' && status !== 'preview')}
-            className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-glow-purple"
-          >
-            {status === 'form' || status === 'preview'
-              ? 'Sign & Propose'
-              : status === 'success'
-              ? 'Done'
-              : 'Processing...'}
-          </button>
+          {status !== 'ledger-needed' && (
+            <button
+              onClick={handleSubmit}
+              disabled={!account || (status !== 'form' && status !== 'preview')}
+              className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-glow-purple"
+            >
+              {status === 'form' || status === 'preview'
+                ? 'Sign & Propose'
+                : status === 'success'
+                ? 'Done'
+                : 'Processing...'}
+            </button>
+          )}
         </div>
       </div>
     </div>
