@@ -24,7 +24,11 @@ export default function Home() {
           <span className="absolute bottom-[-6px] left-0 right-0 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, #F59E0B, #8B5CF6)' }} />
         </div>
       </div>
-      <p className="text-lg text-slate-400 mb-4">Intent-Based Multisig Protocol</p>
+      <p className="text-lg text-slate-400 mb-2">Intent-Based Multisig Protocol</p>
+      <p className="text-sm text-slate-500 max-w-md text-center mb-4">
+        Sign human-readable intents on your Ledger, not blind transactions.
+        Auto-generated governance rulesets verified against program source.
+      </p>
 
       {/* Feature pills */}
       <div className="flex items-center gap-3 mb-12">
@@ -32,7 +36,7 @@ export default function Home() {
           Tamperproof Signing
         </span>
         <span className="px-3 py-1 text-xs font-medium text-violet-400/80 bg-violet-500/10 border border-violet-500/15 rounded-full">
-          On-Chain Constitution
+          On-Chain Ruleset
         </span>
         <span className="px-3 py-1 text-xs font-medium text-slate-400/80 bg-slate-500/10 border border-slate-500/15 rounded-full">
           Pinocchio Runtime

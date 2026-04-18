@@ -103,7 +103,7 @@ The program reconstructs the message from on-chain state and verifies the ed2551
 ### Dashboard
 
 - **Home** — wallet search + demo wallets
-- **Constitution** (`/wallet/:address`) — intent list with risk badges
+- **Ruleset** (`/wallet/:address`) — intent list with risk badges
 - **Proposals** (`/wallet/:address/proposals`) — propose, approve, cancel, execute
 - Ledger WebHID signing for proposals (V0 off-chain envelope)
 - Wallet adapters: Phantom, Backpack, Solflare

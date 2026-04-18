@@ -32,7 +32,7 @@ export default function RiskBadge({ level, className = '' }: Props) {
 
 /** Determine risk level from intent index and type */
 export function inferRiskLevel(intentIndex: number, intentType: number): RiskLevel {
-  // Meta-intents (0-2) are critical (they modify the constitution itself)
+  // Meta-intents (0-2) are critical (they modify the ruleset itself)
   if (intentIndex <= 2) return 'critical';
   // Custom intents could be anything
   if (intentType === 3) return 'high';

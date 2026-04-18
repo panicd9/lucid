@@ -10,7 +10,7 @@ interface Props {
   network: string;
 }
 
-export default function Constitution({ network }: Props) {
+export default function Ruleset({ network }: Props) {
   const { address } = useParams<{ address: string }>();
   const [refreshKey, setRefreshKey] = useState(0);
   const { data, candidates, loading, error } = useLucidWallet(address, network, refreshKey);

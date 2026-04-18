@@ -5,7 +5,7 @@ import { createClient, autoDiscover, backpack, phantom, solflare } from '@solana
 import { SelectedWalletAccountContextProvider } from '@solana/react';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
-import Constitution from './pages/Constitution';
+import Ruleset from './pages/Ruleset';
 import Proposals from './pages/Proposals';
 import { RPC_ENDPOINTS } from './lib/constants';
 
@@ -49,7 +49,7 @@ export default function App() {
               <Route path="/" element={<Home />} />
               <Route
                 path="/wallet/:address"
-                element={<Constitution network={network} />}
+                element={<Ruleset network={network} />}
               />
               <Route
                 path="/wallet/:address/proposals"
