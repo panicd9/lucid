@@ -117,7 +117,7 @@ export default function Home() {
 
       {/* Footer note */}
       <p className="text-xs text-slate-600 mt-20">
-        Read-only explorer &mdash; connect wallet to propose and sign on-chain
+        Connect wallet to propose, approve, and execute on-chain
       </p>
     </div>
   );
