@@ -87,9 +87,9 @@ rm -f "$DEMO/intents"/*_TAMPERED.json
 cargo build -q -p lucid-cli
 
 # ────────────────────────────────────────────────
-# Step 1: Generate intents from Campfire IDL
+# Step 1: Generate intents from crowdfunding IDL
 # ────────────────────────────────────────────────
-echo "── Step 1: Generate intents from Campfire crowdfunding IDL"
+echo "── Step 1: Generate intents from crowdfunding IDL"
 echo ""
 $LUCID generate \
   --idl "$DEMO/crowdfunding.json" \

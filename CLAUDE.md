@@ -10,7 +10,7 @@ cli/                  Rust CLI tool (lucid binary)
 sdk/                  TypeScript SDK (@lucid/sdk)
 dashboard/            React web UI (Vite + Tailwind)
 clients/rust/         Auto-generated Rust client (Codama)
-demo/                 End-to-end demo with Campfire crowdfunding protocol
+demo/                 End-to-end demo with crowdfunding protocol
 ```
 
 ## Program ID
@@ -58,7 +58,7 @@ This runs 5 phases (11 checks total):
 ## Demo
 
 ```bash
-# Terminal 1: start validator with Lucid + Campfire programs
+# Terminal 1: start validator with Lucid + crowdfunding programs
 solana-test-validator \
   --bpf-program LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR target/deploy/lucid.so \
   --reset
@@ -70,7 +70,7 @@ bash demo/run.sh
 npm run dev --prefix dashboard
 ```
 
-Demo flow: generate intents from Campfire IDL -> verify -> tamper detection -> create wallet -> add intents -> audit.
+Demo flow: generate intents from crowdfunding IDL -> verify -> tamper detection -> create wallet -> add intents -> audit.
 
 ## Architecture
 
