@@ -16,7 +16,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center pt-20 pb-16">
-      {/* Hero — T2 Logo */}
+      {/* Hero — Logo */}
       <div className="relative mb-6">
         <div className="absolute inset-0 -m-8 bg-gradient-radial from-amber-500/10 via-violet-500/5 to-transparent rounded-full blur-2xl" />
         <div className="relative inline-block" style={{ fontFamily: "'Orbitron', monospace", fontSize: '48px', fontWeight: 600, letterSpacing: '12px', background: 'linear-gradient(90deg, #e2e8f0, #f8fafc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase' as const }}>
@@ -24,22 +24,22 @@ export default function Home() {
           <span className="absolute bottom-[-6px] left-0 right-0 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, #F59E0B, #8B5CF6)' }} />
         </div>
       </div>
-      <p className="text-lg text-slate-400 mb-2">Intent-Based Multisig Protocol</p>
+      <p className="text-lg text-slate-200 mb-2 font-medium">See what you sign. On your Ledger.</p>
       <p className="text-sm text-slate-500 max-w-md text-center mb-4">
-        Sign human-readable intents on your Ledger, not blind transactions.
-        Auto-generated governance rulesets verified against program source.
+        The multisig where hardware wallets display human-readable actions
+        instead of hex. Auto-generated rulesets verified against program source.
       </p>
 
       {/* Feature pills */}
       <div className="flex items-center gap-3 mb-12">
         <span className="px-3 py-1 text-xs font-medium text-amber-400/80 bg-amber-500/10 border border-amber-500/15 rounded-full">
-          Tamperproof Signing
+          Human-Readable Signing
         </span>
         <span className="px-3 py-1 text-xs font-medium text-violet-400/80 bg-violet-500/10 border border-violet-500/15 rounded-full">
-          On-Chain Ruleset
+          On-Chain Governance Ruleset
         </span>
         <span className="px-3 py-1 text-xs font-medium text-slate-400/80 bg-slate-500/10 border border-slate-500/15 rounded-full">
-          Pinocchio Runtime
+          Built on Solana
         </span>
       </div>
 
@@ -114,6 +114,111 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* How It Works */}
+      <div className="w-full max-w-6xl mt-24">
+        <h2 className="text-2xl font-heading text-slate-100 text-center tracking-[4px] mb-3">
+          HOW IT WORKS
+        </h2>
+        <p className="text-sm text-slate-500 text-center mb-14 max-w-lg mx-auto">
+          Three steps from program source code to tamperproof governance.
+        </p>
+
+        {/* Steps */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {/* Step 1 */}
+          <div className="bg-slate-800/50 border border-slate-700/40 rounded-xl p-6 relative">
+            <div className="absolute -top-3 -left-3 w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-slate-900 text-xs font-bold flex items-center justify-center font-heading">
+              1
+            </div>
+            <svg className="w-8 h-8 text-violet-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+            <h3 className="text-base font-semibold text-slate-100 mb-2">Define Permitted Actions</h3>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Auto-generate governance intents from your program's IDL. Every admin action
+              gets a human-readable template, verified against the source.
+            </p>
+          </div>
+
+          {/* Step 2 */}
+          <div className="bg-slate-800/50 border border-slate-700/40 rounded-xl p-6 relative">
+            <div className="absolute -top-3 -left-3 w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-slate-900 text-xs font-bold flex items-center justify-center font-heading">
+              2
+            </div>
+            <svg className="w-8 h-8 text-violet-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <h3 className="text-base font-semibold text-slate-100 mb-2">Sign What You Read</h3>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Signers approve via <code className="text-amber-400/80 text-xs">signMessage</code> on their Ledger.
+              The hardware wallet displays the action in plain English — not hex.
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div className="bg-slate-800/50 border border-slate-700/40 rounded-xl p-6 relative">
+            <div className="absolute -top-3 -left-3 w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 text-slate-900 text-xs font-bold flex items-center justify-center font-heading">
+              3
+            </div>
+            <svg className="w-8 h-8 text-violet-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <h3 className="text-base font-semibold text-slate-100 mb-2">Verify & Execute On-Chain</h3>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              The program reconstructs the message from on-chain state, verifies
+              ed25519 signatures, and executes the CPI — trustlessly.
+            </p>
+          </div>
+        </div>
+
+        {/* Before / After */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Before */}
+          <div className="rounded-xl overflow-hidden border border-red-500/15">
+            <div className="px-4 py-2 bg-red-500/10 border-b border-red-500/20">
+              <p className="text-xs font-semibold text-red-400 uppercase tracking-wider">
+                What signers see today
+              </p>
+            </div>
+            <div className="bg-slate-900/80 p-5 font-mono text-xs leading-relaxed">
+              <p className="text-slate-600 mb-1">Program: dRif...3xQp</p>
+              <p className="text-red-400/60">01 00 00 03 9a 2f b7 c4 e8 1d</p>
+              <p className="text-red-400/60">a3 f0 42 8b 5c f6 dd 91 7e 2b</p>
+              <p className="text-red-400/60">c0 14 88 3a 9f 62 d4 5e 71 b8</p>
+              <p className="text-slate-600 mt-1">Data: 0x8f3a9b2c4d5e6f...</p>
+              <p className="text-slate-700 mt-2 text-[10px]">Sign transaction?</p>
+            </div>
+          </div>
+
+          {/* After */}
+          <div className="rounded-xl overflow-hidden border border-emerald-500/15">
+            <div className="px-4 py-2 bg-emerald-500/10 border-b border-emerald-500/20">
+              <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                What Lucid signers read
+              </p>
+            </div>
+            <div className="bg-slate-900/80 p-5 font-mono text-xs leading-relaxed">
+              <p className="text-emerald-300/80">
+                approve <span className="text-amber-400">add market 5</span>
+              </p>
+              <p className="text-emerald-300/80">
+                with oracle <span className="text-amber-400">9abc...def</span>
+              </p>
+              <p className="text-emerald-300/80 mt-2 text-slate-500">
+                | wallet: <span className="text-slate-400">drift-governance</span>
+              </p>
+              <p className="text-emerald-300/80 text-slate-500">
+                | proposal: <span className="text-slate-400">42</span>
+              </p>
+              <p className="text-emerald-400/80 mt-2 text-[10px] flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                Approve on trusted device
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Footer note */}
       <p className="text-xs text-slate-600 mt-20">

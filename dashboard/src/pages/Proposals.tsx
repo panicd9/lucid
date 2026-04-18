@@ -73,19 +73,23 @@ export default function Proposals({ network }: Props) {
 
   return (
     <div>
+      {/* Breadcrumbs */}
+      <nav className="flex items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
+        <Link to="/" className="text-slate-500 hover:text-amber-400 transition-colors cursor-pointer flex items-center">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+        </Link>
+        <svg className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <Link to={`/wallet/${address}`} className="text-slate-400 hover:text-amber-400 transition-colors cursor-pointer truncate max-w-[160px]">
+          {walletData?.wallet.name || address}
+        </Link>
+        <svg className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <span className="text-slate-200 font-medium">Proposals</span>
+      </nav>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Link
-              to={`/wallet/${address}`}
-              className="text-slate-500 hover:text-slate-300 transition-colors p-1 -ml-1 rounded-lg hover:bg-slate-800/50"
-              aria-label="Back to constitution"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
             <h1 className="text-2xl font-bold text-slate-50 font-heading tracking-wide">
               Proposals
             </h1>
@@ -96,7 +100,7 @@ export default function Proposals({ network }: Props) {
             )}
           </div>
           {walletData && (
-            <p className="text-sm text-slate-500 ml-9">
+            <p className="text-sm text-slate-500">
               {walletData.wallet.name}
             </p>
           )}

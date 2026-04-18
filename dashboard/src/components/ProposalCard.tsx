@@ -214,6 +214,8 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
           onSuccess={() => {
             setSigningAction(null);
             onRefresh();
+            // Secondary refetch to catch on-chain state propagation
+            setTimeout(onRefresh, 3000);
           }}
         />
       )}
@@ -228,6 +230,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
           onSuccess={() => {
             setShowExecute(false);
             onRefresh();
+            setTimeout(onRefresh, 3000);
           }}
         />
       )}
