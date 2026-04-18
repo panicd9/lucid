@@ -79,12 +79,20 @@ export default function Ruleset({ network }: Props) {
               </div>
               <AddressDisplay address={walletAddr} chars={8} />
             </div>
-            <Link
-              to={`/wallet/${address}/proposals`}
-              className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white text-sm font-semibold rounded-lg transition-all cursor-pointer shadow-glow-purple hover:shadow-glow-purple-lg"
-            >
-              View Proposals
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                to={`/wallet/${address}/history`}
+                className="px-4 py-2.5 text-sm font-medium text-slate-400 hover:text-slate-200 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/40 hover:border-slate-600/50 rounded-lg transition-all cursor-pointer"
+              >
+                Audit Log
+              </Link>
+              <Link
+                to={`/wallet/${address}/proposals`}
+                className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white text-sm font-semibold rounded-lg transition-all cursor-pointer shadow-glow-purple hover:shadow-glow-purple-lg"
+              >
+                View Proposals
+              </Link>
+            </div>
           </div>
 
           {/* Stats grid */}

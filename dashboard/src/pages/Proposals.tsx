@@ -105,6 +105,15 @@ export default function Proposals({ network }: Props) {
             </p>
           )}
         </div>
+        <Link
+          to={`/wallet/${address}`}
+          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/30 transition-all cursor-pointer"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          <span className="hidden sm:inline">New Proposal</span>
+        </Link>
       </div>
 
       {/* Active */}

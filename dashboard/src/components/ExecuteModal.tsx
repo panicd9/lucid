@@ -144,8 +144,8 @@ export default function ExecuteModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="execute-modal-title">
-      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/30 rounded-2xl max-w-lg w-full shadow-2xl">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="execute-modal-title">
+      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/30 rounded-2xl max-w-lg w-full shadow-2xl animate-slide-up">
         {/* Gradient accent line */}
         <div className="h-[1px] bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
 
@@ -183,6 +183,19 @@ export default function ExecuteModal({
               Your wallet only signs the transaction fee.
             </p>
           </div>
+
+          {/* Fee estimate */}
+          {status === 'idle' && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-slate-800/30 border border-slate-800/40 rounded-lg">
+              <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xs text-slate-500">
+                Estimated fee: <span className="text-slate-400 font-mono">~0.000005 SOL</span>
+                <span className="text-slate-600 ml-1">(base fee for 1 signature)</span>
+              </p>
+            </div>
+          )}
 
           {status === 'resolving' && (
             <div className="flex items-center gap-3 text-sm text-amber-300 bg-amber-500/5 rounded-lg px-4 py-3 border border-amber-500/10">

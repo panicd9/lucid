@@ -7,6 +7,9 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Ruleset from './pages/Ruleset';
 import Proposals from './pages/Proposals';
+import History from './pages/History';
+import Demo from './pages/Demo';
+import CreateWallet from './pages/CreateWallet';
 import { RPC_ENDPOINTS } from './lib/constants';
 
 export const CHAIN_MAP: Record<string, `solana:${string}`> = {
@@ -54,6 +57,15 @@ export default function App() {
               <Route
                 path="/wallet/:address/proposals"
                 element={<Proposals network={network} />}
+              />
+              <Route
+                path="/wallet/:address/history"
+                element={<History network={network} />}
+              />
+              <Route path="/demo" element={<Demo />} />
+              <Route
+                path="/create"
+                element={<CreateWallet network={network} />}
               />
             </Routes>
           </main>

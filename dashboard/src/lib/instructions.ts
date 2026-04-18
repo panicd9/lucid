@@ -83,6 +83,56 @@ export function buildEd25519Instruction(
   };
 }
 
+/** Create wallet instruction (discriminator = 0) */
+export function buildCreateWalletInstruction(
+  wallet: Address,
+  vault: Address,
+  intent0: Address,
+  intent1: Address,
+  intent2: Address,
+  payer: Address,
+  createKey: Uint8Array,
+  name: string,
+  proposers: Uint8Array[],
+  approvers: Uint8Array[],
+  approvalThreshold: number,
+  cancellationThreshold: number,
+  timelockSeconds: number,
+): LucidInstruction {
+  const nameBytes = new TextEncoder().encode(name);
+  // Data: [0, create_key(32), name_len(1), name_bytes, proposer_count(1),
+  //   proposer_pubkeys(32 each), approver_count(1), approver_pubkeys(32 each),
+  //   approval_threshold(1), cancellation_threshold(1), timelock(u32 LE)]
+  const dataLen = 1 + 32 + 1 + nameBytes.length + 1 + proposers.length * 32 + 1 + approvers.length * 32 + 1 + 1 + 4;
+  const data = new Uint8Array(dataLen);
+  let offset = 0;
+  data[offset++] = 0; // discriminator
+  data.set(createKey, offset); offset += 32;
+  data[offset++] = nameBytes.length;
+  data.set(nameBytes, offset); offset += nameBytes.length;
+  data[offset++] = proposers.length;
+  for (const p of proposers) { data.set(p, offset); offset += 32; }
+  data[offset++] = approvers.length;
+  for (const a of approvers) { data.set(a, offset); offset += 32; }
+  data[offset++] = approvalThreshold;
+  data[offset++] = cancellationThreshold;
+  new DataView(data.buffer).setUint32(offset, timelockSeconds, true);
+
+  return {
+    programAddress: LUCID_PROGRAM_ADDR,
+    accounts: [
+      { address: wallet, role: ROLE_WRITABLE },
+      { address: vault, role: ROLE_WRITABLE },
+      { address: intent0, role: ROLE_WRITABLE },
+      { address: intent1, role: ROLE_WRITABLE },
+      { address: intent2, role: ROLE_WRITABLE },
+      { address: payer, role: ROLE_WRITABLE_SIGNER },
+      { address: SYSTEM_PROGRAM_ADDR, role: ROLE_READONLY },
+    ],
+    data,
+  };
+}
+
 /** Propose instruction (discriminator = 10) */
 export function buildProposeInstruction(
   wallet: Address,
