@@ -4,6 +4,7 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { useLucidWallet } from '../hooks/useWallet';
 import { RPC_ENDPOINTS, PROGRAM_ID } from '../lib/constants';
 import { getExplorerTxUrl } from '../lib/explorer';
+import { findVaultPDA } from '../lib/pda';
 import WalletDisambiguation from '../components/WalletDisambiguation';
 
 interface TxEntry {
@@ -20,15 +21,27 @@ const ACTION_BADGE: Record<string, string> = {
   cancel: 'text-red-300 bg-red-500/10',
   execute: 'text-emerald-300 bg-emerald-500/10',
   create: 'text-neutral-300 bg-neutral-500/10',
+  'add intent': 'text-emerald-300 bg-emerald-500/10',
+  'batch add': 'text-emerald-300 bg-emerald-500/10',
+  deactivate: 'text-red-300 bg-red-500/10',
+  freeze: 'text-neutral-300 bg-neutral-500/10',
+  cleanup: 'text-neutral-300 bg-neutral-500/10',
+  event: 'text-neutral-400 bg-neutral-500/10',
   unknown: 'text-neutral-400 bg-neutral-500/10',
 };
 
 const DISC_MAP: Record<number, string> = {
   0: 'create',
+  1: 'add intent',
+  2: 'batch add',
+  3: 'deactivate',
+  4: 'freeze',
   10: 'propose',
   11: 'approve',
   12: 'cancel',
   20: 'execute',
+  30: 'cleanup',
+  228: 'event',
 };
 
 interface Props {
@@ -42,10 +55,6 @@ export default function History({ network }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedSig, setCopiedSig] = useState<string | null>(null);
-
-  if (candidates && candidates.length > 1) {
-    return <WalletDisambiguation name={address ?? ''} candidates={candidates} pathSuffix="/history" />;
-  }
 
   const walletAddr = walletData?.address.toBase58();
 
@@ -64,7 +73,19 @@ export default function History({ network }: Props) {
         );
 
         const walletPk = new PublicKey(walletAddr);
-        const sigs = await connection.getSignaturesForAddress(walletPk, { limit: 50 });
+        const [vaultPk] = findVaultPDA(walletPk);
+
+        // Query both wallet and vault PDAs, then deduplicate
+        const [walletSigs, vaultSigs] = await Promise.all([
+          connection.getSignaturesForAddress(walletPk, { limit: 50 }),
+          connection.getSignaturesForAddress(vaultPk, { limit: 50 }),
+        ]);
+        const seen = new Set<string>();
+        const sigs = [...walletSigs, ...vaultSigs].filter((s) => {
+          if (seen.has(s.signature)) return false;
+          seen.add(s.signature);
+          return true;
+        }).sort((a, b) => (b.blockTime ?? 0) - (a.blockTime ?? 0)).slice(0, 50);
 
         const entries: TxEntry[] = [];
 
@@ -141,6 +162,10 @@ export default function History({ network }: Props) {
 
   const pageLoading = walletLoading || loading;
   const pageError = walletError || error;
+
+  if (candidates && candidates.length > 1) {
+    return <WalletDisambiguation name={address ?? ''} candidates={candidates} pathSuffix="/history" />;
+  }
 
   if (pageLoading) {
     return (
