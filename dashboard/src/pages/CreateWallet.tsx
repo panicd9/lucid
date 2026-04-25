@@ -167,7 +167,7 @@ export default function CreateWallet({ network }: Props) {
         return (
           <div className="space-y-6" key="step-0">
             <div>
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Wallet Name
               </label>
               <input
@@ -175,19 +175,19 @@ export default function CreateWallet({ network }: Props) {
                 value={walletName}
                 onChange={(e) => setWalletName(e.target.value.slice(0, 32))}
                 placeholder="e.g. drift-governance"
-                className="w-full px-4 py-3 bg-slate-800/40 border border-slate-800/50 rounded-lg text-sm text-slate-200 placeholder-slate-600 font-mono focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all"
+                className="w-full px-4 py-3 bg-neutral-800/40 border border-neutral-800/50 rounded-lg text-sm text-neutral-200 placeholder-neutral-600 font-mono focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 transition-all"
                 maxLength={32}
                 autoFocus
               />
               <div className="flex items-center justify-between mt-2">
-                <p className="text-xs text-slate-600">Used as a display name. Lowercase, hyphens recommended.</p>
-                <span className={`text-xs font-mono ${walletName.length > 28 ? 'text-amber-400' : 'text-slate-600'}`}>
+                <p className="text-xs text-neutral-600">Used as a display name. Lowercase, hyphens recommended.</p>
+                <span className={`text-xs font-mono ${walletName.length > 28 ? 'text-emerald-400' : 'text-neutral-600'}`}>
                   {walletName.length}/32
                 </span>
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Default Timelock (seconds)
               </label>
               <input
@@ -195,9 +195,9 @@ export default function CreateWallet({ network }: Props) {
                 value={timelockSeconds}
                 onChange={(e) => setTimelockSeconds(Math.max(0, Number(e.target.value)))}
                 min={0}
-                className="w-32 px-4 py-3 bg-slate-800/40 border border-slate-800/50 rounded-lg text-sm text-slate-200 font-mono text-center focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all"
+                className="w-32 px-4 py-3 bg-neutral-800/40 border border-neutral-800/50 rounded-lg text-sm text-neutral-200 font-mono text-center focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 transition-all"
               />
-              <p className="text-xs text-slate-600 mt-2">Delay between approval and execution. 0 = immediate.</p>
+              <p className="text-xs text-neutral-600 mt-2">Delay between approval and execution. 0 = immediate.</p>
             </div>
           </div>
         );
@@ -209,7 +209,7 @@ export default function CreateWallet({ network }: Props) {
         return (
           <div className="space-y-6" key="step-3">
             <div>
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Approval Threshold
               </label>
               <div className="flex items-center gap-3">
@@ -219,16 +219,16 @@ export default function CreateWallet({ network }: Props) {
                   onChange={(e) => setApprovalThreshold(Math.min(Math.max(1, Number(e.target.value)), approvers.length))}
                   min={1}
                   max={approvers.length}
-                  className="w-24 px-4 py-3 bg-slate-800/40 border border-slate-800/50 rounded-lg text-sm text-slate-200 font-mono text-center focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all"
+                  className="w-24 px-4 py-3 bg-neutral-800/40 border border-neutral-800/50 rounded-lg text-sm text-neutral-200 font-mono text-center focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 transition-all"
                 />
-                <span className="text-sm text-slate-500">
-                  of <span className="text-slate-300 font-semibold">{approvers.length}</span> approvers
+                <span className="text-sm text-neutral-500">
+                  of <span className="text-neutral-300 font-semibold">{approvers.length}</span> approvers
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-2">Minimum approvals required to execute a proposal.</p>
+              <p className="text-xs text-neutral-600 mt-2">Minimum approvals required to execute a proposal.</p>
             </div>
             <div>
-              <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Cancellation Threshold
               </label>
               <div className="flex items-center gap-3">
@@ -238,23 +238,23 @@ export default function CreateWallet({ network }: Props) {
                   onChange={(e) => setCancelThreshold(Math.min(Math.max(1, Number(e.target.value)), approvers.length))}
                   min={1}
                   max={approvers.length}
-                  className="w-24 px-4 py-3 bg-slate-800/40 border border-slate-800/50 rounded-lg text-sm text-slate-200 font-mono text-center focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all"
+                  className="w-24 px-4 py-3 bg-neutral-800/40 border border-neutral-800/50 rounded-lg text-sm text-neutral-200 font-mono text-center focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 transition-all"
                 />
-                <span className="text-sm text-slate-500">
-                  of <span className="text-slate-300 font-semibold">{approvers.length}</span> approvers
+                <span className="text-sm text-neutral-500">
+                  of <span className="text-neutral-300 font-semibold">{approvers.length}</span> approvers
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-2">Minimum cancellations to reject a proposal.</p>
+              <p className="text-xs text-neutral-600 mt-2">Minimum cancellations to reject a proposal.</p>
             </div>
             {/* Visual threshold indicator */}
-            <div className="bg-slate-800/30 rounded-lg px-4 py-3 border border-slate-800/50">
+            <div className="bg-neutral-800/30 rounded-lg px-4 py-3 border border-neutral-800/50">
               <div className="flex items-center justify-between text-xs mb-2">
-                <span className="text-slate-500">Approval quorum</span>
-                <span className="text-amber-300 font-mono">{approvalThreshold}/{approvers.length}</span>
+                <span className="text-neutral-500">Approval quorum</span>
+                <span className="text-emerald-300 font-mono">{approvalThreshold}/{approvers.length}</span>
               </div>
-              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400 transition-all"
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all"
                   style={{ width: `${(approvalThreshold / Math.max(approvers.length, 1)) * 100}%` }}
                 />
               </div>
@@ -272,9 +272,9 @@ export default function CreateWallet({ network }: Props) {
               { label: 'Cancel Threshold', value: `${cancelThreshold} of ${approvers.length}` },
               { label: 'Timelock', value: timelockSeconds > 0 ? `${timelockSeconds}s` : 'None (immediate)' },
             ].map((row) => (
-              <div key={row.label} className="flex items-center justify-between py-2 border-b border-slate-800/30 last:border-b-0">
-                <span className="text-xs text-slate-500 uppercase tracking-wider">{row.label}</span>
-                <span className={`text-sm text-slate-200 ${row.mono ? 'font-mono' : ''}`}>{row.value}</span>
+              <div key={row.label} className="flex items-center justify-between py-2 border-b border-neutral-800/30 last:border-b-0">
+                <span className="text-xs text-neutral-500 uppercase tracking-wider">{row.label}</span>
+                <span className={`text-sm text-neutral-200 ${row.mono ? 'font-mono' : ''}`}>{row.value}</span>
               </div>
             ))}
 
@@ -284,11 +284,11 @@ export default function CreateWallet({ network }: Props) {
               { label: 'Approvers', list: approvers },
             ].map((group) => (
               <div key={group.label}>
-                <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">{group.label}</h4>
+                <h4 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">{group.label}</h4>
                 <div className="space-y-1">
                   {group.list.map((addr, i) => (
-                    <div key={i} className="bg-slate-800/20 rounded px-3 py-1.5">
-                      <span className="text-xs font-mono text-slate-400">{addr}</span>
+                    <div key={i} className="bg-neutral-800/20 rounded px-3 py-1.5">
+                      <span className="text-xs font-mono text-neutral-400">{addr}</span>
                     </div>
                   ))}
                 </div>
@@ -296,9 +296,9 @@ export default function CreateWallet({ network }: Props) {
             ))}
 
             {/* Fee estimate */}
-            <div className="flex items-center justify-between px-3 py-2.5 bg-slate-800/20 border border-slate-800/40 rounded-lg">
-              <span className="text-xs text-slate-500">Estimated creation fee</span>
-              <span className="text-xs font-mono text-slate-400">~0.01 SOL</span>
+            <div className="flex items-center justify-between px-3 py-2.5 bg-neutral-800/20 border border-neutral-800/40 rounded-lg">
+              <span className="text-xs text-neutral-500">Estimated creation fee</span>
+              <span className="text-xs font-mono text-neutral-400">~0.01 SOL</span>
             </div>
 
             {/* Status messages */}
@@ -317,13 +317,13 @@ export default function CreateWallet({ network }: Props) {
                       href={getExplorerTxUrl(txSig, network)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-mono text-slate-500 hover:text-amber-300 break-all transition-colors"
+                      className="text-xs font-mono text-neutral-500 hover:text-emerald-300 break-all transition-colors"
                     >
                       {txSig.slice(0, 12)}...{txSig.slice(-8)}
                     </a>
                   </div>
                 )}
-                <p className="text-xs text-slate-500 mt-2">Redirecting to your wallet...</p>
+                <p className="text-xs text-neutral-500 mt-2">Redirecting to your wallet...</p>
               </div>
             )}
             {status === 'error' && (
@@ -357,7 +357,7 @@ export default function CreateWallet({ network }: Props) {
     onRemove: (i: number) => void,
   ) => (
     <div className="space-y-4" key={`step-${label}`}>
-      <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+      <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
         {label}
       </label>
 
@@ -369,12 +369,12 @@ export default function CreateWallet({ network }: Props) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAdd(); } }}
           placeholder="Enter base58 public key..."
-          className="flex-1 px-4 py-3 bg-slate-800/40 border border-slate-800/50 rounded-lg text-sm text-slate-200 placeholder-slate-600 font-mono focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all"
+          className="flex-1 px-4 py-3 bg-neutral-800/40 border border-neutral-800/50 rounded-lg text-sm text-neutral-200 placeholder-neutral-600 font-mono focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 transition-all"
         />
         <button
           onClick={onAdd}
           disabled={!isValidBase58(inputValue)}
-          className="w-full sm:w-auto px-4 py-3 text-sm font-semibold rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+          className="w-full sm:w-auto px-4 py-3 text-sm font-semibold rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
         >
           Add
         </button>
@@ -389,7 +389,7 @@ export default function CreateWallet({ network }: Props) {
               else setApprovers((a) => [...a, account.address]);
             }
           }}
-          className="text-xs text-slate-500 hover:text-amber-300 transition-colors cursor-pointer flex items-center gap-1.5"
+          className="text-xs text-neutral-500 hover:text-emerald-300 transition-colors cursor-pointer flex items-center gap-1.5"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -403,12 +403,12 @@ export default function CreateWallet({ network }: Props) {
         {list.map((addr, i) => (
           <div
             key={i}
-            className="flex items-center justify-between px-4 py-2.5 bg-slate-800/30 border border-slate-800/50 rounded-lg group"
+            className="flex items-center justify-between px-4 py-2.5 bg-neutral-800/30 border border-neutral-800/50 rounded-lg group"
           >
-            <span className="text-xs font-mono text-slate-300 truncate mr-3">{addr}</span>
+            <span className="text-xs font-mono text-neutral-300 truncate mr-3">{addr}</span>
             <button
               onClick={() => onRemove(i)}
-              className="shrink-0 text-slate-600 hover:text-red-400 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+              className="shrink-0 text-neutral-600 hover:text-red-400 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
               aria-label={`Remove ${addr.slice(0, 8)}`}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -420,12 +420,12 @@ export default function CreateWallet({ network }: Props) {
       </div>
 
       {list.length === 0 && (
-        <p className="text-xs text-slate-600 text-center py-4">No {label.toLowerCase()} added yet. Add at least one.</p>
+        <p className="text-xs text-neutral-600 text-center py-4">No {label.toLowerCase()} added yet. Add at least one.</p>
       )}
 
-      <p className="text-xs text-slate-500">
-        <span className="text-amber-300 font-semibold">{list.length}</span> {label.toLowerCase()} added
-        <span className="text-slate-600 ml-1">(max 16)</span>
+      <p className="text-xs text-neutral-500">
+        <span className="text-emerald-300 font-semibold">{list.length}</span> {label.toLowerCase()} added
+        <span className="text-neutral-600 ml-1">(max 16)</span>
       </p>
     </div>
   );
@@ -434,16 +434,16 @@ export default function CreateWallet({ network }: Props) {
     <div className="flex flex-col items-center pt-8 pb-16">
       {/* Header */}
       <div className="text-center mb-10">
-        <h1 className="text-2xl font-heading font-bold text-slate-100 tracking-wide mb-2">
+        <h1 className="text-2xl font-heading font-bold text-neutral-100 tracking-wide mb-2">
           Create Wallet
         </h1>
-        <p className="text-sm text-slate-500">Set up a new Lucid multisig wallet on Solana</p>
+        <p className="text-sm text-neutral-500">Set up a new Lucid multisig wallet on Solana</p>
       </div>
 
       {!account && (
         <div className="w-full max-w-2xl bg-amber-500/5 border border-amber-500/15 rounded-xl p-6 text-center">
           <p className="text-sm text-amber-300">Connect your wallet to create a Lucid multisig.</p>
-          <p className="text-xs text-slate-500 mt-2">Your wallet will pay the transaction fee and rent for account creation.</p>
+          <p className="text-xs text-neutral-500 mt-2">Your wallet will pay the transaction fee and rent for account creation.</p>
         </div>
       )}
 
@@ -455,10 +455,10 @@ export default function CreateWallet({ network }: Props) {
               <div key={i} className="flex-1">
                 <div className={`h-1.5 w-full rounded-full transition-all ${
                   i < currentStep
-                    ? 'bg-amber-400'
+                    ? 'bg-emerald-400'
                     : i === currentStep
-                      ? 'bg-gradient-to-r from-amber-400 to-amber-400/40'
-                      : 'bg-slate-800'
+                      ? 'bg-gradient-to-r from-emerald-400 to-emerald-400/40'
+                      : 'bg-neutral-800'
                 }`} />
               </div>
             ))}
@@ -470,7 +470,7 @@ export default function CreateWallet({ network }: Props) {
               <span
                 key={i}
                 className={`text-[10px] uppercase tracking-wider font-semibold transition-colors ${
-                  i <= currentStep ? 'text-amber-400/70' : 'text-slate-700'
+                  i <= currentStep ? 'text-emerald-400/70' : 'text-neutral-700'
                 }`}
               >
                 {step.label}
@@ -479,8 +479,8 @@ export default function CreateWallet({ network }: Props) {
           </div>
 
           {/* Form card */}
-          <div className="bg-slate-900/60 border border-slate-800/60 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="h-[1px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
+          <div className="bg-neutral-900/60 border border-neutral-800/60 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
             <div className="p-5 sm:p-8">
               <div key={currentStep} className="animate-step-in">
                 {renderStep()}
@@ -488,11 +488,11 @@ export default function CreateWallet({ network }: Props) {
             </div>
 
             {/* Navigation footer */}
-            <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-t border-slate-800/50">
+            <div className="flex items-center justify-between px-5 sm:px-8 py-5 border-t border-neutral-800/50">
               <button
                 onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                 disabled={currentStep === 0}
-                className="px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-lg hover:bg-slate-800/50"
+                className="px-4 py-2.5 text-sm text-neutral-400 hover:text-neutral-200 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer rounded-lg hover:bg-neutral-800/50"
               >
                 Back
               </button>
@@ -500,14 +500,14 @@ export default function CreateWallet({ network }: Props) {
                 <button
                   onClick={() => setCurrentStep(currentStep + 1)}
                   disabled={!isStepValid(currentStep)}
-                  className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-900 transition-all cursor-pointer shadow-glow-gold disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white transition-all cursor-pointer shadow-glow-green disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Continue
                 </button>
               ) : status === 'error' ? (
                 <button
                   onClick={handleRetry}
-                  className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-900 transition-all cursor-pointer shadow-glow-gold"
+                  className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white transition-all cursor-pointer shadow-glow-green"
                 >
                   Retry
                 </button>
@@ -515,11 +515,11 @@ export default function CreateWallet({ network }: Props) {
                 <button
                   onClick={handleCreate}
                   disabled={status === 'sending'}
-                  className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-900 transition-all cursor-pointer shadow-glow-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white transition-all cursor-pointer shadow-glow-green disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {status === 'sending' ? (
                     <span className="flex items-center gap-2">
-                      <div className="w-3.5 h-3.5 border-2 border-slate-900/30 border-t-slate-900 rounded-full animate-spin" />
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Creating...
                     </span>
                   ) : (

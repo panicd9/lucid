@@ -96,14 +96,14 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
     <>
       <div className={`rounded-xl transition-all ${
         isActive
-          ? 'bg-slate-900/50 border-gradient hover:shadow-glow-gold'
-          : 'bg-slate-900/30 border border-slate-800/50 hover:border-slate-700/50'
+          ? 'bg-neutral-900/50 border-gradient hover:shadow-glow-green'
+          : 'bg-neutral-900/30 border border-neutral-800/50 hover:border-neutral-700/50'
       }`}>
         <div className="p-5">
           {/* Top row */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-mono text-slate-500 font-heading">
+              <span className="text-sm font-mono text-neutral-500 font-heading">
                 #{proposal.proposalIndex.toString()}
               </span>
               <ProposalStatusBadge status={proposal.status} />
@@ -130,18 +130,18 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
 
           {/* Rendered template */}
           {renderedTemplate && (
-            <div className="mb-4 bg-slate-800/30 border border-slate-800/50 rounded-lg px-3 py-2.5">
-              <p className="text-sm text-slate-200 font-mono break-all">{renderedTemplate}</p>
+            <div className="mb-4 bg-neutral-800/30 border border-neutral-800/50 rounded-lg px-3 py-2.5">
+              <p className="text-sm text-neutral-200 font-mono break-all">{renderedTemplate}</p>
             </div>
           )}
 
           {/* Approval progress */}
           <div className="mb-4">
             <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-slate-400">
-                Approvals: <span className="text-amber-300 font-semibold">{approvalCount}</span>/{threshold}
+              <span className="text-neutral-400">
+                Approvals: <span className="text-emerald-300 font-semibold">{approvalCount}</span>/{threshold}
                 {totalApprovers > 0 && (
-                  <span className="text-slate-600 ml-1">({totalApprovers} total)</span>
+                  <span className="text-neutral-600 ml-1">({totalApprovers} total)</span>
                 )}
               </span>
               {cancellationCount > 0 && (
@@ -150,18 +150,18 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
                 </span>
               )}
             </div>
-            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all bg-gradient-to-r from-amber-500 to-amber-400"
+                className="h-full rounded-full transition-all bg-gradient-to-r from-emerald-500 to-emerald-400"
                 style={{ width: `${Math.min(approvalPct, 100)}%` }}
               />
             </div>
           </div>
 
           {/* Details row */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-500">
             <div className="flex items-center gap-1.5">
-              <svg className="w-3 h-3 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3 h-3 text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <AddressDisplay address={proposal.proposer.toBase58()} chars={4} />
@@ -173,7 +173,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
 
         {/* Action buttons */}
         {(canApprove || canCancel || canExecute) && (
-          <div className="flex gap-2 px-5 py-3 border-t border-slate-800/40">
+          <div className="flex gap-2 px-5 py-3 border-t border-neutral-800/40">
             {canApprove && (
               <button
                 onClick={() => setSigningAction('approve')}
@@ -192,7 +192,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
             )}
             {canExecute && (
               <button
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 text-white hover:from-violet-500 hover:to-violet-400 transition-all cursor-pointer shadow-glow-purple"
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-500 hover:to-emerald-400 transition-all cursor-pointer shadow-glow-green"
                 onClick={() => setShowExecute(true)}
               >
                 Execute

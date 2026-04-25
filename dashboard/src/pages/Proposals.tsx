@@ -39,10 +39,10 @@ export default function Proposals({ network }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <div className="relative w-12 h-12 mb-5">
-          <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
-          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-amber-500 animate-spin" />
+          <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" />
         </div>
-        <p className="text-sm text-slate-400">Loading proposals...</p>
+        <p className="text-sm text-neutral-400">Loading proposals...</p>
       </div>
     );
   }
@@ -56,7 +56,7 @@ export default function Proposals({ network }: Props) {
           </svg>
         </div>
         <p className="text-sm font-medium text-red-400 mb-1">Failed to load proposals</p>
-        <p className="text-xs text-slate-500">{error}</p>
+        <p className="text-xs text-neutral-500">{error}</p>
       </div>
     );
   }
@@ -75,39 +75,39 @@ export default function Proposals({ network }: Props) {
     <div>
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
-        <Link to="/" className="text-slate-500 hover:text-amber-400 transition-colors cursor-pointer flex items-center">
+        <Link to="/" className="text-neutral-500 hover:text-emerald-400 transition-colors cursor-pointer flex items-center">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
         </Link>
-        <svg className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-        <Link to={`/wallet/${address}`} className="text-slate-400 hover:text-amber-400 transition-colors cursor-pointer truncate max-w-[160px]">
+        <svg className="w-3.5 h-3.5 text-neutral-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <Link to={`/wallet/${address}`} className="text-neutral-400 hover:text-emerald-400 transition-colors cursor-pointer truncate max-w-[160px]">
           {walletData?.wallet.name || address}
         </Link>
-        <svg className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-        <span className="text-slate-200 font-medium">Proposals</span>
+        <svg className="w-3.5 h-3.5 text-neutral-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <span className="text-neutral-200 font-medium">Proposals</span>
       </nav>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-slate-50 font-heading tracking-wide">
+            <h1 className="text-2xl font-bold text-neutral-50 font-heading tracking-wide">
               Proposals
             </h1>
             {proposals.length > 0 && (
-              <span className="text-xs font-mono text-slate-500 bg-slate-800/60 px-2.5 py-1 rounded-full border border-slate-700/40">
+              <span className="text-xs font-mono text-neutral-500 bg-neutral-800/60 px-2.5 py-1 rounded-full border border-neutral-700/40">
                 {proposals.length}
               </span>
             )}
           </div>
           {walletData && (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-neutral-500">
               {walletData.wallet.name}
             </p>
           )}
         </div>
         <Link
           to={`/wallet/${address}`}
-          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 hover:bg-amber-500/15 hover:border-amber-500/30 transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/15 hover:border-emerald-500/30 transition-all cursor-pointer"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -119,11 +119,11 @@ export default function Proposals({ network }: Props) {
       {/* Active */}
       <section className="mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-1 h-5 rounded-full bg-gradient-to-b from-amber-500 to-amber-500/30" />
-          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+          <div className="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-500/30" />
+          <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">
             Active &amp; Pending
           </h2>
-          <span className="text-xs font-mono text-amber-400/70">{activeProposals.length}</span>
+          <span className="text-xs font-mono text-emerald-400/70">{activeProposals.length}</span>
         </div>
         {activeProposals.length > 0 ? (
           <div className="space-y-3">
@@ -139,8 +139,8 @@ export default function Proposals({ network }: Props) {
             ))}
           </div>
         ) : (
-          <div className="border border-dashed border-slate-800 rounded-xl p-8 text-center">
-            <p className="text-sm text-slate-500">No active proposals</p>
+          <div className="border border-dashed border-neutral-800 rounded-xl p-8 text-center">
+            <p className="text-sm text-neutral-500">No active proposals</p>
           </div>
         )}
       </section>
@@ -148,11 +148,11 @@ export default function Proposals({ network }: Props) {
       {/* Past */}
       <section>
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-1 h-5 rounded-full bg-gradient-to-b from-slate-600 to-slate-600/30" />
-          <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+          <div className="w-1 h-5 rounded-full bg-gradient-to-b from-neutral-600 to-neutral-600/30" />
+          <h2 className="text-sm font-semibold text-neutral-300 uppercase tracking-wider">
             Past
           </h2>
-          <span className="text-xs font-mono text-slate-500">{pastProposals.length}</span>
+          <span className="text-xs font-mono text-neutral-500">{pastProposals.length}</span>
         </div>
         {pastProposals.length > 0 ? (
           <div className="space-y-3">
@@ -168,8 +168,8 @@ export default function Proposals({ network }: Props) {
             ))}
           </div>
         ) : (
-          <div className="border border-dashed border-slate-800 rounded-xl p-8 text-center">
-            <p className="text-sm text-slate-500">No past proposals</p>
+          <div className="border border-dashed border-neutral-800 rounded-xl p-8 text-center">
+            <p className="text-sm text-neutral-500">No past proposals</p>
           </div>
         )}
       </section>

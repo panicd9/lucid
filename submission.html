@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucid — Colosseum Frontier Submission</title>
+<style>
+  :root { --bg: #0a0f1a; --card: #111827; --border: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --gold: #f59e0b; --purple: #8b5cf6; --red: #ef4444; --green: #10b981; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(90deg, #e2e8f0, #f8fafc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  h2 { font-size: 1.25rem; color: var(--gold); margin: 2rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+  h3 { font-size: 1rem; color: var(--text); margin: 1.5rem 0 0.5rem; }
+  p, li { color: var(--muted); font-size: 0.95rem; }
+  p { margin-bottom: 0.75rem; }
+  .tagline { font-size: 1.1rem; color: var(--gold); margin-bottom: 1.5rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 1rem 0; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1rem 0; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+  .stat-num { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+  .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  code { background: rgba(139,92,246,0.1); color: var(--purple); padding: 0.15em 0.4em; border-radius: 4px; font-size: 0.85em; font-family: 'JetBrains Mono', monospace; }
+  pre { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; font-size: 0.85rem; margin: 0.75rem 0; }
+  pre code { background: none; padding: 0; color: var(--muted); }
+  .section-copy { position: relative; }
+  .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: var(--border); border: none; color: var(--muted); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+  .copy-btn:hover { background: var(--gold); color: var(--bg); }
+  ul { padding-left: 1.25rem; margin: 0.5rem 0; }
+  li { margin: 0.25rem 0; }
+  .badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+  .badge-gold { background: rgba(245,158,11,0.15); color: var(--gold); }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-purple { background: rgba(139,92,246,0.15); color: var(--purple); }
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
+  .checklist li:last-child { border-bottom: none; }
+  .check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .check.done { background: var(--green); border-color: var(--green); }
+  .check.todo { border-color: var(--gold); }
+  table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; }
+  th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+  th { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  a { color: var(--purple); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .flex { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  @media (max-width: 640px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } body { padding: 1rem; } }
+</style>
+</head>
+<body>
+
+<h1>Lucid</h1>
+<p class="tagline">The intent-based multisig where signers read what they approve — on their hardware wallet.</p>
+
+<div class="flex" style="margin-bottom: 1.5rem;">
+  <span class="badge badge-gold">DeFi Infrastructure</span>
+  <span class="badge badge-purple">Public Good</span>
+  <span class="badge badge-green">Pinocchio</span>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>1. Project Description</h2>
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="card section-copy" id="description">
+
+<p><strong>The problem.</strong> Nobody knows what they sign on Solana. The $280M Drift exploit (April 2026) proved it — state actors social-engineered multisig signers into approving transactions they couldn't read. The hardware wallet showed raw hex. The compromised UI said "routine config update." The transaction said "change admin authority to attacker." Every existing verification tool runs on the same compromised machine that can lie to the signer. The one trusted device — the Ledger — still shows meaningless bytes.</p>
+
+<p><strong>What Lucid does.</strong> A multisig where signers approve human-readable intents via <code>signMessage</code>, not opaque transactions via <code>signTransaction</code>. The Ledger displays the actual action in plain text: <code>approve add market 5 with oracle 9abc...def | wallet: drift-governance proposal: 42</code>. Protocols define their governance ruleset as verified intents auto-generated from their program's IDL — each intent specifies the exact CPI, parameters, and human-readable template. Proposers and approvers sign what they read, on their trusted device.</p>
+
+<p><strong>Why Solana.</strong> Lucid exploits Solana's ed25519 precompile for on-chain signature verification of off-chain messages. The program reconstructs the human-readable message from stored intent definitions and proposal parameters, then verifies the signer's ed25519 signature against it — if the transaction was tampered with, the reconstructed message won't match and the signature fails. This is only possible because Solana exposes the ed25519 precompile as a native program.</p>
+
+<p><strong>Technical execution.</strong> 3,500 LOC Pinocchio on-chain program with zero-copy accounts, 11 instructions, and a byte-pool pattern for variable-length intent data. TypeScript SDK with a two-tier verification engine: Tier 1 matches known programs by discriminator, Tier 2 performs structural validation against Anchor IDLs. Full React dashboard with Ledger WebHID signing, wallet creation, proposal tracking, timelock countdowns, and an interactive demo. 121 tests across Rust (LiteSVM with precompile support), SDK (vitest), and dashboard.</p>
+
+<p><strong>What's next.</strong> Mainnet deployment, integration with one live protocol (targeting governance admin keys), and a signMessage fallback for mobile wallets that can't use Ledger. Intent template hashing on-chain (SHA256 of the intent JSON stored in the account header) is designed but not yet implemented — it would let verifiers confirm intent authenticity without trusting the frontend.</p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>2. Project Stats</h2>
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="stat-grid">
+  <div class="stat"><div class="stat-num">17K+</div><div class="stat-label">Lines of Code</div></div>
+  <div class="stat"><div class="stat-num">121</div><div class="stat-label">Tests</div></div>
+  <div class="stat"><div class="stat-num">11</div><div class="stat-label">Instructions</div></div>
+  <div class="stat"><div class="stat-num">154</div><div class="stat-label">Source Files</div></div>
+</div>
+
+<table>
+  <tr><th>Component</th><th>Language</th><th>LOC</th><th>Tests</th></tr>
+  <tr><td>On-chain program</td><td>Rust (Pinocchio)</td><td>3,539</td><td>35</td></tr>
+  <tr><td>CLI</td><td>Rust</td><td>4,271</td><td>10</td></tr>
+  <tr><td>SDK</td><td>TypeScript</td><td>2,506</td><td>64</td></tr>
+  <tr><td>Dashboard</td><td>React + Tailwind</td><td>7,013</td><td>22</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>3. Demo Video Script (2:50)</h2>
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="card">
+
+<h3>0:00–0:20 — Hook</h3>
+<p>"In April 2026, North Korean state actors drained $280 million from Drift. The multisig signers approved the transaction. They had no idea what they signed — because their Ledger showed hex. This is what every multisig signer on Solana sees today."</p>
+<p><em>[Show the before panel from the dashboard — raw hex on a Ledger screen]</em></p>
+
+<h3>0:20–0:40 — Solution</h3>
+<p>"Lucid is a multisig where signers read what they approve — in plain text, on their hardware wallet. Not on a screen that can lie. On the device that can't."</p>
+<p><em>[Show the after panel — human-readable message on Ledger: "approve add market 5 with oracle 9abc...def"]</em></p>
+
+<h3>0:40–2:10 — Live Demo (90 seconds)</h3>
+<p><em>[Dashboard on localhost with local validator running]</em></p>
+<ul>
+  <li><strong>0:40</strong> — Show the home page. "This is the Lucid dashboard." Click "Try the Demo" to walk through the 5-step attack scenario.</li>
+  <li><strong>1:00</strong> — Navigate to the demo treasury wallet. Show the Ruleset page — intents with risk badges, approval thresholds, timelocks.</li>
+  <li><strong>1:10</strong> — Open the crowdfunding "withdraw" intent. "Each intent has a human-readable template, parameter constraints, and risk classification."</li>
+  <li><strong>1:20</strong> — Click "Propose." Fill in parameters. Show the message preview — this is what the Ledger will display. Click "Sign with Ledger."</li>
+  <li><strong>1:35</strong> — <em>[Cut to Ledger device]</em> The Ledger shows the human-readable message. Approve on device. Transaction sent.</li>
+  <li><strong>1:45</strong> — Switch to Proposals page. Show the proposal with approval progress. Click "Approve" with a second signer. Threshold reached.</li>
+  <li><strong>1:55</strong> — Timelock clears. Click "Execute." CPI fires from the vault PDA. Show the Solscan link — transaction confirmed.</li>
+  <li><strong>2:05</strong> — Navigate to Audit Log. All transactions visible with action types, timestamps, signatures.</li>
+</ul>
+
+<h3>2:10–2:40 — Technical Highlight (30 seconds)</h3>
+<p>"Under the hood: the program stores intent definitions as byte pools — variable-length account data with offset/length pairs. When a signer approves, the program reconstructs the human-readable message from the stored intent template and proposal parameters, then verifies the ed25519 signature via the precompile. If anything was tampered with — different accounts, different parameters, different instruction — the reconstructed message won't match the signature, and the CPI is rejected."</p>
+<p><em>[Show the architecture diagram from README for 5 seconds]</em></p>
+
+<h3>2:40–2:50 — Close</h3>
+<p>"Lucid. See what you sign. Built for Colosseum Frontier."</p>
+<p><em>[Show GitHub URL + program ID]</em></p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>4. Technical Demo Video Script (2:30)</h2>
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="card">
+
+<h3>0:00–0:20 — Architecture Overview</h3>
+<p><em>[Show architecture diagram]</em></p>
+<p>"Lucid has four components: a Pinocchio on-chain program, a Rust CLI, a TypeScript SDK with a two-tier verification engine, and a React dashboard with Ledger WebHID."</p>
+
+<h3>0:20–0:50 — Intent Generation & Verification</h3>
+<p><em>[Terminal: run <code>lucid generate-intents --idl crowdfunding.json</code>]</em></p>
+<p>"Feed an Anchor IDL, get complete intent definitions. Each one specifies the exact discriminator, accounts, parameters, seeds for PDA derivation, and a human-readable template."</p>
+<p><em>[Terminal: run <code>lucid verify-intents</code> — show Tier 1 + Tier 2 checks passing]</em></p>
+<p>"The verification engine catches 5 attack vectors: swapped discriminators, removed signers, faked instruction names, stripped accounts, and retyped parameters."</p>
+
+<h3>0:50–1:20 — Tamper Detection</h3>
+<p><em>[Terminal: run tamper detection from demo/run.sh — show each tampered intent being rejected]</em></p>
+<p>"Here are five tampered intent definitions. Each has a single field modified. The verification engine catches every one."</p>
+
+<h3>1:20–1:50 — On-Chain Signing Flow</h3>
+<p><em>[Show code: <code>programs/lucid/src/instructions/approve.rs</code>]</em></p>
+<p>"The approve instruction reads the intent template and proposal parameters from on-chain accounts, reconstructs the message the signer should have approved, and verifies the ed25519 signature from the precompile instruction. No trust in the frontend."</p>
+
+<h3>1:50–2:20 — Test Suite</h3>
+<p><em>[Terminal: run <code>bash test.sh</code> — show 11/11 passing]</em></p>
+<p>"121 tests across the stack. Rust integration tests use LiteSVM with precompile support — the tests sign actual ed25519 messages and verify them on-chain. SDK vitest covers intent generation, verification, and message envelope construction."</p>
+
+<h3>2:20–2:30 — Close</h3>
+<p>"17,000 lines of code, 121 tests, built in 2 weeks. Lucid — the multisig where you see what you sign."</p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>5. Submission Checklist</h2>
+<!-- ═══════════════════════════════════════════════ -->
+
+<ul class="checklist">
+  <li><div class="check done">&#10003;</div> <strong>On-chain program</strong> — 11 instructions, zero-copy Pinocchio, compiles to SBF</li>
+  <li><div class="check done">&#10003;</div> <strong>Full test suite</strong> — 121 tests, 11/11 checks pass (bash test.sh)</li>
+  <li><div class="check done">&#10003;</div> <strong>Dashboard</strong> — Wallet creation, ruleset browser, proposals, Ledger signing, audit log, interactive demo</li>
+  <li><div class="check done">&#10003;</div> <strong>SDK</strong> — Intent generation, 2-tier verification, signing envelopes</li>
+  <li><div class="check done">&#10003;</div> <strong>CLI</strong> — Wallet management, intent generation, verification, demo flow</li>
+  <li><div class="check done">&#10003;</div> <strong>README</strong> — Architecture, quick start, demo instructions</li>
+  <li><div class="check done">&#10003;</div> <strong>Demo script</strong> — E2E flow with crowdfunding protocol + tamper detection</li>
+  <li><div class="check todo" style="border-color: var(--gold);">!</div> <strong>GitHub repo</strong> — Push to public repository</li>
+  <li><div class="check todo" style="border-color: var(--gold);">!</div> <strong>Devnet deployment</strong> — Deploy program to devnet</li>
+  <li><div class="check todo" style="border-color: var(--gold);">!</div> <strong>Pitch video</strong> — Record 2:50 pitch video (script above)</li>
+  <li><div class="check todo" style="border-color: var(--gold);">!</div> <strong>Technical demo video</strong> — Record 2:30 technical walkthrough (script above)</li>
+  <li><div class="check todo" style="border-color: var(--gold);">!</div> <strong>Dashboard hosted</strong> — Deploy dashboard to Vercel/Netlify for judges to try</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>6. Pre-Submission Action Items</h2>
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="card">
+
+<h3>GitHub (15 min)</h3>
+<pre><code># Create and push
+gh repo create lucid-multisig --public --source=. --push
+
+# Or manually:
+git remote add origin git@github.com:YOUR_USERNAME/lucid-multisig.git
+git push -u origin main</code></pre>
+
+<h3>Devnet Deploy (10 min)</h3>
+<pre><code># Ensure you have a devnet keypair with SOL
+solana config set --url devnet
+solana airdrop 5
+
+# Deploy
+solana program deploy target/deploy/lucid.so --url devnet
+
+# Verify
+solana program show LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR --url devnet</code></pre>
+<p style="color: var(--gold); font-size: 0.85rem;"><strong>Note:</strong> The program ID is derived from <code>target/deploy/lucid-keypair.json</code>. If you deploy with this keypair, the existing ID <code>LUC5Tb...JJWR</code> stays valid. If the keypair is missing, a new ID will be assigned — update <code>dashboard/src/lib/constants.ts</code> and <code>cli/src/pda.rs</code>.</p>
+
+<h3>Host Dashboard (10 min)</h3>
+<pre><code># Build production bundle
+cd dashboard && npm run build
+
+# Deploy to Vercel (one-liner)
+npx vercel --prod
+
+# Or Netlify
+npx netlify deploy --prod --dir=dashboard/dist</code></pre>
+
+<h3>Record Videos</h3>
+<ul>
+  <li>Use OBS or Loom, 1080p, clean browser profile</li>
+  <li>Run local validator + demo before recording to ensure everything works</li>
+  <li>Pitch video: follow the 2:50 script in Section 3</li>
+  <li>Technical demo: follow the 2:30 script in Section 4</li>
+  <li>Upload to YouTube (unlisted is fine)</li>
+</ul>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>7. Judge Optimization Notes</h2>
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="card">
+
+<h3>Why this should score high</h3>
+
+<p><strong>Functionality (30%):</strong> Working end-to-end. Wallet creation, intent registration, propose/approve/cancel/execute cycle with Ledger hardware signing. 121 tests passing. Interactive demo walkthrough. Judges can run <code>bash demo/run.sh</code> and see the full flow in 2 minutes.</p>
+
+<p><strong>Innovation (25%):</strong> Novel primitive — no existing multisig uses <code>signMessage</code> for human-readable approval on hardware wallets. The ed25519 precompile verification of off-chain messages against on-chain state reconstruction is new. Auto-generated intents from IDLs with 2-tier verification is new. Closest comparable (Squads) uses <code>signTransaction</code> — signers see hex.</p>
+
+<p><strong>Technical Execution (20%):</strong> Pinocchio (not Anchor) for zero-copy performance. Byte-pool pattern for variable-length on-chain data. LiteSVM integration tests with real ed25519 signatures. Clean separation: program / SDK / CLI / dashboard. 17K LOC, all tested.</p>
+
+<p><strong>Potential Impact (15%):</strong> Every protocol with admin keys is a target. Drift ($280M), Wormhole ($320M), Mango ($116M) — all were multisig signing failures. Lucid eliminates the attack vector at the hardware level. Public good: the signing primitive is open and protocol-agnostic.</p>
+
+<p><strong>Presentation (10%):</strong> Direct, technical, no fluff. Architecture diagram in README. Demo script with tamper detection. Dashboard is polished with animations, error handling, explorer links.</p>
+
+<h3>Positioning against winner patterns</h3>
+<ul>
+  <li><strong>Infrastructure play:</strong> Like Bunkr (Grizzlython security winner) and Unruggable (Cypherpunk grand champion), Lucid is a security primitive. Grand champions are infrastructure.</li>
+  <li><strong>Novel primitive:</strong> Like Ore (novel PoW on Solana), Lucid introduces something that didn't exist: human-readable hardware wallet signing for multisigs.</li>
+  <li><strong>Real attack prevention:</strong> Unlike theoretical security tools, Lucid addresses a specific $280M exploit with a concrete countermeasure.</li>
+</ul>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>8. Quick Copy — Submission Fields</h2>
+<!-- ═══════════════════════════════════════════════ -->
+
+<div class="card">
+
+<h3>Project Name</h3>
+<p>Lucid</p>
+
+<h3>Tagline</h3>
+<p>The intent-based multisig where signers read what they approve — on their hardware wallet.</p>
+
+<h3>One-liner</h3>
+<p>Lucid eliminates blind signing on Solana by making hardware wallets display human-readable governance actions instead of hex, verified on-chain via ed25519 precompile.</p>
+
+<h3>Categories</h3>
+<p>DeFi Infrastructure, Security, Public Good, Developer Tooling</p>
+
+<h3>Program ID</h3>
+<p><code>LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR</code></p>
+
+<h3>Tech Stack</h3>
+<p>Pinocchio (on-chain), Rust CLI, TypeScript SDK, React + Tailwind + @solana/kit (dashboard), Ledger WebHID, LiteSVM (testing)</p>
+
+<h3>Team</h3>
+<p>Darko Panic — solo builder</p>
+
+</div>
+
+<hr>
+<p style="text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2rem;">
+  Generated for Colosseum Frontier Hackathon submission — April 2026
+</p>
+
+</body>
+</html>

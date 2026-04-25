@@ -22,15 +22,15 @@ export default function AddressDisplay({ address, chars = 4, className = '' }: P
 
   return (
     <span className={`inline-flex items-center gap-1.5 font-mono text-xs ${className}`}>
-      <span className="text-slate-400">{truncated}</span>
+      <span className="text-neutral-400">{truncated}</span>
       <button
         onClick={handleCopy}
-        className="text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
+        className="text-neutral-600 hover:text-neutral-400 transition-colors cursor-pointer"
         title="Copy address"
         aria-label={copied ? 'Address copied' : 'Copy address to clipboard'}
       >
         {copied ? (
-          <svg className="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         ) : (

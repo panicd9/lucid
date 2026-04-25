@@ -15,7 +15,7 @@ function ConnectWalletRow({ wallet, onSelect }: { wallet: UiWallet; onSelect: (a
           onSelect(accounts[0]);
         }
       }}
-      className="w-full px-4 py-3 text-left hover:bg-slate-700/30 transition-colors flex items-center gap-3 cursor-pointer disabled:opacity-50"
+      className="w-full px-4 py-3 text-left hover:bg-neutral-700/30 transition-colors flex items-center gap-3 cursor-pointer disabled:opacity-50"
     >
       {wallet.icon ? (
         <img
@@ -24,12 +24,12 @@ function ConnectWalletRow({ wallet, onSelect }: { wallet: UiWallet; onSelect: (a
           className="w-6 h-6 rounded-lg"
         />
       ) : (
-        <div className="w-6 h-6 rounded-lg bg-slate-700/50 flex items-center justify-center">
-          <span className="text-xs text-slate-400">{wallet.name[0]}</span>
+        <div className="w-6 h-6 rounded-lg bg-neutral-700/50 flex items-center justify-center">
+          <span className="text-xs text-neutral-400">{wallet.name[0]}</span>
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-sm text-slate-200 font-medium">
+        <p className="text-sm text-neutral-200 font-medium">
           {isConnecting ? `Connecting to ${wallet.name}...` : wallet.name}
         </p>
       </div>
@@ -59,17 +59,17 @@ export default function WalletButton() {
       <div ref={ref} className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3.5 py-2 text-sm text-amber-200 hover:bg-amber-500/15 hover:border-amber-500/30 transition-all cursor-pointer"
+          className="flex items-center gap-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3.5 py-2 text-sm text-emerald-200 hover:bg-emerald-500/15 hover:border-emerald-500/30 transition-all cursor-pointer"
           aria-label="Wallet menu"
         >
-          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.5)]" />
+          <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(5,150,105,0.5)]" />
           <span className="font-mono text-xs">{short}</span>
         </button>
         {open && (
-          <div className="absolute right-0 mt-2 w-52 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-700/50">
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Connected</p>
-              <p className="text-xs text-slate-300 truncate font-mono">{addr}</p>
+          <div className="absolute right-0 mt-2 w-52 bg-neutral-800/95 backdrop-blur-xl border border-neutral-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+            <div className="px-4 py-3 border-b border-neutral-700/50">
+              <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Connected</p>
+              <p className="text-xs text-neutral-300 truncate font-mono">{addr}</p>
             </div>
             <button
               onClick={() => {
@@ -103,28 +103,28 @@ export default function WalletButton() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white text-sm font-semibold rounded-lg px-4 py-2 transition-all cursor-pointer shadow-glow-purple hover:shadow-glow-purple-lg"
+        className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-sm font-semibold rounded-lg px-4 py-2 transition-all cursor-pointer shadow-glow-green hover:shadow-glow-green-lg"
       >
         Connect
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-72 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-72 bg-neutral-800/95 backdrop-blur-xl border border-neutral-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
           {uniqueWallets.length === 0 ? (
             <div className="px-4 py-6 text-center">
-              <div className="w-10 h-10 rounded-xl bg-slate-700/30 flex items-center justify-center mx-auto mb-3">
-                <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-10 h-10 rounded-xl bg-neutral-700/30 flex items-center justify-center mx-auto mb-3">
+                <svg className="w-5 h-5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 013 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 013 6v3" />
                 </svg>
               </div>
-              <p className="text-sm text-slate-400">No wallets detected</p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-sm text-neutral-400">No wallets detected</p>
+              <p className="text-xs text-neutral-500 mt-1">
                 Install Phantom, Solflare, or Backpack
               </p>
             </div>
           ) : (
             <div className="py-1">
               <div className="px-4 py-2">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider">Select Wallet</p>
+                <p className="text-[10px] text-neutral-500 uppercase tracking-wider">Select Wallet</p>
               </div>
               {/* Show pre-authorized accounts first */}
               {withAccounts.map(({ wallet, account: acc }) => (
@@ -134,18 +134,18 @@ export default function WalletButton() {
                     setAccount(acc);
                     setOpen(false);
                   }}
-                  className="w-full px-4 py-3 text-left hover:bg-slate-700/30 transition-colors flex items-center gap-3 cursor-pointer"
+                  className="w-full px-4 py-3 text-left hover:bg-neutral-700/30 transition-colors flex items-center gap-3 cursor-pointer"
                 >
                   {wallet.icon ? (
                     <img src={wallet.icon} alt={wallet.name} className="w-6 h-6 rounded-lg" />
                   ) : (
-                    <div className="w-6 h-6 rounded-lg bg-slate-700/50 flex items-center justify-center">
-                      <span className="text-xs text-slate-400">{wallet.name[0]}</span>
+                    <div className="w-6 h-6 rounded-lg bg-neutral-700/50 flex items-center justify-center">
+                      <span className="text-xs text-neutral-400">{wallet.name[0]}</span>
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-slate-200 font-medium">{wallet.name}</p>
-                    <p className="text-xs text-slate-500 font-mono truncate">
+                    <p className="text-sm text-neutral-200 font-medium">{wallet.name}</p>
+                    <p className="text-xs text-neutral-500 font-mono truncate">
                       {acc.address.slice(0, 8)}...{acc.address.slice(-4)}
                     </p>
                   </div>

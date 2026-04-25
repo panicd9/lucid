@@ -19,8 +19,8 @@ export default function WalletDisambiguation({ name, candidates, pathSuffix = ''
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <h2 className="text-xl font-bold text-slate-100 mb-1 font-heading tracking-wide">Multiple wallets named "{name}"</h2>
-      <p className="text-sm text-slate-500 mb-8">Select which wallet you want to view</p>
+      <h2 className="text-xl font-bold text-neutral-100 mb-1 font-heading tracking-wide">Multiple wallets named "{name}"</h2>
+      <p className="text-sm text-neutral-500 mb-8">Select which wallet you want to view</p>
 
       <div className="w-full max-w-lg space-y-2">
         {candidates.map((c) => {
@@ -29,12 +29,12 @@ export default function WalletDisambiguation({ name, candidates, pathSuffix = ''
             <button
               key={addr}
               onClick={() => navigate(`/wallet/${addr}${pathSuffix}`)}
-              className="w-full text-left px-5 py-5 bg-slate-900/50 border border-slate-800/60 rounded-xl hover:border-slate-700/60 hover:bg-slate-800/50 transition-all group cursor-pointer"
+              className="w-full text-left px-5 py-5 bg-neutral-900/50 border border-neutral-800/60 rounded-xl hover:border-neutral-700/60 hover:bg-neutral-800/50 transition-all group cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <p className="text-sm font-semibold text-slate-200 group-hover:text-amber-300 transition-colors">
+                    <p className="text-sm font-semibold text-neutral-200 group-hover:text-emerald-300 transition-colors">
                       {c.name}
                     </p>
                     {c.frozen && (
@@ -44,13 +44,13 @@ export default function WalletDisambiguation({ name, candidates, pathSuffix = ''
                     )}
                   </div>
                   <AddressDisplay address={addr} chars={8} />
-                  <div className="flex gap-4 mt-2 text-xs text-slate-500">
+                  <div className="flex gap-4 mt-2 text-xs text-neutral-500">
                     <span>{c.intentCount} intent{c.intentCount !== 1 ? 's' : ''}</span>
                     <span>{c.proposalIndex.toString()} proposal{c.proposalIndex !== 1n ? 's' : ''}</span>
                   </div>
                 </div>
                 <svg
-                  className="w-4 h-4 text-slate-700 group-hover:text-amber-400/50 group-hover:translate-x-0.5 transition-all flex-shrink-0"
+                  className="w-4 h-4 text-neutral-700 group-hover:text-emerald-400/50 group-hover:translate-x-0.5 transition-all flex-shrink-0"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

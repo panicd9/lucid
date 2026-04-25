@@ -45,7 +45,7 @@ export default function App() {
           deleteSelectedWallet: () => localStorage.removeItem('lucid-wallet'),
         }}
       >
-        <div className="min-h-screen bg-slate-950">
+        <div className="min-h-screen bg-neutral-950">
           <Navbar network={network} onNetworkChange={setNetwork} />
           <main className="max-w-6xl mx-auto px-6 py-8">
             <Routes>

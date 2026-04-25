@@ -31,8 +31,8 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
     <div
       className={`rounded-xl transition-all ${
         expanded
-          ? 'bg-slate-900/60 border-gradient shadow-glow-gold'
-          : 'bg-slate-900/30 border border-slate-800/60 hover:border-slate-700/60 hover:bg-slate-900/50'
+          ? 'bg-neutral-900/60 border-gradient shadow-glow-green'
+          : 'bg-neutral-900/30 border border-neutral-800/60 hover:border-neutral-700/60 hover:bg-neutral-900/50'
       }`}
     >
       {/* Header — always visible */}
@@ -43,21 +43,21 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
         aria-label={`${intent.template || `Intent #${intent.intentIndex}`} — ${expanded ? 'collapse' : 'expand'} details`}
       >
         {/* Index badge */}
-        <span className="shrink-0 w-9 h-9 rounded-lg bg-slate-800/60 border border-slate-700/30 flex items-center justify-center text-sm font-mono text-slate-400 font-heading">
+        <span className="shrink-0 w-9 h-9 rounded-lg bg-neutral-800/60 border border-neutral-700/30 flex items-center justify-center text-sm font-mono text-neutral-400 font-heading">
           {intent.intentIndex}
         </span>
 
         {/* Template & type */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-slate-200 truncate">
+          <p className="text-sm font-medium text-neutral-200 truncate">
             {intent.template || `Intent #${intent.intentIndex}`}
           </p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-neutral-500">
               {INTENT_TYPE_LABELS[intent.intentType] || 'Unknown'}
             </span>
             {isMeta && (
-              <span className="text-[10px] text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded font-medium uppercase tracking-wider">
+              <span className="text-[10px] text-emerald-400/70 bg-emerald-500/10 px-1.5 py-0.5 rounded font-medium uppercase tracking-wider">
                 Meta
               </span>
             )}
@@ -91,7 +91,7 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
 
         {/* Expand arrow */}
         <svg
-          className={`w-4 h-4 text-slate-600 transition-transform shrink-0 ${
+          className={`w-4 h-4 text-neutral-600 transition-transform shrink-0 ${
             expanded ? 'rotate-180' : ''
           }`}
           fill="none"
@@ -106,7 +106,7 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
       {expanded && (
         <div className="px-5 pb-5 pt-1 space-y-5">
           {/* Divider */}
-          <div className="h-[1px] bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
+          <div className="h-[1px] bg-gradient-to-r from-transparent via-neutral-700/50 to-transparent" />
 
           {/* Summary row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -116,9 +116,9 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
               { label: 'Proposers', value: String(intent.proposerCount) },
               { label: 'Active Proposals', value: String(intent.activeProposalCount) },
             ].map((stat) => (
-              <div key={stat.label} className="bg-slate-800/30 rounded-lg px-3 py-2.5 border border-slate-800/50">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
-                <p className="text-sm font-semibold text-slate-200">{stat.value}</p>
+              <div key={stat.label} className="bg-neutral-800/30 rounded-lg px-3 py-2.5 border border-neutral-800/50">
+                <p className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">{stat.label}</p>
+                <p className="text-sm font-semibold text-neutral-200">{stat.value}</p>
               </div>
             ))}
           </div>
@@ -126,12 +126,12 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
           {/* Proposers */}
           {intent.proposers.length > 0 && (
             <div>
-              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h4 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Proposers
               </h4>
               <div className="flex flex-wrap gap-2">
                 {intent.proposers.map((p, i) => (
-                  <div key={i} className="bg-slate-800/30 rounded-lg px-2.5 py-1.5 border border-slate-800/50">
+                  <div key={i} className="bg-neutral-800/30 rounded-lg px-2.5 py-1.5 border border-neutral-800/50">
                     <AddressDisplay address={p.toBase58()} chars={6} />
                   </div>
                 ))}
@@ -142,12 +142,12 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
           {/* Approvers */}
           {intent.approvers.length > 0 && (
             <div>
-              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h4 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Approvers
               </h4>
               <div className="flex flex-wrap gap-2">
                 {intent.approvers.map((a, i) => (
-                  <div key={i} className="bg-slate-800/30 rounded-lg px-2.5 py-1.5 border border-slate-800/50">
+                  <div key={i} className="bg-neutral-800/30 rounded-lg px-2.5 py-1.5 border border-neutral-800/50">
                     <AddressDisplay address={a.toBase58()} chars={6} />
                   </div>
                 ))}
@@ -158,13 +158,13 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
           {/* Parameters */}
           {intent.params.length > 0 && (
             <div>
-              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h4 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Parameters
               </h4>
-              <div className="overflow-x-auto rounded-lg border border-slate-800/50">
+              <div className="overflow-x-auto rounded-lg border border-neutral-800/50">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[10px] text-slate-500 uppercase tracking-wider bg-slate-800/30">
+                    <tr className="text-left text-[10px] text-neutral-500 uppercase tracking-wider bg-neutral-800/30">
                       <th className="px-3 py-2">Name</th>
                       <th className="px-3 py-2">Type</th>
                       <th className="px-3 py-2">Constraint</th>
@@ -173,17 +173,17 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
                   </thead>
                   <tbody>
                     {intent.params.map((p, i) => (
-                      <tr key={i} className="border-t border-slate-800/40">
-                        <td className="px-3 py-2 text-slate-300 font-mono text-xs">
+                      <tr key={i} className="border-t border-neutral-800/40">
+                        <td className="px-3 py-2 text-neutral-300 font-mono text-xs">
                           {p.name || `param_${i}`}
                         </td>
-                        <td className="px-3 py-2 text-slate-400 text-xs">
+                        <td className="px-3 py-2 text-neutral-400 text-xs">
                           {PARAM_TYPE_LABELS[p.paramType] || `type(${p.paramType})`}
                         </td>
-                        <td className="px-3 py-2 text-slate-400 text-xs">
+                        <td className="px-3 py-2 text-neutral-400 text-xs">
                           {CONSTRAINT_LABELS[p.constraintType] || 'None'}
                         </td>
-                        <td className="px-3 py-2 text-slate-400 font-mono text-xs">
+                        <td className="px-3 py-2 text-neutral-400 font-mono text-xs">
                           {p.constraintType !== 0 ? p.constraintValue.toString() : '-'}
                         </td>
                       </tr>
@@ -197,13 +197,13 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
           {/* Accounts */}
           {intent.accounts.length > 0 && (
             <div>
-              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h4 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Accounts
               </h4>
-              <div className="overflow-x-auto rounded-lg border border-slate-800/50">
+              <div className="overflow-x-auto rounded-lg border border-neutral-800/50">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[10px] text-slate-500 uppercase tracking-wider bg-slate-800/30">
+                    <tr className="text-left text-[10px] text-neutral-500 uppercase tracking-wider bg-neutral-800/30">
                       <th className="px-3 py-2">#</th>
                       <th className="px-3 py-2">Source</th>
                       <th className="px-3 py-2">Writable</th>
@@ -212,23 +212,23 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
                   </thead>
                   <tbody>
                     {intent.accounts.map((a, i) => (
-                      <tr key={i} className="border-t border-slate-800/40">
-                        <td className="px-3 py-2 text-slate-400 font-mono text-xs">{i}</td>
-                        <td className="px-3 py-2 text-slate-300 text-xs">
+                      <tr key={i} className="border-t border-neutral-800/40">
+                        <td className="px-3 py-2 text-neutral-400 font-mono text-xs">{i}</td>
+                        <td className="px-3 py-2 text-neutral-300 text-xs">
                           {SOURCE_LABELS[a.source] || `source(${a.source})`}
                         </td>
                         <td className="px-3 py-2">
                           {a.writable ? (
-                            <span className="text-amber-400 text-xs">Yes</span>
+                            <span className="text-emerald-400 text-xs">Yes</span>
                           ) : (
-                            <span className="text-slate-600 text-xs">No</span>
+                            <span className="text-neutral-600 text-xs">No</span>
                           )}
                         </td>
                         <td className="px-3 py-2">
                           {a.isSigner ? (
-                            <span className="text-amber-400 text-xs">Yes</span>
+                            <span className="text-emerald-400 text-xs">Yes</span>
                           ) : (
-                            <span className="text-slate-600 text-xs">No</span>
+                            <span className="text-neutral-600 text-xs">No</span>
                           )}
                         </td>
                       </tr>
@@ -242,14 +242,14 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
           {/* Data segments */}
           {intent.dataSegments.length > 0 && (
             <div>
-              <h4 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+              <h4 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
                 Data Segments ({intent.dataSegments.length})
               </h4>
               <div className="flex flex-wrap gap-2">
                 {intent.dataSegments.map((ds, i) => (
                   <span
                     key={i}
-                    className="text-xs font-mono bg-slate-800/30 px-2.5 py-1.5 rounded-lg text-slate-400 border border-slate-800/50"
+                    className="text-xs font-mono bg-neutral-800/30 px-2.5 py-1.5 rounded-lg text-neutral-400 border border-neutral-800/50"
                   >
                     {ds.segmentType === 0 ? 'Literal' : 'Param'}
                   </span>
@@ -261,10 +261,10 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
           {/* New Proposal button — visible when connected wallet is a proposer */}
           {account && intent.proposers.some((p) => p.toBase58() === account.address) && (
             <div className="pt-3">
-              <div className="h-[1px] bg-gradient-to-r from-transparent via-slate-700/50 to-transparent mb-4" />
+              <div className="h-[1px] bg-gradient-to-r from-transparent via-neutral-700/50 to-transparent mb-4" />
               <button
                 onClick={() => setShowProposeModal(true)}
-                className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white transition-all cursor-pointer shadow-glow-purple hover:shadow-glow-purple-lg"
+                className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white transition-all cursor-pointer shadow-glow-green hover:shadow-glow-green-lg"
               >
                 New Proposal
               </button>

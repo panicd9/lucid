@@ -25,7 +25,7 @@ export default function TimelockDisplay({ seconds, className = '' }: Props) {
   return (
     <span
       className={`inline-flex items-center gap-1 text-sm ${
-        isNone ? 'text-slate-500' : 'text-slate-300'
+        isNone ? 'text-neutral-500' : 'text-neutral-300'
       } ${className}`}
     >
       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
