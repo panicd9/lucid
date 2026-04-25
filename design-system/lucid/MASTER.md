@@ -7,8 +7,9 @@
 ---
 
 **Project:** Lucid
-**Generated:** 2026-04-15 05:08:13
-**Category:** Fintech/Crypto
+**Updated:** 2026-04-25
+**Category:** Security / Crypto Governance
+**Style:** Muted Security (single-accent emerald on neutral black)
 
 ---
 
@@ -16,26 +17,45 @@
 
 ### Color Palette
 
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#F59E0B` | `--color-primary` |
-| Secondary | `#FBBF24` | `--color-secondary` |
-| CTA/Accent | `#8B5CF6` | `--color-cta` |
-| Background | `#0F172A` | `--color-background` |
-| Text | `#F8FAFC` | `--color-text` |
+| Role | Hex | Tailwind | Usage |
+|------|-----|----------|-------|
+| Primary | `#059669` | `emerald-600` | Accent, verified states, CTAs, actions |
+| Primary Light | `#10B981` | `emerald-500` | Hover states, gradient endpoints |
+| Background | `#141414` | `neutral-950` | Page background |
+| Surface 1 | `#1A1A1A` | `neutral-900` | Intermediate surface |
+| Surface 2 | `#1E1E1E` | `neutral-800` | Cards, modals |
+| Surface 3 | `#262626` | `neutral-750` | Nested content inside cards |
+| Text | `#F0F0F0` | `neutral-100` | Primary text |
+| Muted | `#A3A3A3` | `neutral-400` | Secondary text |
 
-**Color Notes:** Gold trust + purple tech
+**Single-accent system:** Emerald is the only brand color. All interactive elements, status indicators, and CTAs use emerald. No blue in the brand.
+
+### Semantic Colors (do not change)
+
+| State | Color | Usage |
+|-------|-------|-------|
+| Warning/Unverified | `amber-400` | Attention needed, unverified intents, signing prompts |
+| Error/Cancel | `red-400` | Errors, cancelled proposals, tampered data |
+| Success/Verified | `emerald-400` | Verified intents, approved actions, confirmed txns |
+| Danger/Critical | `red-500` | Critical risk, destructive actions |
+| High Risk | `orange-400` | High-risk intents |
+| Medium Risk | `yellow-400` | Medium-risk intents |
 
 ### Typography
 
 - **Heading Font:** Orbitron
 - **Body Font:** Exo 2
-- **Mood:** crypto, web3, futuristic, tech, blockchain, digital
-- **Google Fonts:** [Orbitron + Exo 2](https://fonts.google.com/share?selection.family=Exo+2:wght@300;400;500;600;700|Orbitron:wght@400;500;600;700)
+- **Mono Font:** JetBrains Mono
+- **Google Fonts:** [Orbitron + Exo 2 + JetBrains Mono](https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap)
 
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
+### Surface Layering
+
+Use progressively lighter neutrals for depth:
+
+```
+Page background (neutral-950)
+  └── Card (neutral-800)
+        └── Nested content (neutral-750)
 ```
 
 ### Spacing Variables
@@ -54,10 +74,8 @@
 
 | Level | Value | Usage |
 |-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
+| `shadow-glow-green` | `0 0 20px rgba(5, 150, 105, 0.15)` | Primary glow |
+| `shadow-glow-green-lg` | `0 0 40px rgba(5, 150, 105, 0.2)` | Large primary glow |
 
 ---
 
@@ -66,9 +84,9 @@
 ### Buttons
 
 ```css
-/* Primary Button */
+/* Primary CTA Button */
 .btn-primary {
-  background: #8B5CF6;
+  background: linear-gradient(to right, #059669, #10B981);
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -77,16 +95,11 @@
   cursor: pointer;
 }
 
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
 /* Secondary Button */
 .btn-secondary {
   background: transparent;
-  color: #F59E0B;
-  border: 2px solid #F59E0B;
+  color: #059669;
+  border: 2px solid #059669;
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -99,17 +112,22 @@
 
 ```css
 .card {
-  background: #0F172A;
+  background: #1E1E1E;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: var(--shadow-md);
   transition: all 200ms ease;
   cursor: pointer;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+}
+
+/* Nested content inside a card */
+.card-nested {
+  background: #262626;
+  border-radius: 8px;
+  padding: 16px;
 }
 ```
 
@@ -118,16 +136,18 @@
 ```css
 .input {
   padding: 12px 16px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #404040;
   border-radius: 8px;
   font-size: 16px;
+  background: #141414;
+  color: #F0F0F0;
   transition: border-color 200ms ease;
 }
 
 .input:focus {
-  border-color: #F59E0B;
+  border-color: #059669;
   outline: none;
-  box-shadow: 0 0 0 3px #F59E0B20;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
 }
 ```
 
@@ -135,15 +155,14 @@
 
 ```css
 .modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: white;
+  background: #1E1E1E;
   border-radius: 16px;
   padding: 32px;
-  box-shadow: var(--shadow-xl);
   max-width: 500px;
   width: 90%;
 }
@@ -153,40 +172,37 @@
 
 ## Style Guidelines
 
-**Style:** Dark Mode (OLED)
+**Style:** Muted Security — single emerald accent
 
-**Keywords:** Dark theme, low light, high contrast, deep black, midnight blue, eye-friendly, OLED, night mode, power efficient
+**Keywords:** Dark grey, warm black, security green, enterprise, infrastructure
 
-**Best For:** Night-mode apps, coding platforms, entertainment, eye-strain prevention, OLED devices, low-light
+**Best For:** Security tools, governance dashboards, signing workflows, multisig interfaces
 
-**Key Effects:** Minimal glow (text-shadow: 0 0 10px), dark-to-light transitions, low white emission, high readability, visible focus
+**Key Effects:** Subtle green glow (text-shadow: 0 0 10px), dark transitions, high readability, visible focus rings
 
-### Page Pattern
+### Color Language
 
-**Pattern Name:** Horizontal Scroll Journey
-
-- **Conversion Strategy:** Immersive product discovery. High engagement. Keep navigation visible.
-28,Bento Grid Showcase,bento,  grid,  features,  modular,  apple-style,  showcase", 1. Hero, 2. Bento Grid (Key Features), 3. Detail Cards, 4. Tech Specs, 5. CTA, Floating Action Button or Bottom of Grid, Card backgrounds: #F5F5F7 or Glass. Icons: Vibrant brand colors. Text: Dark., Hover card scale (1.02), video inside cards, tilt effect, staggered reveal, Scannable value props. High information density without clutter. Mobile stack.
-29,Interactive 3D Configurator,3d,  configurator,  customizer,  interactive,  product", 1. Hero (Configurator), 2. Feature Highlight (synced), 3. Price/Specs, 4. Purchase, Inside Configurator UI + Sticky Bottom Bar, Neutral studio background. Product: Realistic materials. UI: Minimal overlay., Real-time rendering, material swap animation, camera rotate/zoom, light reflection, Increases ownership feeling. 360 view reduces return rates. Direct add-to-cart.
-30,AI-Driven Dynamic Landing,ai,  dynamic,  personalized,  adaptive,  generative", 1. Prompt/Input Hero, 2. Generated Result Preview, 3. How it Works, 4. Value Prop, Input Field (Hero) + 'Try it' Buttons, Adaptive to user input. Dark mode for compute feel. Neon accents., Typing text effects, shimmering generation loaders, morphing layouts, Immediate value demonstration. 'Show, don't tell'. Low friction start.
-- **CTA Placement:** Floating Sticky CTA or End of Horizontal Track
-- **Section Order:** 1. Intro (Vertical), 2. The Journey (Horizontal Track), 3. Detail Reveal, 4. Vertical Footer
+- **Emerald** = Everything intentional: CTAs, verified states, active states, actions, navigation
+- **Amber** = Warning only (unverified, pending attention)
+- **Red** = Error/cancel/critical risk
+- **Orange/Yellow** = Risk badges (high/medium)
+- **Neutral greys** = Structure, text, borders
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
 - ❌ Light backgrounds
-- ❌ No security indicators
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
+- ❌ Navy/blue-tinted backgrounds (use neutral grey)
+- ❌ Blue as brand or CTA color (emerald only)
+- ❌ Gold/amber as brand accent (reserved for semantic warnings only)
+- ❌ Purple/violet
+- ❌ Emojis as icons — Use SVG icons (Heroicons, Lucide, Simple Icons)
+- ❌ Missing cursor:pointer on clickable elements
+- ❌ Layout-shifting hovers (avoid scale transforms that shift layout)
+- ❌ Low contrast text — maintain 4.5:1 minimum contrast ratio
+- ❌ Instant state changes — always use transitions (150-300ms)
+- ❌ Invisible focus states
 
 ---
 
@@ -198,9 +214,12 @@ Before delivering any UI code, verify:
 - [ ] All icons from consistent icon set (Heroicons/Lucide)
 - [ ] `cursor-pointer` on all clickable elements
 - [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
+- [ ] Text contrast 4.5:1 minimum
 - [ ] Focus states visible for keyboard navigation
 - [ ] `prefers-reduced-motion` respected
 - [ ] Responsive: 375px, 768px, 1024px, 1440px
 - [ ] No content hidden behind fixed navbars
 - [ ] No horizontal scroll on mobile
+- [ ] Emerald used for all brand accents (no blue)
+- [ ] Amber reserved for semantic warnings only
+- [ ] Nested content uses neutral-750 for depth

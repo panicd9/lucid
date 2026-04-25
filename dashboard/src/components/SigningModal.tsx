@@ -154,19 +154,19 @@ export default function SigningModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="signing-modal-title">
-      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/30 rounded-2xl max-w-lg w-full shadow-2xl animate-slide-up">
+      <div className="bg-neutral-900/95 backdrop-blur-xl border border-neutral-700/30 rounded-2xl max-w-lg w-full shadow-2xl animate-slide-up">
         {/* Gradient accent line */}
         <div className={`h-[1px] bg-gradient-to-r ${accentGradient}`} />
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/50">
-          <h3 id="signing-modal-title" className="text-lg font-semibold text-slate-100 font-heading tracking-wide capitalize">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800/50">
+          <h3 id="signing-modal-title" className="text-lg font-semibold text-neutral-100 font-heading tracking-wide capitalize">
             {action} Proposal
-            <span className="text-sm font-normal text-slate-500 ml-2 font-body">#{proposal.proposalIndex.toString()}</span>
+            <span className="text-sm font-normal text-neutral-500 ml-2 font-body">#{proposal.proposalIndex.toString()}</span>
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-800/50"
+            className="text-neutral-500 hover:text-neutral-300 transition-colors cursor-pointer p-1 rounded-lg hover:bg-neutral-800/50"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -178,23 +178,23 @@ export default function SigningModal({
         {/* Body */}
         <div className="px-6 py-5 space-y-5">
           <div>
-            <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
               Message to sign
             </label>
-            <div className="bg-slate-800/40 border border-slate-800/50 rounded-lg p-3 text-sm text-amber-300/90 font-mono break-all">
+            <div className="bg-neutral-800/40 border border-neutral-800/50 rounded-lg p-3 text-sm text-emerald-300/90 font-mono break-all">
               {messageBody}
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <label className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider mb-2">
               Signature expiry
             </label>
             <select
               value={expirySeconds}
               onChange={(e) => setExpirySeconds(Number(e.target.value))}
               disabled={status !== 'idle'}
-              className="bg-slate-800/40 border border-slate-800/50 rounded-lg px-3 py-2.5 text-sm text-slate-200 w-full focus:outline-none focus:border-amber-500/40 cursor-pointer"
+              className="bg-neutral-800/40 border border-neutral-800/50 rounded-lg px-3 py-2.5 text-sm text-neutral-200 w-full focus:outline-none focus:border-emerald-500/40 cursor-pointer"
             >
               <option value={60}>1 minute</option>
               <option value={300}>5 minutes</option>
@@ -206,13 +206,13 @@ export default function SigningModal({
 
           {/* Fee estimate */}
           {status === 'idle' && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-slate-800/30 border border-slate-800/40 rounded-lg">
-              <svg className="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex items-center gap-2 px-3 py-2 bg-neutral-800/30 border border-neutral-800/40 rounded-lg">
+              <svg className="w-3.5 h-3.5 text-neutral-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="text-xs text-slate-500">
-                Estimated fee: <span className="text-slate-400 font-mono">~0.00001 SOL</span>
-                <span className="text-slate-600 ml-1">(base fee for 2 signatures)</span>
+              <p className="text-xs text-neutral-500">
+                Estimated fee: <span className="text-neutral-400 font-mono">~0.00001 SOL</span>
+                <span className="text-neutral-600 ml-1">(base fee for 2 signatures)</span>
               </p>
             </div>
           )}
@@ -224,8 +224,8 @@ export default function SigningModal({
             </div>
           )}
           {status === 'sending' && (
-            <div className="flex items-center gap-3 text-sm text-violet-300 bg-violet-500/5 rounded-lg px-4 py-3 border border-violet-500/10">
-              <div className="w-4 h-4 border-2 border-violet-300/30 border-t-violet-300 rounded-full animate-spin" />
+            <div className="flex items-center gap-3 text-sm text-emerald-300 bg-emerald-500/5 rounded-lg px-4 py-3 border border-emerald-500/10">
+              <div className="w-4 h-4 border-2 border-emerald-300/30 border-t-emerald-300 rounded-full animate-spin" />
               Sending transaction...
             </div>
           )}
@@ -234,14 +234,14 @@ export default function SigningModal({
               <p className="text-sm font-medium text-emerald-300 mb-2">Transaction confirmed</p>
               {txSig && (
                 <div className="flex items-center gap-2">
-                  <p className="text-xs text-slate-500 font-mono break-all flex-1">{txSig}</p>
+                  <p className="text-xs text-neutral-500 font-mono break-all flex-1">{txSig}</p>
                   <button
                     onClick={handleCopyTx}
-                    className="shrink-0 w-6 h-6 flex items-center justify-center rounded text-slate-600 hover:text-slate-300 hover:bg-slate-700/50 transition-all cursor-pointer"
+                    className="shrink-0 w-6 h-6 flex items-center justify-center rounded text-neutral-600 hover:text-neutral-300 hover:bg-neutral-700/50 transition-all cursor-pointer"
                     aria-label={txCopied ? 'Copied' : 'Copy transaction signature'}
                   >
                     {txCopied ? (
-                      <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     ) : (
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                     )}
@@ -268,14 +268,14 @@ export default function SigningModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800/50">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-neutral-800/50">
           <div>
             {status === 'success' && txSig && (
               <a
                 href={getExplorerTxUrl(txSig, network)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/40 hover:border-slate-600/50 rounded-lg transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-400 hover:text-neutral-200 bg-neutral-800/50 hover:bg-neutral-700/50 border border-neutral-700/40 hover:border-neutral-600/50 rounded-lg transition-all cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                 Verify on Solscan
@@ -286,14 +286,14 @@ export default function SigningModal({
             <button
               onClick={onClose}
               disabled={status === 'signing' || status === 'sending'}
-              className="px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed rounded-lg hover:bg-slate-800/50"
+              className="px-4 py-2.5 text-sm text-neutral-400 hover:text-neutral-200 transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed rounded-lg hover:bg-neutral-800/50"
             >
               {status === 'success' ? 'Done' : 'Cancel'}
             </button>
             {status === 'error' ? (
               <button
                 onClick={handleRetry}
-                className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white transition-all cursor-pointer shadow-glow-purple"
+                className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white transition-all cursor-pointer shadow-glow-green"
               >
                 Retry
               </button>

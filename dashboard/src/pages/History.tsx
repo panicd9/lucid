@@ -15,12 +15,12 @@ interface TxEntry {
 }
 
 const ACTION_BADGE: Record<string, string> = {
-  propose: 'text-violet-300 bg-violet-500/10',
+  propose: 'text-emerald-300 bg-emerald-500/10',
   approve: 'text-emerald-300 bg-emerald-500/10',
   cancel: 'text-red-300 bg-red-500/10',
-  execute: 'text-amber-300 bg-amber-500/10',
-  create: 'text-slate-300 bg-slate-500/10',
-  unknown: 'text-slate-400 bg-slate-500/10',
+  execute: 'text-emerald-300 bg-emerald-500/10',
+  create: 'text-neutral-300 bg-neutral-500/10',
+  unknown: 'text-neutral-400 bg-neutral-500/10',
 };
 
 const DISC_MAP: Record<number, string> = {
@@ -146,10 +146,10 @@ export default function History({ network }: Props) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <div className="relative w-12 h-12 mb-5">
-          <div className="absolute inset-0 rounded-full border-2 border-amber-500/20" />
-          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-amber-500 animate-spin" />
+          <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" />
         </div>
-        <p className="text-sm text-slate-400">Loading audit log...</p>
+        <p className="text-sm text-neutral-400">Loading audit log...</p>
       </div>
     );
   }
@@ -163,7 +163,7 @@ export default function History({ network }: Props) {
           </svg>
         </div>
         <p className="text-sm font-medium text-red-400 mb-1">Failed to load audit log</p>
-        <p className="text-xs text-slate-500">{pageError}</p>
+        <p className="text-xs text-neutral-500">{pageError}</p>
       </div>
     );
   }
@@ -172,37 +172,37 @@ export default function History({ network }: Props) {
     <div>
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
-        <Link to="/" className="text-slate-500 hover:text-amber-400 transition-colors cursor-pointer flex items-center">
+        <Link to="/" className="text-neutral-500 hover:text-emerald-400 transition-colors cursor-pointer flex items-center">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
         </Link>
-        <svg className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-        <Link to={`/wallet/${address}`} className="text-slate-400 hover:text-amber-400 transition-colors cursor-pointer truncate max-w-[160px]">
+        <svg className="w-3.5 h-3.5 text-neutral-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <Link to={`/wallet/${address}`} className="text-neutral-400 hover:text-emerald-400 transition-colors cursor-pointer truncate max-w-[160px]">
           {walletData?.wallet.name || address}
         </Link>
-        <svg className="w-3.5 h-3.5 text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-        <span className="text-slate-200 font-medium">Audit Log</span>
+        <svg className="w-3.5 h-3.5 text-neutral-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        <span className="text-neutral-200 font-medium">Audit Log</span>
       </nav>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-50 font-heading tracking-wide mb-1">
+          <h1 className="text-2xl font-bold text-neutral-50 font-heading tracking-wide mb-1">
             Audit Log
           </h1>
-          <p className="text-sm text-slate-500">Transaction history for {walletData?.wallet.name}</p>
+          <p className="text-sm text-neutral-500">Transaction history for {walletData?.wallet.name}</p>
         </div>
       </div>
 
       {/* Table */}
       {transactions.length > 0 ? (
-        <div className="bg-slate-900/50 border border-slate-800/60 rounded-xl overflow-hidden">
+        <div className="bg-neutral-900/50 border border-neutral-800/60 rounded-xl overflow-hidden">
           {/* Table header — desktop */}
-          <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-slate-800/30 border-b border-slate-800/50">
-            <span className="col-span-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Signature</span>
-            <span className="col-span-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Action</span>
-            <span className="col-span-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Proposal</span>
-            <span className="col-span-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Timestamp</span>
-            <span className="col-span-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider text-right">Status</span>
+          <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-neutral-800/30 border-b border-neutral-800/50">
+            <span className="col-span-3 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Signature</span>
+            <span className="col-span-2 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Action</span>
+            <span className="col-span-2 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Proposal</span>
+            <span className="col-span-3 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Timestamp</span>
+            <span className="col-span-2 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider text-right">Status</span>
           </div>
 
           {/* Desktop rows */}
@@ -210,24 +210,24 @@ export default function History({ network }: Props) {
             {transactions.map((tx) => (
               <div
                 key={tx.signature}
-                className="grid grid-cols-12 gap-4 px-5 py-3.5 border-b border-slate-800/30 last:border-b-0 hover:bg-slate-800/20 transition-colors"
+                className="grid grid-cols-12 gap-4 px-5 py-3.5 border-b border-neutral-800/30 last:border-b-0 hover:bg-neutral-800/20 transition-colors"
               >
                 <div className="col-span-3 flex items-center gap-2 min-w-0">
                   <a
                     href={getExplorerTxUrl(tx.signature, network)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-mono text-slate-400 hover:text-amber-300 truncate transition-colors"
+                    className="text-xs font-mono text-neutral-400 hover:text-emerald-300 truncate transition-colors"
                   >
                     {tx.signature.slice(0, 8)}...{tx.signature.slice(-6)}
                   </a>
                   <button
                     onClick={() => handleCopy(tx.signature)}
-                    className="shrink-0 text-slate-600 hover:text-slate-400 transition-colors cursor-pointer"
+                    className="shrink-0 text-neutral-600 hover:text-neutral-400 transition-colors cursor-pointer"
                     aria-label="Copy signature"
                   >
                     {copiedSig === tx.signature ? (
-                      <svg className="w-3 h-3 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
@@ -243,12 +243,12 @@ export default function History({ network }: Props) {
                   </span>
                 </div>
                 <div className="col-span-2 flex items-center">
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs font-mono text-neutral-400">
                     {tx.proposalIndex !== '-' ? `#${tx.proposalIndex}` : '-'}
                   </span>
                 </div>
                 <div className="col-span-3 flex items-center">
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-neutral-500">
                     {tx.timestamp > 0 ? new Date(tx.timestamp * 1000).toLocaleString() : '-'}
                   </span>
                 </div>
@@ -268,7 +268,7 @@ export default function History({ network }: Props) {
           {/* Mobile cards */}
           <div className="md:hidden space-y-3 p-4">
             {transactions.map((tx) => (
-              <div key={tx.signature} className="bg-slate-800/30 border border-slate-800/50 rounded-lg p-4 space-y-2.5">
+              <div key={tx.signature} className="bg-neutral-800/30 border border-neutral-800/50 rounded-lg p-4 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${ACTION_BADGE[tx.action] || ACTION_BADGE.unknown}`}>
                     {tx.action}
@@ -284,15 +284,15 @@ export default function History({ network }: Props) {
                     href={getExplorerTxUrl(tx.signature, network)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-mono text-slate-400 hover:text-amber-300 transition-colors"
+                    className="text-xs font-mono text-neutral-400 hover:text-emerald-300 transition-colors"
                   >
                     {tx.signature.slice(0, 8)}...{tx.signature.slice(-6)}
                   </a>
-                  <span className="text-xs font-mono text-slate-500">
+                  <span className="text-xs font-mono text-neutral-500">
                     {tx.proposalIndex !== '-' ? `#${tx.proposalIndex}` : ''}
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-600">
+                <span className="text-[11px] text-neutral-600">
                   {tx.timestamp > 0 ? new Date(tx.timestamp * 1000).toLocaleString() : ''}
                 </span>
               </div>
@@ -300,12 +300,12 @@ export default function History({ network }: Props) {
           </div>
         </div>
       ) : (
-        <div className="bg-slate-900/50 border border-slate-800/60 rounded-xl px-6 py-16 flex flex-col items-center justify-center text-center">
-          <svg className="w-12 h-12 text-slate-700 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="bg-neutral-900/50 border border-neutral-800/60 rounded-xl px-6 py-16 flex flex-col items-center justify-center text-center">
+          <svg className="w-12 h-12 text-neutral-700 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-sm text-slate-400 font-medium mb-1">No transactions yet</p>
-          <p className="text-xs text-slate-600">Transactions will appear here once proposals are created or executed.</p>
+          <p className="text-sm text-neutral-400 font-medium mb-1">No transactions yet</p>
+          <p className="text-xs text-neutral-600">Transactions will appear here once proposals are created or executed.</p>
         </div>
       )}
     </div>

@@ -7,14 +7,14 @@ import {
 } from '../lib/constants';
 
 const proposalStyles: Record<number, string> = {
-  [STATUS_ACTIVE]: 'bg-blue-500/10 text-blue-400 border-blue-500/15',
+  [STATUS_ACTIVE]: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15',
   [STATUS_APPROVED]: 'bg-amber-500/10 text-amber-400 border-amber-500/15',
   [STATUS_EXECUTED]: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/15',
   [STATUS_CANCELLED]: 'bg-red-500/10 text-red-400 border-red-500/15',
 };
 
 const dotStyles: Record<number, string> = {
-  [STATUS_ACTIVE]: 'bg-blue-400',
+  [STATUS_ACTIVE]: 'bg-emerald-400',
   [STATUS_APPROVED]: 'bg-amber-400',
   [STATUS_EXECUTED]: 'bg-emerald-400',
   [STATUS_CANCELLED]: 'bg-red-400',
