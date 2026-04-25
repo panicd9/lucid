@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSelectedWalletAccount, useWalletAccountTransactionSigner } from '@solana/react';
+import { useSelectedWalletAccount, useSignMessage, useWalletAccountTransactionSigner } from '@solana/react';
 import {
   pipe,
   createTransactionMessage,
@@ -54,7 +54,9 @@ export default function SigningModal({
 
   const [account] = useSelectedWalletAccount();
   const chain = CHAIN_MAP[network] ?? 'solana:localnet';
+  const signMessage = useSignMessage(account!);
   const signer = useWalletAccountTransactionSigner(account!, chain);
+  const [signingMethod, setSigningMethod] = useState<'ledger' | 'wallet' | null>(null);
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && status !== 'signing' && status !== 'sending') onClose();
@@ -76,24 +78,36 @@ export default function SigningModal({
     expiryStr
   );
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (method: 'ledger' | 'wallet') => {
     if (!account) return;
 
     try {
       setStatus('signing');
+      setSigningMethod(method);
       setErrorMsg('');
       setRecoveryMsg('');
 
       const envelope = buildOffchainEnvelope(messageBody);
-      const result = await signWithLedger(envelope, account.address);
+
+      let sigBytes: Uint8Array;
+      let pubkeyBytes: Uint8Array;
+      let envelopeForIx: Uint8Array;
+
+      if (method === 'ledger') {
+        const result = await signWithLedger(envelope, account.address);
+        sigBytes = result.signature;
+        pubkeyBytes = result.publicKey;
+        envelopeForIx = result.v0Envelope;
+      } else {
+        const { signature } = await signMessage({ message: envelope });
+        sigBytes = new Uint8Array(signature);
+        pubkeyBytes = new Uint8Array(bs58.decode(account.address));
+        envelopeForIx = envelope;
+      }
 
       setStatus('sending');
 
-      const ed25519Ix = buildEd25519Instruction(
-        result.signature,
-        result.publicKey,
-        result.v0Envelope
-      );
+      const ed25519Ix = buildEd25519Instruction(sigBytes, pubkeyBytes, envelopeForIx);
 
       const walletAddr = address(walletAddress);
       const intentPdaAddr = address(proposal.intent.toBase58());
@@ -104,7 +118,6 @@ export default function SigningModal({
           ? buildApproveInstruction(walletAddr, intentPdaAddr, proposalAddr)
           : buildCancelInstruction(walletAddr, intentPdaAddr, proposalAddr);
 
-      // Fetch blockhash after signing — Ledger signing can take time
       const rpc = createSolanaRpc(RPC_ENDPOINTS[network]);
       const { value: blockhash } = await rpc.getLatestBlockhash().send();
 
@@ -220,7 +233,9 @@ export default function SigningModal({
           {status === 'signing' && (
             <div className="flex items-center gap-3 text-sm text-amber-300 bg-amber-500/5 rounded-lg px-4 py-3 border border-amber-500/10">
               <div className="w-4 h-4 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
-              Check your Ledger device and approve the message.
+              {signingMethod === 'ledger'
+                ? 'Check your Ledger device and approve the message.'
+                : 'Approve the message in your wallet...'}
             </div>
           )}
           {status === 'sending' && (
@@ -298,17 +313,36 @@ export default function SigningModal({
                 Retry
               </button>
             ) : status !== 'success' ? (
-              <button
-                onClick={handleSubmit}
-                disabled={!account || status !== 'idle'}
-                className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed ${
-                  isApprove
-                    ? 'bg-emerald-500 hover:bg-emerald-400 text-white'
-                    : 'bg-red-500 hover:bg-red-400 text-white'
-                }`}
-              >
-                {status === 'idle' ? `Sign with Ledger` : 'Processing...'}
-              </button>
+              status === 'idle' ? (
+                <>
+                  <button
+                    onClick={() => handleSubmit('wallet')}
+                    disabled={!account}
+                    className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed border ${
+                      isApprove
+                        ? 'border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10'
+                        : 'border-red-500/40 text-red-400 hover:bg-red-500/10'
+                    }`}
+                  >
+                    Sign with Wallet
+                  </button>
+                  <button
+                    onClick={() => handleSubmit('ledger')}
+                    disabled={!account}
+                    className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed ${
+                      isApprove
+                        ? 'bg-emerald-500 hover:bg-emerald-400 text-white'
+                        : 'bg-red-500 hover:bg-red-400 text-white'
+                    }`}
+                  >
+                    Sign with Ledger
+                  </button>
+                </>
+              ) : (
+                <button disabled className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-neutral-700/50 text-white/50 cursor-not-allowed">
+                  Processing...
+                </button>
+              )
             ) : null}
           </div>
         </div>
