@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSelectedWalletAccount, useSignMessage, useWalletAccountTransactionSigner } from '@solana/react';
+import { useSelectedWalletAccount, useWalletAccountTransactionSigner } from '@solana/react';
 import {
   pipe,
   createTransactionMessage,
@@ -18,6 +18,7 @@ import { RPC_ENDPOINTS } from '../lib/constants';
 import { CHAIN_MAP } from '../App';
 import { parseTransactionError } from '../lib/errors';
 import { getExplorerTxUrl } from '../lib/explorer';
+import { signWithLedger } from '../lib/ledger';
 import type { IntentAccount, ProposalAccount } from '../lib/deserialize';
 import type { PublicKey } from '@solana/web3.js';
 import { address } from '@solana/kit';
@@ -53,7 +54,6 @@ export default function SigningModal({
 
   const [account] = useSelectedWalletAccount();
   const chain = CHAIN_MAP[network] ?? 'solana:localnet';
-  const signMessage = useSignMessage(account!);
   const signer = useWalletAccountTransactionSigner(account!, chain);
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
@@ -85,15 +85,14 @@ export default function SigningModal({
       setRecoveryMsg('');
 
       const envelope = buildOffchainEnvelope(messageBody);
-      const { signature } = await signMessage({ message: envelope });
+      const result = await signWithLedger(envelope, account.address);
 
       setStatus('sending');
 
-      const pubkeyBytes = new Uint8Array(bs58.decode(account.address));
       const ed25519Ix = buildEd25519Instruction(
-        new Uint8Array(signature),
-        pubkeyBytes,
-        envelope
+        result.signature,
+        result.publicKey,
+        result.v0Envelope
       );
 
       const walletAddr = address(walletAddress);
@@ -105,6 +104,7 @@ export default function SigningModal({
           ? buildApproveInstruction(walletAddr, intentPdaAddr, proposalAddr)
           : buildCancelInstruction(walletAddr, intentPdaAddr, proposalAddr);
 
+      // Fetch blockhash after signing — Ledger signing can take time
       const rpc = createSolanaRpc(RPC_ENDPOINTS[network]);
       const { value: blockhash } = await rpc.getLatestBlockhash().send();
 
@@ -220,7 +220,7 @@ export default function SigningModal({
           {status === 'signing' && (
             <div className="flex items-center gap-3 text-sm text-amber-300 bg-amber-500/5 rounded-lg px-4 py-3 border border-amber-500/10">
               <div className="w-4 h-4 border-2 border-amber-300/30 border-t-amber-300 rounded-full animate-spin" />
-              Waiting for wallet signature... Check your wallet for the approval prompt.
+              Check your Ledger device and approve the message.
             </div>
           )}
           {status === 'sending' && (
@@ -307,7 +307,7 @@ export default function SigningModal({
                     : 'bg-red-500 hover:bg-red-400 text-white'
                 }`}
               >
-                {status === 'idle' ? `Sign & ${isApprove ? 'Approve' : 'Cancel'}` : 'Processing...'}
+                {status === 'idle' ? `Sign with Ledger` : 'Processing...'}
               </button>
             ) : null}
           </div>
