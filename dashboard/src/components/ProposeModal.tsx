@@ -185,6 +185,7 @@ export default function ProposeModal({
       setErrorMsg('');
       setRecoveryMsg('');
 
+
       // Prepare on-chain data
       const connection = new Connection(RPC_ENDPOINTS[network]);
       const walletPk = new PublicKey(walletAddress);
