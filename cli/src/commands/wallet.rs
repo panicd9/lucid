@@ -506,6 +506,10 @@ pub fn build_intent_bytes(
         byte_pool.extend_from_slice(addr_bytes);
     }
 
+    // Target program (CPI program ID) pool offset — always stored for resolve_address
+    let target_prog_pool_off = byte_pool.len() as u16;
+    byte_pool.extend_from_slice(&program_id_bytes);
+
     // PDA program address pool offsets
     let mut pda_prog_pool_offsets: std::collections::HashMap<usize, u16> = std::collections::HashMap::new();
     for (acct_idx, prog_bytes) in &pda_program_addresses {
@@ -591,8 +595,8 @@ pub fn build_intent_bytes(
     result.push((approver_bytes.len() / 32) as u8);
     // param_count: u8
     result.push(def.params.len() as u8);
-    // account_count: u8
-    result.push(def.accounts.len() as u8);
+    // account_count: u8 (+1 for the target program entry)
+    result.push((def.accounts.len() + 1) as u8);
     // instruction_count: u8 (1 for single CPI)
     result.push(1);
     // data_segment_count: u8
@@ -708,21 +712,17 @@ pub fn build_intent_bytes(
         }
     }
 
+    // Append target program as a dedicated account entry (SOURCE_STATIC, readonly, non-signer).
+    // This is the CPI target program — program_account_index points here.
+    let prog_acct_idx = def.accounts.len() as u8;
+    result.push(SOURCE_STATIC);       // source
+    result.push(0);                    // writable = false
+    result.push(0);                    // is_signer = false
+    result.push(0);                    // pad
+    result.extend_from_slice(&target_prog_pool_off.to_le_bytes()); // pool offset (2 bytes)
+    result.extend_from_slice(&[0u8; 2]);                           // padding (2 bytes)
+
     // Instruction entries (single CPI)
-    // InstructionEntry: program_account_index:u8, account_start_index:u8, account_count:u8,
-    //   data_segment_start_index:u8, data_segment_count:u8, pad:3
-    // The program account is typically the first account (index 0) but it's a separate concept.
-    // For simplicity, we assume accounts[0] is the program, and the rest are CPI accounts.
-    // Actually, the program account index refers to the AccountEntry that holds the program ID.
-    // Let's find which account has the program ID.
-    let mut prog_acct_idx = 0u8;
-    for (i, acct) in def.accounts.iter().enumerate() {
-        if acct.name.contains("program") || acct.name.ends_with("Program") {
-            prog_acct_idx = i as u8;
-            break;
-        }
-    }
-    // CPI accounts are all non-program accounts
     let cpi_account_start = 0u8;
     let cpi_account_count = def.accounts.len() as u8;
 
