@@ -162,6 +162,14 @@ pub fn accounts_entry_offset(h: &IntentHeaderInfo) -> usize {
     params_entry_offset(h) + (h.param_count as usize * PARAM_ENTRY_SIZE)
 }
 
+/// Compute the seeds entry offset from an IntentHeaderInfo.
+pub fn seeds_offset(h: &IntentHeaderInfo) -> usize {
+    accounts_entry_offset(h)
+        + (h.account_count as usize * ACCOUNT_ENTRY_SIZE)
+        + (h.instruction_count as usize * INSTRUCTION_ENTRY_SIZE)
+        + (h.data_segment_count as usize * DATA_SEGMENT_ENTRY_SIZE)
+}
+
 /// Render a template by substituting param placeholders with decoded values from params_data.
 /// Uses the compact cancel.rs approach with `param_type_size`.
 pub fn render_template_with_params(template: &str, intent_data: &[u8], params_data: &[u8], intent_type: u8) -> String {

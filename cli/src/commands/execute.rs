@@ -143,13 +143,14 @@ fn build_remaining_accounts_for_custom(
     let account_count = h.account_count as usize;
     let accounts_offset = intent_utils::accounts_entry_offset(&h);
     let bp_offset = intent_utils::byte_pool_offset(&h);
+    let seeds_offset = intent_utils::seeds_offset(&h);
 
     let params_data_start = PREFIX_LEN + PROPOSAL_DATA_LEN;
     let pd = &proposal_data[PREFIX_LEN..];
     let params_data_len = u16::from_le_bytes([pd[160], pd[161]]) as usize;
     let params_data = &proposal_data[params_data_start..params_data_start + params_data_len];
 
-    let mut remaining = Vec::new();
+    let mut remaining: Vec<AccountMeta> = Vec::new();
 
     // Read all account entries and resolve addresses
     for a in 0..account_count {
@@ -166,34 +167,83 @@ fn build_remaining_accounts_for_custom(
         let address = match source {
             SOURCE_STATIC => {
                 let pool_off = u16::from_le_bytes([source_data[0], source_data[1]]) as usize;
-                if bp_offset + pool_off + 32 <= intent_data.len() {
-                    Pubkey::from(<[u8; 32]>::try_from(
-                        &intent_data[bp_offset + pool_off..bp_offset + pool_off + 32],
-                    )?)
-                } else {
+                if bp_offset + pool_off + 32 > intent_data.len() {
                     continue;
                 }
+                Pubkey::from(<[u8; 32]>::try_from(
+                    &intent_data[bp_offset + pool_off..bp_offset + pool_off + 32],
+                )?)
             }
             SOURCE_PARAM => {
                 let param_idx = source_data[0] as usize;
-                // Read the address from params_data at the right offset
-                let addr = read_param_address(intent_data, params_data, param_idx, &h)?;
-                addr
+                read_param_address(intent_data, params_data, param_idx, &h)?
             }
             SOURCE_VAULT => *vault_pda,
             SOURCE_PDA => {
-                // For PDA resolution, we'd need to resolve seeds.
-                // For hackathon simplicity, skip complex PDA resolution in remaining accounts.
-                // The user can add them manually if needed.
+                let seed_start = source_data[0] as usize;
+                let pda_seed_count = source_data[1] as usize;
+                let prog_off = u16::from_le_bytes([source_data[2], source_data[3]]) as usize;
+
+                if bp_offset + prog_off + 32 > intent_data.len() {
+                    continue;
+                }
+                let prog_pubkey = Pubkey::from(<[u8; 32]>::try_from(
+                    &intent_data[bp_offset + prog_off..bp_offset + prog_off + 32],
+                )?);
+
+                let mut seed_buffers: Vec<Vec<u8>> = Vec::with_capacity(pda_seed_count);
+                for s in 0..pda_seed_count {
+                    let seed_entry_off = seeds_offset + (seed_start + s) * SEED_ENTRY_SIZE;
+                    if seed_entry_off + SEED_ENTRY_SIZE > intent_data.len() {
+                        anyhow::bail!("Seed entry out of bounds");
+                    }
+                    let seed_type = intent_data[seed_entry_off];
+                    let seed_data = &intent_data[seed_entry_off + 2..seed_entry_off + 6];
+
+                    let seed_bytes: Vec<u8> = match seed_type {
+                        SEED_LITERAL => {
+                            let lit_off = u16::from_le_bytes([seed_data[0], seed_data[1]]) as usize;
+                            let lit_len = u16::from_le_bytes([seed_data[2], seed_data[3]]) as usize;
+                            if bp_offset + lit_off + lit_len > intent_data.len() {
+                                anyhow::bail!("Seed literal out of bounds");
+                            }
+                            intent_data[bp_offset + lit_off..bp_offset + lit_off + lit_len].to_vec()
+                        }
+                        SEED_PARAM => {
+                            let pi = seed_data[0] as usize;
+                            read_param_bytes(intent_data, params_data, pi, &h)?
+                        }
+                        SEED_ACCOUNT => {
+                            let ai = seed_data[0] as usize;
+                            if ai >= remaining.len() {
+                                anyhow::bail!("Seed account index {} out of range", ai);
+                            }
+                            remaining[ai].pubkey.to_bytes().to_vec()
+                        }
+                        _ => anyhow::bail!("Unknown seed type {}", seed_type),
+                    };
+                    seed_buffers.push(seed_bytes);
+                }
+
+                let seed_refs: Vec<&[u8]> = seed_buffers.iter().map(|s| s.as_slice()).collect();
+                let (pda, _) = Pubkey::find_program_address(&seed_refs, &prog_pubkey);
+                pda
+            }
+            SOURCE_HAS_ONE => {
+                // HAS_ONE references another account's data — would require an extra RPC fetch.
+                // Skip for now; if a real intent uses it, this path needs implementation.
                 continue;
             }
             _ => continue,
         };
 
-        // Vault and PDA accounts are signed by the on-chain program via CPI,
-        // not by the outer transaction. Only mark as signer if the keypair
-        // is actually available (i.e. source is param or static).
-        let outer_signer = is_signer && source != SOURCE_VAULT && source != SOURCE_PDA;
+        // Vault, PDA, and HAS_ONE accounts cannot be signed by the outer transaction:
+        // - VAULT and PDA sign via invoke_signed in the CPI
+        // - HAS_ONE has no associated keypair on the client side
+        let outer_signer = is_signer
+            && source != SOURCE_VAULT
+            && source != SOURCE_PDA
+            && source != SOURCE_HAS_ONE;
 
         if writable {
             remaining.push(AccountMeta::new(address, outer_signer));
@@ -203,6 +253,62 @@ fn build_remaining_accounts_for_custom(
     }
 
     Ok(remaining)
+}
+
+/// Walk params_data to extract the raw bytes for a given param index.
+/// Mirrors on-chain `read_param_bytes`.
+fn read_param_bytes(
+    intent_data: &[u8],
+    params_data: &[u8],
+    param_idx: usize,
+    h: &intent_utils::IntentHeaderInfo,
+) -> Result<Vec<u8>> {
+    let params_entry_offset = intent_utils::params_entry_offset(h);
+    let param_count = h.param_count as usize;
+
+    if param_idx >= param_count {
+        anyhow::bail!("Param index {} out of range", param_idx);
+    }
+
+    let mut offset = 0usize;
+    for i in 0..=param_idx {
+        let entry_off = params_entry_offset + (i * PARAM_ENTRY_SIZE);
+        if entry_off + PARAM_ENTRY_SIZE > intent_data.len() {
+            anyhow::bail!("Param entry out of bounds");
+        }
+        let pt = intent_data[entry_off + 12];
+        let size = param_type_size(pt);
+
+        if i == param_idx {
+            if size == 0 {
+                if offset + 2 > params_data.len() {
+                    anyhow::bail!("Params data too short");
+                }
+                let slen = u16::from_le_bytes([params_data[offset], params_data[offset + 1]]) as usize;
+                if offset + 2 + slen > params_data.len() {
+                    anyhow::bail!("String param out of bounds");
+                }
+                return Ok(params_data[offset..offset + 2 + slen].to_vec());
+            } else {
+                if offset + size > params_data.len() {
+                    anyhow::bail!("Param value out of bounds");
+                }
+                return Ok(params_data[offset..offset + size].to_vec());
+            }
+        }
+
+        if size == 0 {
+            if offset + 2 > params_data.len() {
+                anyhow::bail!("Params data too short");
+            }
+            let slen = u16::from_le_bytes([params_data[offset], params_data[offset + 1]]) as usize;
+            offset += 2 + slen;
+        } else {
+            offset += size;
+        }
+    }
+
+    unreachable!("Loop should always return for valid param_idx")
 }
 
 fn read_param_address(
