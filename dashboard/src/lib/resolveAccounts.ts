@@ -31,6 +31,7 @@ import {
   SEED_LITERAL,
   SEED_PARAM,
   SEED_ACCOUNT,
+  SEED_ACCOUNT_FIELD,
   ROLE_READONLY,
   ROLE_WRITABLE,
   ROLE_READONLY_SIGNER,
@@ -298,6 +299,36 @@ async function resolveCustomAccounts(
               if (ai < results.length) {
                 seeds.push(Buffer.from(new PublicKey(results[ai].address).toBytes()));
               }
+              break;
+            }
+            case SEED_ACCOUNT_FIELD: {
+              // Read N bytes at offset from another account's data, use as seed.
+              const ai = seedData[0];
+              const off = seedData[1] | (seedData[2] << 8);
+              const len = seedData[3];
+              if (len === 0 || len > 32) {
+                throw new Error(
+                  `SEED_ACCOUNT_FIELD len must be 1..=32, got ${len}`
+                );
+              }
+              if (ai >= results.length) {
+                throw new Error(
+                  `SEED_ACCOUNT_FIELD account index ${ai} out of range`
+                );
+              }
+              const srcAddr = new PublicKey(results[ai].address);
+              const info = await connection.getAccountInfo(srcAddr);
+              if (!info) {
+                throw new Error(
+                  `SEED_ACCOUNT_FIELD: account ${srcAddr.toBase58()} not found`
+                );
+              }
+              if (off + len > info.data.length) {
+                throw new Error(
+                  `SEED_ACCOUNT_FIELD slice [${off}, ${off + len}) exceeds account data len ${info.data.length}`
+                );
+              }
+              seeds.push(Buffer.from(info.data.subarray(off, off + len)));
               break;
             }
           }

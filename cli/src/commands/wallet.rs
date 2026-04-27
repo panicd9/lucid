@@ -790,6 +790,22 @@ pub fn build_intent_bytes(
                 result.push(ai);
                 result.extend_from_slice(&[0u8; 3]);
             }
+            "account_field" => {
+                let ai = seed.account_index
+                    .ok_or_else(|| anyhow::anyhow!("account_field seed requires accountIndex"))?;
+                let off = seed.field_offset
+                    .ok_or_else(|| anyhow::anyhow!("account_field seed requires fieldOffset"))?;
+                let len = seed.field_len
+                    .ok_or_else(|| anyhow::anyhow!("account_field seed requires fieldLen"))?;
+                if len == 0 || len > 32 {
+                    anyhow::bail!("account_field seed fieldLen must be 1..=32, got {}", len);
+                }
+                result.push(SEED_ACCOUNT_FIELD);
+                result.push(0); // pad
+                result.push(ai);
+                result.extend_from_slice(&off.to_le_bytes());
+                result.push(len);
+            }
             other => anyhow::bail!("Unknown seed type '{}'", other),
         }
     }

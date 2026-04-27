@@ -67,6 +67,10 @@ pub struct SeedDef {
     pub param_index: Option<u8>,
     #[serde(default)]
     pub account_index: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub field_offset: Option<u16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub field_len: Option<u8>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,6 +115,7 @@ pub const SEGMENT_PARAM: u8 = 1;
 pub const SEED_LITERAL: u8 = 0;
 pub const SEED_PARAM: u8 = 1;
 pub const SEED_ACCOUNT: u8 = 2;
+pub const SEED_ACCOUNT_FIELD: u8 = 3;
 
 /// Intent type constants
 pub const INTENT_TYPE_ADD: u8 = 0;

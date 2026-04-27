@@ -208,7 +208,7 @@ fn generate_intent_from_instruction(
 
         // Extract seeds for PDA accounts
         let final_source_data = if source == "pda" {
-            if let Some(pda_seeds) = extract_pda_seeds(acct, &ix.accounts, &ix.args) {
+            if let Some(pda_seeds) = extract_pda_seeds(acct, &ix.accounts, &ix.args, idl_types) {
                 let seed_start = all_seeds.len();
                 let seed_count = pda_seeds.seeds.len();
                 all_seeds.extend(pda_seeds.seeds);
@@ -294,6 +294,7 @@ fn extract_pda_seeds(
     acct: &NormalizedAccount,
     all_accounts: &[NormalizedAccount],
     args: &[NormalizedArg],
+    idl_types: &serde_json::Value,
 ) -> Option<ExtractedSeeds> {
     let pda = acct.pda.as_ref()?;
     let pda_obj = pda.as_object()?;
@@ -317,6 +318,8 @@ fn extract_pda_seeds(
                         )),
                         param_index: None,
                         account_index: None,
+                        field_offset: None,
+                        field_len: None,
                     });
                 }
             }
@@ -329,28 +332,51 @@ fn extract_pda_seeds(
                     value: None,
                     param_index: param_idx.map(|i| i as u8),
                     account_index: None,
+                    field_offset: None,
+                    field_len: None,
                 });
             }
             "account" => {
-                // Account reference — find matching account index
+                // Account reference — find matching account index. Nested paths
+                // like "pool.deposit_mint" select a struct field within the
+                // referenced account's data and emit SEED_ACCOUNT_FIELD; plain
+                // paths emit SEED_ACCOUNT (account address as the seed).
                 let path = seed.get("path").and_then(|p| p.as_str()).unwrap_or("");
-                // For nested paths like "pool.deposit_mint", use the root account name
-                let root_name = path.split('.').next().unwrap_or(path);
+                let mut parts = path.splitn(2, '.');
+                let root_name = parts.next().unwrap_or(path);
+                let field_path = parts.next();
                 let acct_idx = all_accounts.iter().position(|a| a.name == root_name);
 
-                // If it's a nested path, store the full path in value for reference
-                let value = if path.contains('.') {
-                    Some(serde_json::Value::String(path.to_string()))
+                if let Some(field_name) = field_path {
+                    // Anchor IDL provides the explicit type via `seed.account`
+                    // (e.g. "FundingPool"). Fall back to snake_to_pascal of the
+                    // local account name for older IDLs that omit it.
+                    let type_name = seed.get("account")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string())
+                        .unwrap_or_else(|| snake_to_pascal(root_name));
+                    let (offset, size) = idl_field_offset_and_size(idl_types, &type_name, field_name)?;
+                    if size == 0 || size > 32 {
+                        return None;
+                    }
+                    seeds.push(SeedDef {
+                        seed_type: "account_field".to_string(),
+                        value: Some(serde_json::Value::String(path.to_string())),
+                        param_index: None,
+                        account_index: acct_idx.map(|i| i as u8),
+                        field_offset: Some(offset),
+                        field_len: Some(size as u8),
+                    });
                 } else {
-                    None
-                };
-
-                seeds.push(SeedDef {
-                    seed_type: "account".to_string(),
-                    value,
-                    param_index: None,
-                    account_index: acct_idx.map(|i| i as u8),
-                });
+                    seeds.push(SeedDef {
+                        seed_type: "account".to_string(),
+                        value: None,
+                        param_index: None,
+                        account_index: acct_idx.map(|i| i as u8),
+                        field_offset: None,
+                        field_len: None,
+                    });
+                }
             }
             _ => {}
         }
@@ -413,15 +439,28 @@ fn idl_type_size(ty: &serde_json::Value) -> Option<u16> {
 }
 
 fn idl_field_offset(types: &serde_json::Value, type_name: &str, field_name: &str) -> Option<u16> {
+    idl_field_offset_and_size(types, type_name, field_name).map(|(off, _)| off)
+}
+
+/// Walk an Anchor IDL type's fields and return the (byte_offset, byte_size)
+/// of the named field. Offset starts at 8 to account for the Anchor account
+/// discriminator. Returns None if the type or field isn't found, or if any
+/// preceding field has an unsized type (variable-length, e.g. Vec/String).
+fn idl_field_offset_and_size(
+    types: &serde_json::Value,
+    type_name: &str,
+    field_name: &str,
+) -> Option<(u16, u16)> {
     let types_arr = types.as_array()?;
     let type_def = types_arr.iter().find(|t| t["name"].as_str() == Some(type_name))?;
     let fields = type_def["type"]["fields"].as_array()?;
     let mut offset: u16 = 8; // Anchor discriminator
     for field in fields {
+        let size = idl_type_size(&field["type"])?;
         if field["name"].as_str() == Some(field_name) {
-            return Some(offset);
+            return Some((offset, size));
         }
-        offset += idl_type_size(&field["type"])?;
+        offset += size;
     }
     None
 }

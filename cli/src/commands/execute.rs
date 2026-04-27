@@ -85,6 +85,7 @@ pub fn execute(
                 &wallet_pubkey,
                 &vault_pda,
                 &program_id,
+                &client,
             )?;
             accounts.extend(remaining);
         }
@@ -138,6 +139,7 @@ fn build_remaining_accounts_for_custom(
     _wallet_pubkey: &Pubkey,
     vault_pda: &Pubkey,
     _program_id: &Pubkey,
+    client: &solana_client::rpc_client::RpcClient,
 ) -> Result<Vec<AccountMeta>> {
     let h = intent_utils::deserialize_intent_header(intent_data)?;
     let account_count = h.account_count as usize;
@@ -219,6 +221,30 @@ fn build_remaining_accounts_for_custom(
                                 anyhow::bail!("Seed account index {} out of range", ai);
                             }
                             remaining[ai].pubkey.to_bytes().to_vec()
+                        }
+                        SEED_ACCOUNT_FIELD => {
+                            let ai = seed_data[0] as usize;
+                            let off = u16::from_le_bytes([seed_data[1], seed_data[2]]) as usize;
+                            let len = seed_data[3] as usize;
+                            if len == 0 || len > 32 {
+                                anyhow::bail!("Seed account_field len must be 1..=32, got {}", len);
+                            }
+                            if ai >= remaining.len() {
+                                anyhow::bail!("Seed account_field index {} out of range", ai);
+                            }
+                            let src_pubkey = remaining[ai].pubkey;
+                            let acct_data = crate::rpc::fetch_account(client, &src_pubkey)
+                                .with_context(|| format!(
+                                    "fetch account {} for SEED_ACCOUNT_FIELD",
+                                    src_pubkey
+                                ))?;
+                            if off + len > acct_data.len() {
+                                anyhow::bail!(
+                                    "SEED_ACCOUNT_FIELD slice [{}, {}) exceeds account data len {}",
+                                    off, off + len, acct_data.len()
+                                );
+                            }
+                            acct_data[off..off + len].to_vec()
                         }
                         _ => anyhow::bail!("Unknown seed type {}", seed_type),
                     };

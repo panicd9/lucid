@@ -113,6 +113,7 @@ export const SOURCE_LABELS: Record<number, string> = {
 export const SEED_LITERAL = 0;
 export const SEED_PARAM = 1;
 export const SEED_ACCOUNT = 2;
+export const SEED_ACCOUNT_FIELD = 3;
 
 // Risk levels (for display, mapped from intent metadata)
 export type RiskLevel = 'critical' | 'high' | 'medium' | 'low';

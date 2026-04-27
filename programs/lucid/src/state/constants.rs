@@ -54,6 +54,7 @@ pub const SEGMENT_PARAM: u8 = 1;
 pub const SEED_LITERAL: u8 = 0;
 pub const SEED_PARAM: u8 = 1;
 pub const SEED_ACCOUNT: u8 = 2;
+pub const SEED_ACCOUNT_FIELD: u8 = 3;
 
 /// Limits
 pub const MAX_NAME_LEN: usize = 32;

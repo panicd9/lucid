@@ -323,6 +323,32 @@ fn resolve_address_inner(
                         seed_bufs[s] = addr;
                         seed_lens[s] = 32;
                     }
+                    SEED_ACCOUNT_FIELD => {
+                        let ai = se.seed_data[0];
+                        let off = u16::from_le_bytes([se.seed_data[1], se.seed_data[2]]) as usize;
+                        let len = se.seed_data[3] as usize;
+                        if len == 0 || len > 32 {
+                            return Err(ProgramError::InvalidInstructionData);
+                        }
+                        if (ai as usize) >= remaining.len() {
+                            return Err(ProgramError::NotEnoughAccountKeys);
+                        }
+                        // Verify the supplied account at remaining[ai] matches what the
+                        // intent's account entry at the same index resolves to. Without
+                        // this check, an attacker could pass arbitrary account data and
+                        // forge the resulting PDA.
+                        let ae = read_account_entry(intent_data, intent, ai)?;
+                        let expected = resolve_address_inner(intent_data, intent, ae, params_data, remaining, vault_address, depth + 1)?;
+                        if remaining[ai as usize].address().to_bytes() != expected {
+                            return Err(ProgramError::Custom(ERR_ACCOUNT_MISMATCH));
+                        }
+                        let adata = remaining[ai as usize].try_borrow()?;
+                        if off + len > adata.len() {
+                            return Err(ProgramError::InvalidAccountData);
+                        }
+                        seed_bufs[s][..len].copy_from_slice(&adata[off..off + len]);
+                        seed_lens[s] = len;
+                    }
                     _ => return Err(ProgramError::InvalidInstructionData),
                 }
             }

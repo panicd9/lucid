@@ -388,6 +388,8 @@ fn pda_account_without_program_field_uses_target_program() {
             value: Some(serde_json::json!("global-config")),
             param_index: None,
             account_index: None,
+            field_offset: None,
+            field_len: None,
         }],
         template: "accept admin".to_string(),
         risk_level: "CRITICAL".to_string(),
@@ -422,4 +424,109 @@ fn pda_account_without_program_field_uses_target_program() {
         target_program_bytes.as_slice(),
         "PDA prog_off must point to the target program bytes in the byte pool"
     );
+}
+
+/// SEED_ACCOUNT_FIELD encodes the account index, byte offset (u16 LE), and
+/// byte length into the 4-byte seed_data slot. The encoder must reject
+/// fieldLen == 0 or > 32, and the wire bytes must be readable as the same
+/// values the resolver expects.
+#[test]
+fn seed_account_field_encodes_account_index_offset_len() {
+    use lucid_cli::types::{INTENT_HEADER_LEN, ACCOUNT_ENTRY_SIZE, SEED_ACCOUNT_FIELD};
+
+    // Single PDA account whose seeds include one SEED_ACCOUNT_FIELD entry.
+    // No proposers/approvers/params, 1 account (+ 1 target-program entry),
+    // 1 instruction, 1 data segment, 1 seed.
+    let def = IntentDefinition {
+        version: 1,
+        program_id: "11111111111111111111111111111111".to_string(),
+        instruction_name: "test".to_string(),
+        discriminator: vec![1, 2, 3, 4, 5, 6, 7, 8],
+        params: vec![],
+        accounts: vec![AccountDef {
+            name: "child".to_string(),
+            source: "pda".to_string(),
+            writable: true,
+            is_signer: false,
+            source_data: Some(serde_json::json!({
+                "seedCount": 1,
+                "seedStart": 0,
+            })),
+        }],
+        data_segments: vec![DataSegmentDef {
+            segment_type: "literal".to_string(),
+            data: Some(serde_json::json!([1, 2, 3, 4, 5, 6, 7, 8])),
+            param_index: None,
+        }],
+        seeds: vec![SeedDef {
+            seed_type: "account_field".to_string(),
+            value: Some(serde_json::json!("pool.deposit_mint")),
+            param_index: None,
+            account_index: Some(1),
+            field_offset: Some(48),
+            field_len: Some(32),
+        }],
+        template: "test".to_string(),
+        risk_level: "LOW".to_string(),
+        timelock_seconds: 0,
+        verification: None,
+    };
+
+    let bytes = lucid_cli::commands::wallet::build_intent_bytes(&def, 1, 1, &[], &[]).unwrap();
+
+    // seeds table sits after: header + 2 accounts (PDA + target program) + 1 instruction + 1 data segment.
+    let seeds_offset = INTENT_HEADER_LEN
+        + 2 * ACCOUNT_ENTRY_SIZE
+        + INSTRUCTION_ENTRY_SIZE
+        + DATA_SEGMENT_ENTRY_SIZE;
+
+    // SeedEntry layout: [type:u8, pad:u8, data:[u8;4]]
+    assert_eq!(bytes[seeds_offset], SEED_ACCOUNT_FIELD, "seed type tag");
+    assert_eq!(bytes[seeds_offset + 1], 0, "padding byte");
+    assert_eq!(bytes[seeds_offset + 2], 1, "account index");
+    let off = u16::from_le_bytes([bytes[seeds_offset + 3], bytes[seeds_offset + 4]]);
+    assert_eq!(off, 48, "field offset");
+    assert_eq!(bytes[seeds_offset + 5], 32, "field length");
+}
+
+/// fieldLen of 0 or > 32 should be rejected by the encoder. 32 is the max
+/// supported seed buffer width on-chain (seed_bufs is [[u8; 32]; 16]).
+#[test]
+fn seed_account_field_rejects_invalid_field_len() {
+    let make = |len: u8| IntentDefinition {
+        version: 1,
+        program_id: "11111111111111111111111111111111".to_string(),
+        instruction_name: "test".to_string(),
+        discriminator: vec![1, 2, 3, 4, 5, 6, 7, 8],
+        params: vec![],
+        accounts: vec![AccountDef {
+            name: "child".to_string(),
+            source: "pda".to_string(),
+            writable: true,
+            is_signer: false,
+            source_data: Some(serde_json::json!({"seedCount": 1, "seedStart": 0})),
+        }],
+        data_segments: vec![DataSegmentDef {
+            segment_type: "literal".to_string(),
+            data: Some(serde_json::json!([1, 2, 3, 4, 5, 6, 7, 8])),
+            param_index: None,
+        }],
+        seeds: vec![SeedDef {
+            seed_type: "account_field".to_string(),
+            value: None,
+            param_index: None,
+            account_index: Some(0),
+            field_offset: Some(0),
+            field_len: Some(len),
+        }],
+        template: "t".to_string(),
+        risk_level: "LOW".to_string(),
+        timelock_seconds: 0,
+        verification: None,
+    };
+
+    assert!(lucid_cli::commands::wallet::build_intent_bytes(&make(0), 1, 1, &[], &[]).is_err());
+    assert!(lucid_cli::commands::wallet::build_intent_bytes(&make(33), 1, 1, &[], &[]).is_err());
+    assert!(lucid_cli::commands::wallet::build_intent_bytes(&make(32), 1, 1, &[], &[]).is_ok());
+    assert!(lucid_cli::commands::wallet::build_intent_bytes(&make(1), 1, 1, &[], &[]).is_ok());
 }
