@@ -680,7 +680,7 @@ pub fn build_intent_bytes(
                     if let Some(obj) = sd.as_object() {
                         let seed_start = obj.get("seedStart").and_then(|v| v.as_u64()).unwrap_or(0) as u8;
                         let seed_count = obj.get("seedCount").and_then(|v| v.as_u64()).unwrap_or(0) as u8;
-                        let prog_off = pda_prog_pool_offsets.get(&i).copied().unwrap_or(0);
+                        let prog_off = pda_prog_pool_offsets.get(&i).copied().unwrap_or(target_prog_pool_off);
                         result.push(seed_start);
                         result.push(seed_count);
                         result.extend_from_slice(&prog_off.to_le_bytes());

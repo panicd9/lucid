@@ -346,3 +346,80 @@ fn build_and_canonicalize_is_idempotent() {
     let c2 = canonicalize_built_bytes(&c1);
     assert_eq!(c1, c2);
 }
+
+/// Regression: a `pda` account whose `sourceData` omits `program` must default
+/// the byte-pool program offset to the target program (not 0). Offset 0 is the
+/// template header, so reading 32 bytes there yields garbage and produces a
+/// wrong PDA at execute time — which manifests as Anchor's AccountNotInitialized
+/// (0xbc4) rather than a seeds error, since the wrong PDA points to a system
+/// account that fails type-loading before constraint checks run.
+#[test]
+fn pda_account_without_program_field_uses_target_program() {
+    use lucid_cli::types::{INTENT_HEADER_LEN, ACCOUNT_ENTRY_SIZE, SOURCE_PDA};
+
+    let target_program_b58 = "Ab1nTbMuFjcfoRJWWAdxPAVotYz2kzPxS18Yzie2iiQt";
+    let target_program_bytes = bs58::decode(target_program_b58).into_vec().unwrap();
+
+    // Mirrors demo/intents/accept_admin.json: a single PDA account with seedCount/seedStart
+    // but no `program` field in sourceData.
+    let def = IntentDefinition {
+        version: 1,
+        program_id: target_program_b58.to_string(),
+        instruction_name: "accept_admin".to_string(),
+        discriminator: vec![112, 42, 45, 90, 116, 181, 13, 170],
+        params: vec![],
+        accounts: vec![AccountDef {
+            name: "global_config".to_string(),
+            source: "pda".to_string(),
+            writable: true,
+            is_signer: false,
+            source_data: Some(serde_json::json!({
+                "seedCount": 1,
+                "seedStart": 0,
+            })),
+        }],
+        data_segments: vec![DataSegmentDef {
+            segment_type: "literal".to_string(),
+            data: Some(serde_json::json!([112, 42, 45, 90, 116, 181, 13, 170])),
+            param_index: None,
+        }],
+        seeds: vec![SeedDef {
+            seed_type: "literal".to_string(),
+            value: Some(serde_json::json!("global-config")),
+            param_index: None,
+            account_index: None,
+        }],
+        template: "accept admin".to_string(),
+        risk_level: "CRITICAL".to_string(),
+        timelock_seconds: 0,
+        verification: None,
+    };
+
+    let bytes =
+        lucid_cli::commands::wallet::build_intent_bytes(&def, 1, 1, &[], &[]).unwrap();
+
+    // build_intent_bytes returns data without PREFIX_LEN. The accounts table
+    // sits immediately after the 88-byte header (no proposers/approvers/params).
+    let pda_entry_offset = INTENT_HEADER_LEN;
+    assert_eq!(bytes[pda_entry_offset], SOURCE_PDA, "first account should be SOURCE_PDA");
+    let prog_off =
+        u16::from_le_bytes([bytes[pda_entry_offset + 6], bytes[pda_entry_offset + 7]]) as usize;
+    assert_ne!(
+        prog_off, 0,
+        "prog_off must not be 0 — that would point at the template header in the byte pool"
+    );
+
+    // byte_pool starts after: header + accounts(2 entries: PDA + target-program) + 1 instruction + 1 data segment + 1 seed.
+    let bp_offset = INTENT_HEADER_LEN
+        + 2 * ACCOUNT_ENTRY_SIZE
+        + INSTRUCTION_ENTRY_SIZE
+        + DATA_SEGMENT_ENTRY_SIZE
+        + SEED_ENTRY_SIZE;
+
+    let prog_bytes_in_pool = &bytes[bp_offset + prog_off..bp_offset + prog_off + 32];
+    assert_eq!(
+        prog_bytes_in_pool,
+        target_program_bytes.as_slice(),
+        "PDA prog_off must point to the target program bytes in the byte pool"
+    );
+}
