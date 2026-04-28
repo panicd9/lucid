@@ -6,8 +6,9 @@ set -euo pipefail
 #   --bpf-program Ab1nTbMuFjcfoRJWWAdxPAVotYz2kzPxS18Yzie2iiQt demo/crowdfunding_programs/crowdfunding.so \
 #   --bpf-program 2hNiHwyEh9VJaBKdKAPhw1c9q6wcc5Jgmc1YBTbPNr8M demo/crowdfunding_programs/issuance.so \
 #   --bpf-program 6N4KJsm6TPooxvGMrp8PVLXXcp5vMEZJpffzRS29rG6h demo/crowdfunding_programs/rwa_transfer_hook.so \
+#   --bpf-program SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf demo/squads_programs/squads_v4.so \
+#   --account BSTq9w3kZwNwpBXJEvTZz2G9ZTNyKBvoSeXMvwb4cNZr demo/squads_programs/program_config.json \
 #   --reset
-
 
 # Lucid Demo Script — runs on solana-test-validator
 #
