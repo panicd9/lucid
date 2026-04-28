@@ -388,7 +388,7 @@ fn pda_account_without_program_field_uses_target_program() {
             value: Some(serde_json::json!("global-config")),
             param_index: None,
             account_index: None,
-            field_offset: None,
+            field_path: None,
             field_len: None,
         }],
         template: "accept admin".to_string(),
@@ -426,17 +426,18 @@ fn pda_account_without_program_field_uses_target_program() {
     );
 }
 
-/// SEED_ACCOUNT_FIELD encodes the account index, byte offset (u16 LE), and
-/// byte length into the 4-byte seed_data slot. The encoder must reject
-/// fieldLen == 0 or > 32, and the wire bytes must be readable as the same
-/// values the resolver expects.
+/// SEED_ACCOUNT_FIELD encodes (account_index, plan_offset, target_len) into
+/// the 4-byte seed_data slot. The walk plan itself lives in byte_pool as
+/// [count:u8, [op:u8, size:u16 LE] * count]. This test verifies a plain
+/// SKIP_FIXED-only path (no Option predecessors).
 #[test]
-fn seed_account_field_encodes_account_index_offset_len() {
-    use lucid_cli::types::{INTENT_HEADER_LEN, ACCOUNT_ENTRY_SIZE, SEED_ACCOUNT_FIELD};
+fn seed_account_field_encodes_walk_plan_skip_fixed() {
+    use lucid_cli::types::{
+        INTENT_HEADER_LEN, ACCOUNT_ENTRY_SIZE, SEED_ACCOUNT_FIELD, FieldPathOp,
+        FIELD_OP_SKIP_FIXED,
+    };
 
-    // Single PDA account whose seeds include one SEED_ACCOUNT_FIELD entry.
-    // No proposers/approvers/params, 1 account (+ 1 target-program entry),
-    // 1 instruction, 1 data segment, 1 seed.
+    // Mirrors deposit.json's seed for `pool.deposit_mint`: skip id (u64) + creator (Pubkey).
     let def = IntentDefinition {
         version: 1,
         program_id: "11111111111111111111111111111111".to_string(),
@@ -448,10 +449,7 @@ fn seed_account_field_encodes_account_index_offset_len() {
             source: "pda".to_string(),
             writable: true,
             is_signer: false,
-            source_data: Some(serde_json::json!({
-                "seedCount": 1,
-                "seedStart": 0,
-            })),
+            source_data: Some(serde_json::json!({"seedCount": 1, "seedStart": 0})),
         }],
         data_segments: vec![DataSegmentDef {
             segment_type: "literal".to_string(),
@@ -463,7 +461,7 @@ fn seed_account_field_encodes_account_index_offset_len() {
             value: Some(serde_json::json!("pool.deposit_mint")),
             param_index: None,
             account_index: Some(1),
-            field_offset: Some(48),
+            field_path: Some(vec![FieldPathOp { op: "skip_fixed".to_string(), size: 40 }]),
             field_len: Some(32),
         }],
         template: "test".to_string(),
@@ -474,25 +472,97 @@ fn seed_account_field_encodes_account_index_offset_len() {
 
     let bytes = lucid_cli::commands::wallet::build_intent_bytes(&def, 1, 1, &[], &[]).unwrap();
 
-    // seeds table sits after: header + 2 accounts (PDA + target program) + 1 instruction + 1 data segment.
     let seeds_offset = INTENT_HEADER_LEN
         + 2 * ACCOUNT_ENTRY_SIZE
         + INSTRUCTION_ENTRY_SIZE
         + DATA_SEGMENT_ENTRY_SIZE;
 
-    // SeedEntry layout: [type:u8, pad:u8, data:[u8;4]]
     assert_eq!(bytes[seeds_offset], SEED_ACCOUNT_FIELD, "seed type tag");
-    assert_eq!(bytes[seeds_offset + 1], 0, "padding byte");
     assert_eq!(bytes[seeds_offset + 2], 1, "account index");
-    let off = u16::from_le_bytes([bytes[seeds_offset + 3], bytes[seeds_offset + 4]]);
-    assert_eq!(off, 48, "field offset");
-    assert_eq!(bytes[seeds_offset + 5], 32, "field length");
+    let plan_off = u16::from_le_bytes([bytes[seeds_offset + 3], bytes[seeds_offset + 4]]) as usize;
+    assert_eq!(bytes[seeds_offset + 5], 32, "target_len");
+
+    // Walk plan in byte_pool starts at plan_off. byte_pool follows the seeds table.
+    let bp_offset = seeds_offset + SEED_ENTRY_SIZE;
+    let count = bytes[bp_offset + plan_off];
+    assert_eq!(count, 1, "1 op (single SKIP_FIXED merging id+creator)");
+    assert_eq!(bytes[bp_offset + plan_off + 1], FIELD_OP_SKIP_FIXED, "op = SKIP_FIXED");
+    let size = u16::from_le_bytes([bytes[bp_offset + plan_off + 2], bytes[bp_offset + plan_off + 3]]);
+    assert_eq!(size, 40, "skip 40 bytes (8 + 32)");
+}
+
+/// Walk plan with a SKIP_OPTION op (mirrors create_pool's seed for
+/// `global_config.next_pool_id` past `pending_admin: Option<Pubkey>`).
+#[test]
+fn seed_account_field_encodes_walk_plan_skip_option() {
+    use lucid_cli::types::{
+        INTENT_HEADER_LEN, ACCOUNT_ENTRY_SIZE, SEED_ACCOUNT_FIELD, FieldPathOp,
+        FIELD_OP_SKIP_FIXED, FIELD_OP_SKIP_OPTION,
+    };
+
+    let def = IntentDefinition {
+        version: 1,
+        program_id: "11111111111111111111111111111111".to_string(),
+        instruction_name: "test".to_string(),
+        discriminator: vec![1, 2, 3, 4, 5, 6, 7, 8],
+        params: vec![],
+        accounts: vec![AccountDef {
+            name: "child".to_string(),
+            source: "pda".to_string(),
+            writable: true,
+            is_signer: false,
+            source_data: Some(serde_json::json!({"seedCount": 1, "seedStart": 0})),
+        }],
+        data_segments: vec![DataSegmentDef {
+            segment_type: "literal".to_string(),
+            data: Some(serde_json::json!([1, 2, 3, 4, 5, 6, 7, 8])),
+            param_index: None,
+        }],
+        seeds: vec![SeedDef {
+            seed_type: "account_field".to_string(),
+            value: Some(serde_json::json!("global_config.next_pool_id")),
+            param_index: None,
+            account_index: Some(1),
+            field_path: Some(vec![
+                FieldPathOp { op: "skip_fixed".to_string(), size: 32 },   // admin: Pubkey
+                FieldPathOp { op: "skip_option".to_string(), size: 32 },  // pending_admin: Option<Pubkey>
+            ]),
+            field_len: Some(8),
+        }],
+        template: "test".to_string(),
+        risk_level: "LOW".to_string(),
+        timelock_seconds: 0,
+        verification: None,
+    };
+
+    let bytes = lucid_cli::commands::wallet::build_intent_bytes(&def, 1, 1, &[], &[]).unwrap();
+
+    let seeds_offset = INTENT_HEADER_LEN
+        + 2 * ACCOUNT_ENTRY_SIZE
+        + INSTRUCTION_ENTRY_SIZE
+        + DATA_SEGMENT_ENTRY_SIZE;
+    let plan_off = u16::from_le_bytes([bytes[seeds_offset + 3], bytes[seeds_offset + 4]]) as usize;
+    let bp_offset = seeds_offset + SEED_ENTRY_SIZE;
+
+    let count = bytes[bp_offset + plan_off];
+    assert_eq!(count, 2, "2 ops");
+    assert_eq!(bytes[bp_offset + plan_off + 1], FIELD_OP_SKIP_FIXED);
+    assert_eq!(
+        u16::from_le_bytes([bytes[bp_offset + plan_off + 2], bytes[bp_offset + plan_off + 3]]),
+        32
+    );
+    assert_eq!(bytes[bp_offset + plan_off + 4], FIELD_OP_SKIP_OPTION);
+    assert_eq!(
+        u16::from_le_bytes([bytes[bp_offset + plan_off + 5], bytes[bp_offset + plan_off + 6]]),
+        32
+    );
 }
 
 /// fieldLen of 0 or > 32 should be rejected by the encoder. 32 is the max
 /// supported seed buffer width on-chain (seed_bufs is [[u8; 32]; 16]).
 #[test]
 fn seed_account_field_rejects_invalid_field_len() {
+    use lucid_cli::types::FieldPathOp;
     let make = |len: u8| IntentDefinition {
         version: 1,
         program_id: "11111111111111111111111111111111".to_string(),
@@ -516,7 +586,7 @@ fn seed_account_field_rejects_invalid_field_len() {
             value: None,
             param_index: None,
             account_index: Some(0),
-            field_offset: Some(0),
+            field_path: Some(vec![FieldPathOp { op: "skip_fixed".to_string(), size: 0 }]),
             field_len: Some(len),
         }],
         template: "t".to_string(),

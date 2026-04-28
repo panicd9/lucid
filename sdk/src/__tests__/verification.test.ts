@@ -518,3 +518,178 @@ describe('Orchestration', () => {
     }
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────
+// Tier 2 — PDA seed validation (account_field walk plans)
+// ─────────────────────────────────────────────────────────────────────────
+
+const SEED_IDL: any = {
+  address: 'SeedTestProg11111111111111111111111111111111',
+  metadata: { name: 'seed_test', version: '0.0.0', spec: '0.1.0' },
+  instructions: [
+    {
+      name: 'create_pool',
+      // sha256("global:create_pool")[0..8]
+      discriminator: Array.from(
+        require('node:crypto').createHash('sha256').update('global:create_pool').digest().subarray(0, 8)
+      ),
+      accounts: [
+        {
+          name: 'global_config',
+          writable: false,
+          pda: { seeds: [{ kind: 'const', value: [99, 102, 103] }] }, // "cfg"
+        },
+        {
+          name: 'pool',
+          writable: true,
+          pda: {
+            seeds: [
+              { kind: 'const', value: [112, 111, 111, 108] }, // "pool"
+              { kind: 'account', path: 'global_config.next_pool_id', account: 'GlobalConfig' },
+            ],
+          },
+        },
+      ],
+      args: [],
+    },
+  ],
+  types: [
+    {
+      name: 'GlobalConfig',
+      type: {
+        kind: 'struct',
+        fields: [
+          { name: 'admin', type: 'pubkey' },
+          { name: 'pending_admin', type: { option: 'pubkey' } },
+          { name: 'next_pool_id', type: 'u64' },
+        ],
+      },
+    },
+  ],
+};
+
+function makeSeedIntent(overrides: { poolSeeds?: SeedDefinition[] } = {}): IntentDefinition {
+  return {
+    version: 1,
+    programId: SEED_IDL.address,
+    instructionName: 'create_pool',
+    discriminator: SEED_IDL.instructions[0].discriminator,
+    params: [],
+    accounts: [
+      {
+        index: 0,
+        name: 'global_config',
+        source: 'pda',
+        writable: false,
+        signer: false,
+        seeds: [{ type: 'literal', value: [99, 102, 103] }],
+      },
+      {
+        index: 1,
+        name: 'pool',
+        source: 'pda',
+        writable: true,
+        signer: false,
+        seeds: overrides.poolSeeds ?? [
+          { type: 'literal', value: [112, 111, 111, 108] },
+          {
+            type: 'account_field',
+            accountIndex: 0,
+            fieldPath: [
+              { op: 'skip_fixed', size: 32 },
+              { op: 'skip_option', size: 32 },
+            ],
+            fieldLen: 8,
+          },
+        ],
+      },
+    ],
+    dataSegments: [{ type: 'literal', value: SEED_IDL.instructions[0].discriminator }],
+    seeds: [],
+    template: 'create pool',
+    riskLevel: 'low',
+    timelockSeconds: 0,
+    verification: { status: 'unverified', tier: 'unverified', confidence: 0 },
+  };
+}
+
+import type { SeedDefinition } from '../types.js';
+
+describe('Tier 2 - Seed validation (account_field walk plans)', () => {
+  it('verified intent with correct walk plan passes', () => {
+    const result = engine.verify(makeSeedIntent(), SEED_IDL);
+    expect(result.status).toBe('verified');
+    expect(result.tier).toBe('idl_structural');
+  });
+
+  it('tampered fieldLen → mismatch', () => {
+    const intent = makeSeedIntent({
+      poolSeeds: [
+        { type: 'literal', value: [112, 111, 111, 108] },
+        {
+          type: 'account_field',
+          accountIndex: 0,
+          fieldPath: [
+            { op: 'skip_fixed', size: 32 },
+            { op: 'skip_option', size: 32 },
+          ],
+          fieldLen: 32, // wrong: should be 8 (u64)
+        },
+      ],
+    });
+    const result = engine.verify(intent, SEED_IDL);
+    expect(result.status).toBe('mismatch');
+    expect(result.details).toMatch(/fieldLen mismatch/);
+  });
+
+  it('tampered fieldPath (missing SKIP_OPTION) → mismatch', () => {
+    const intent = makeSeedIntent({
+      poolSeeds: [
+        { type: 'literal', value: [112, 111, 111, 108] },
+        {
+          type: 'account_field',
+          accountIndex: 0,
+          fieldPath: [
+            { op: 'skip_fixed', size: 32 }, // missing skip_option
+          ],
+          fieldLen: 8,
+        },
+      ],
+    });
+    const result = engine.verify(intent, SEED_IDL);
+    expect(result.status).toBe('mismatch');
+    expect(result.details).toMatch(/fieldPath/);
+  });
+
+  it('downgraded account_field → account → mismatch', () => {
+    const intent = makeSeedIntent({
+      poolSeeds: [
+        { type: 'literal', value: [112, 111, 111, 108] },
+        // Attacker swaps the walk-plan seed for a plain account-address seed.
+        { type: 'account', accountIndex: 0 },
+      ],
+    });
+    const result = engine.verify(intent, SEED_IDL);
+    expect(result.status).toBe('mismatch');
+  });
+
+  it('tampered literal seed bytes → mismatch', () => {
+    const intent = makeSeedIntent({
+      poolSeeds: [
+        { type: 'literal', value: [88, 88, 88, 88] }, // not "pool"
+        {
+          type: 'account_field',
+          accountIndex: 0,
+          fieldPath: [
+            { op: 'skip_fixed', size: 32 },
+            { op: 'skip_option', size: 32 },
+          ],
+          fieldLen: 8,
+        },
+      ],
+    });
+    const result = engine.verify(intent, SEED_IDL);
+    expect(result.status).toBe('mismatch');
+    expect(result.details).toMatch(/literal bytes mismatch/);
+  });
+});

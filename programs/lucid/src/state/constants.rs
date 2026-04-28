@@ -56,6 +56,12 @@ pub const SEED_PARAM: u8 = 1;
 pub const SEED_ACCOUNT: u8 = 2;
 pub const SEED_ACCOUNT_FIELD: u8 = 3;
 
+/// SEED_ACCOUNT_FIELD walk-plan op codes. The plan walks from offset 8
+/// (past Anchor's discriminator) through fixed-size and Option<FixedT>
+/// predecessors, then the resolver reads target_len bytes at the final offset.
+pub const FIELD_OP_SKIP_FIXED: u8 = 0;
+pub const FIELD_OP_SKIP_OPTION: u8 = 1;
+
 /// Limits
 pub const MAX_NAME_LEN: usize = 32;
 pub const MAX_SIGNERS: usize = 16;

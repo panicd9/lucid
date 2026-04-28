@@ -300,6 +300,12 @@ fn resolve_address_inner(
             let mut seed_bufs = [[0u8; 32]; 16];
             let mut seed_lens = [0usize; 16];
 
+            // Cache the verified expected address per account_index across all
+            // SEED_ACCOUNT_FIELD seeds in this PDA. A single source account
+            // referenced multiple times (e.g. deposit reads pool 3 times) only
+            // needs one resolve_address_inner call, which can itself recurse.
+            let mut expected_addr_cache: [Option<[u8; 32]>; 16] = [None; 16];
+
             for s in 0..sc {
                 let se = read_seed_entry(intent_data, intent, seed_start + s as u8)?;
                 match se.seed_type {
@@ -324,30 +330,82 @@ fn resolve_address_inner(
                         seed_lens[s] = 32;
                     }
                     SEED_ACCOUNT_FIELD => {
+                        // Walk past variable-length predecessors (Option<T>) at runtime:
+                        // Anchor's serializer writes only the used Borsh prefix, so a
+                        // static offset would read stale bytes after a Some→None transition.
                         let ai = se.seed_data[0];
-                        let off = u16::from_le_bytes([se.seed_data[1], se.seed_data[2]]) as usize;
-                        let len = se.seed_data[3] as usize;
-                        if len == 0 || len > 32 {
+                        let plan_off = u16::from_le_bytes([se.seed_data[1], se.seed_data[2]]);
+                        let target_len = se.seed_data[3] as usize;
+                        if target_len == 0 || target_len > 32 {
                             return Err(ProgramError::InvalidInstructionData);
                         }
                         if (ai as usize) >= remaining.len() {
                             return Err(ProgramError::NotEnoughAccountKeys);
                         }
+
                         // Verify the supplied account at remaining[ai] matches what the
                         // intent's account entry at the same index resolves to. Without
                         // this check, an attacker could pass arbitrary account data and
                         // forge the resulting PDA.
-                        let ae = read_account_entry(intent_data, intent, ai)?;
-                        let expected = resolve_address_inner(intent_data, intent, ae, params_data, remaining, vault_address, depth + 1)?;
-                        if remaining[ai as usize].address().to_bytes() != expected {
+                        let ai_us = ai as usize;
+                        let expected = match expected_addr_cache[ai_us] {
+                            Some(addr) => addr,
+                            None => {
+                                let ae = read_account_entry(intent_data, intent, ai)?;
+                                let addr = resolve_address_inner(intent_data, intent, ae, params_data, remaining, vault_address, depth + 1)?;
+                                expected_addr_cache[ai_us] = Some(addr);
+                                addr
+                            }
+                        };
+                        if remaining[ai_us].address().to_bytes() != expected {
                             return Err(ProgramError::Custom(ERR_ACCOUNT_MISMATCH));
                         }
+
+                        // Read plan: count first, then op entries.
+                        let count = read_bytes_from_byte_pool(intent_data, intent, plan_off, 1)?[0];
+                        let plan_bytes = read_bytes_from_byte_pool(
+                            intent_data,
+                            intent,
+                            plan_off + 1,
+                            (count as u16) * 3,
+                        )?;
+
                         let adata = remaining[ai as usize].try_borrow()?;
-                        if off + len > adata.len() {
+                        let mut o: usize = 8;
+
+                        for i in 0..(count as usize) {
+                            let p = i * 3;
+                            let op = plan_bytes[p];
+                            let size = u16::from_le_bytes([plan_bytes[p + 1], plan_bytes[p + 2]]) as usize;
+                            match op {
+                                FIELD_OP_SKIP_FIXED => {
+                                    o = o.checked_add(size).ok_or(ProgramError::InvalidInstructionData)?;
+                                    if o > adata.len() {
+                                        return Err(ProgramError::InvalidAccountData);
+                                    }
+                                }
+                                FIELD_OP_SKIP_OPTION => {
+                                    if o >= adata.len() {
+                                        return Err(ProgramError::InvalidAccountData);
+                                    }
+                                    let tag = adata[o];
+                                    o += 1;
+                                    if tag != 0 {
+                                        o = o.checked_add(size).ok_or(ProgramError::InvalidInstructionData)?;
+                                        if o > adata.len() {
+                                            return Err(ProgramError::InvalidAccountData);
+                                        }
+                                    }
+                                }
+                                _ => return Err(ProgramError::InvalidInstructionData),
+                            }
+                        }
+
+                        if o + target_len > adata.len() {
                             return Err(ProgramError::InvalidAccountData);
                         }
-                        seed_bufs[s][..len].copy_from_slice(&adata[off..off + len]);
-                        seed_lens[s] = len;
+                        seed_bufs[s][..target_len].copy_from_slice(&adata[o..o + target_len]);
+                        seed_lens[s] = target_len;
                     }
                     _ => return Err(ProgramError::InvalidInstructionData),
                 }

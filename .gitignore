@@ -24,4 +24,7 @@ test-ledger/
 # Demo wallets (ephemeral keypairs)
 demo/wallets/
 
+# Demo intents (regenerated locally via `cargo run -p lucid-cli -- generate`)
+demo/intents/
+
 .claude/

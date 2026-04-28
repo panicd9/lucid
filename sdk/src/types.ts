@@ -48,10 +48,27 @@ export interface DataSegmentDefinition {
 }
 
 export interface SeedDefinition {
-  type: 'literal' | 'param' | 'account';
+  type: 'literal' | 'param' | 'account' | 'account_field';
   value?: number[];
   paramIndex?: number;
   accountIndex?: number;
+  /**
+   * For `account_field` only: walk plan to navigate past variable-length
+   * predecessors (Option<FixedT>) in the source struct's Borsh encoding.
+   * The walker starts past Anchor's 8-byte discriminator.
+   */
+  fieldPath?: FieldPathOp[];
+  /** For `account_field` only: number of bytes to read at the final offset (1..=32). */
+  fieldLen?: number;
+}
+
+export interface FieldPathOp {
+  /**
+   * `skip_fixed`: advance offset by `size` bytes.
+   * `skip_option`: read 1-byte tag at offset; advance 1; if tag != 0, advance `size` more.
+   */
+  op: 'skip_fixed' | 'skip_option';
+  size: number;
 }
 
 export interface VerificationResult {
@@ -91,6 +108,12 @@ export interface AnchorSeed {
   kind: 'const' | 'arg' | 'account';
   value?: number[];
   path?: string;
+  /**
+   * For `kind: 'account'` with a nested `path: "a.field"`: the type name of
+   * `a` (e.g. "FundingPool"). Anchor IDL emits this so consumers don't have
+   * to guess the struct from the local account name.
+   */
+  account?: string;
 }
 
 export interface AnchorArg {

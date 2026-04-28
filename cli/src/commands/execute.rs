@@ -152,6 +152,12 @@ fn build_remaining_accounts_for_custom(
     let params_data_len = u16::from_le_bytes([pd[160], pd[161]]) as usize;
     let params_data = &proposal_data[params_data_start..params_data_start + params_data_len];
 
+    // Cache fetched account data so a single source account referenced by
+    // multiple SEED_ACCOUNT_FIELD seeds (e.g. deposit reads pool twice)
+    // doesn't trigger duplicate RPC round-trips.
+    let mut account_data_cache: std::collections::HashMap<Pubkey, Vec<u8>> =
+        std::collections::HashMap::new();
+
     let mut remaining: Vec<AccountMeta> = Vec::new();
 
     // Read all account entries and resolve addresses
@@ -224,27 +230,75 @@ fn build_remaining_accounts_for_custom(
                         }
                         SEED_ACCOUNT_FIELD => {
                             let ai = seed_data[0] as usize;
-                            let off = u16::from_le_bytes([seed_data[1], seed_data[2]]) as usize;
-                            let len = seed_data[3] as usize;
-                            if len == 0 || len > 32 {
-                                anyhow::bail!("Seed account_field len must be 1..=32, got {}", len);
+                            let plan_off = u16::from_le_bytes([seed_data[1], seed_data[2]]) as usize;
+                            let target_len = seed_data[3] as usize;
+                            if target_len == 0 || target_len > 32 {
+                                anyhow::bail!("Seed account_field target_len must be 1..=32, got {}", target_len);
                             }
                             if ai >= remaining.len() {
                                 anyhow::bail!("Seed account_field index {} out of range", ai);
                             }
+
+                            // Read plan from intent's byte_pool.
+                            if bp_offset + plan_off + 1 > intent_data.len() {
+                                anyhow::bail!("plan_offset out of bounds");
+                            }
+                            let count = intent_data[bp_offset + plan_off] as usize;
+                            let plan_bytes_off = bp_offset + plan_off + 1;
+                            if plan_bytes_off + count * 3 > intent_data.len() {
+                                anyhow::bail!("plan body out of bounds");
+                            }
+                            let plan_bytes = &intent_data[plan_bytes_off..plan_bytes_off + count * 3];
+
                             let src_pubkey = remaining[ai].pubkey;
-                            let acct_data = crate::rpc::fetch_account(client, &src_pubkey)
-                                .with_context(|| format!(
-                                    "fetch account {} for SEED_ACCOUNT_FIELD",
-                                    src_pubkey
-                                ))?;
-                            if off + len > acct_data.len() {
+                            if !account_data_cache.contains_key(&src_pubkey) {
+                                let data = crate::rpc::fetch_account(client, &src_pubkey)
+                                    .with_context(|| format!(
+                                        "fetch account {} for SEED_ACCOUNT_FIELD",
+                                        src_pubkey
+                                    ))?;
+                                account_data_cache.insert(src_pubkey, data);
+                            }
+                            let acct_data = &account_data_cache[&src_pubkey];
+
+                            let mut o: usize = 8;
+                            for i in 0..count {
+                                let p = i * 3;
+                                let op = plan_bytes[p];
+                                let size = u16::from_le_bytes([plan_bytes[p + 1], plan_bytes[p + 2]]) as usize;
+                                match op {
+                                    FIELD_OP_SKIP_FIXED => {
+                                        o = o.checked_add(size).ok_or_else(||
+                                            anyhow::anyhow!("plan offset overflow"))?;
+                                        if o > acct_data.len() {
+                                            anyhow::bail!("plan SKIP_FIXED past end of data");
+                                        }
+                                    }
+                                    FIELD_OP_SKIP_OPTION => {
+                                        if o >= acct_data.len() {
+                                            anyhow::bail!("plan SKIP_OPTION read past end");
+                                        }
+                                        let tag = acct_data[o];
+                                        o += 1;
+                                        if tag != 0 {
+                                            o = o.checked_add(size).ok_or_else(||
+                                                anyhow::anyhow!("plan offset overflow"))?;
+                                            if o > acct_data.len() {
+                                                anyhow::bail!("plan SKIP_OPTION Some past end");
+                                            }
+                                        }
+                                    }
+                                    _ => anyhow::bail!("unknown plan op {}", op),
+                                }
+                            }
+
+                            if o + target_len > acct_data.len() {
                                 anyhow::bail!(
                                     "SEED_ACCOUNT_FIELD slice [{}, {}) exceeds account data len {}",
-                                    off, off + len, acct_data.len()
+                                    o, o + target_len, acct_data.len()
                                 );
                             }
-                            acct_data[off..off + len].to_vec()
+                            acct_data[o..o + target_len].to_vec()
                         }
                         _ => anyhow::bail!("Unknown seed type {}", seed_type),
                     };

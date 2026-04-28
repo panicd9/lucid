@@ -208,7 +208,7 @@ fn generate_intent_from_instruction(
 
         // Extract seeds for PDA accounts
         let final_source_data = if source == "pda" {
-            if let Some(pda_seeds) = extract_pda_seeds(acct, &ix.accounts, &ix.args, idl_types) {
+            if let Some(pda_seeds) = extract_pda_seeds(acct, &ix.accounts, &ix.args, idl_types)? {
                 let seed_start = all_seeds.len();
                 let seed_count = pda_seeds.seeds.len();
                 all_seeds.extend(pda_seeds.seeds);
@@ -289,21 +289,34 @@ struct ExtractedSeeds {
 }
 
 /// Extract PDA seeds from an account's IDL pda definition.
-/// Returns None if the account has no pda field or no seeds.
+/// Returns Ok(None) if the account isn't a PDA. Returns Err on real failures
+/// (unknown account type, unsupported field type) so we never silently fall
+/// back to wrong source_data.
 fn extract_pda_seeds(
     acct: &NormalizedAccount,
     all_accounts: &[NormalizedAccount],
     args: &[NormalizedArg],
     idl_types: &serde_json::Value,
-) -> Option<ExtractedSeeds> {
-    let pda = acct.pda.as_ref()?;
-    let pda_obj = pda.as_object()?;
-    let seeds_arr = pda_obj.get("seeds")?.as_array()?;
+) -> Result<Option<ExtractedSeeds>> {
+    let pda = match acct.pda.as_ref() {
+        Some(p) => p,
+        None => return Ok(None),
+    };
+    let pda_obj = match pda.as_object() {
+        Some(p) => p,
+        None => return Ok(None),
+    };
+    let seeds_arr = match pda_obj.get("seeds").and_then(|v| v.as_array()) {
+        Some(s) => s,
+        None => return Ok(None),
+    };
 
     let mut seeds = Vec::new();
 
     for seed in seeds_arr {
-        let kind = seed.get("kind")?.as_str()?;
+        let kind = seed.get("kind")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| anyhow::anyhow!("PDA seed entry missing 'kind' string"))?;
         match kind {
             "const" => {
                 // Literal bytes
@@ -318,7 +331,7 @@ fn extract_pda_seeds(
                         )),
                         param_index: None,
                         account_index: None,
-                        field_offset: None,
+                        field_path: None,
                         field_len: None,
                     });
                 }
@@ -332,7 +345,7 @@ fn extract_pda_seeds(
                     value: None,
                     param_index: param_idx.map(|i| i as u8),
                     account_index: None,
-                    field_offset: None,
+                    field_path: None,
                     field_len: None,
                 });
             }
@@ -355,17 +368,21 @@ fn extract_pda_seeds(
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string())
                         .unwrap_or_else(|| snake_to_pascal(root_name));
-                    let (offset, size) = idl_field_offset_and_size(idl_types, &type_name, field_name)?;
-                    if size == 0 || size > 32 {
-                        return None;
+                    let (walk_plan, target_size) =
+                        idl_walk_plan_to_field(idl_types, &type_name, field_name)?;
+                    if target_size == 0 || target_size > 32 {
+                        anyhow::bail!(
+                            "seed target field '{}.{}' has size {} (must be 1..=32)",
+                            type_name, field_name, target_size
+                        );
                     }
                     seeds.push(SeedDef {
                         seed_type: "account_field".to_string(),
                         value: Some(serde_json::Value::String(path.to_string())),
                         param_index: None,
                         account_index: acct_idx.map(|i| i as u8),
-                        field_offset: Some(offset),
-                        field_len: Some(size as u8),
+                        field_path: Some(walk_plan),
+                        field_len: Some(target_size as u8),
                     });
                 } else {
                     seeds.push(SeedDef {
@@ -373,7 +390,7 @@ fn extract_pda_seeds(
                         value: None,
                         param_index: None,
                         account_index: acct_idx.map(|i| i as u8),
-                        field_offset: None,
+                        field_path: None,
                         field_len: None,
                     });
                 }
@@ -402,9 +419,9 @@ fn extract_pda_seeds(
     });
 
     if seeds.is_empty() {
-        None
+        Ok(None)
     } else {
-        Some(ExtractedSeeds { seeds, program })
+        Ok(Some(ExtractedSeeds { seeds, program }))
     }
 }
 
@@ -438,31 +455,103 @@ fn idl_type_size(ty: &serde_json::Value) -> Option<u16> {
     None
 }
 
+/// Backwards-compatible wrapper used by `infer_account_source` for has_one
+/// offset calculation, which only needs the byte offset of a field assuming
+/// fixed-position layout (i.e. no Option/Vec predecessors). For the seed
+/// walk-plan, use `idl_walk_plan_to_field` instead. Returns None on overflow
+/// or unsupported predecessor types.
 fn idl_field_offset(types: &serde_json::Value, type_name: &str, field_name: &str) -> Option<u16> {
-    idl_field_offset_and_size(types, type_name, field_name).map(|(off, _)| off)
-}
-
-/// Walk an Anchor IDL type's fields and return the (byte_offset, byte_size)
-/// of the named field. Offset starts at 8 to account for the Anchor account
-/// discriminator. Returns None if the type or field isn't found, or if any
-/// preceding field has an unsized type (variable-length, e.g. Vec/String).
-fn idl_field_offset_and_size(
-    types: &serde_json::Value,
-    type_name: &str,
-    field_name: &str,
-) -> Option<(u16, u16)> {
     let types_arr = types.as_array()?;
     let type_def = types_arr.iter().find(|t| t["name"].as_str() == Some(type_name))?;
     let fields = type_def["type"]["fields"].as_array()?;
-    let mut offset: u16 = 8; // Anchor discriminator
+    let mut offset: u16 = 8;
     for field in fields {
         let size = idl_type_size(&field["type"])?;
         if field["name"].as_str() == Some(field_name) {
-            return Some((offset, size));
+            return Some(offset);
         }
-        offset += size;
+        offset = offset.checked_add(size)?;
     }
     None
+}
+
+/// Compute the walk-plan ops needed to reach `field_name` in `type_name`.
+/// Anchor uses Borsh, which encodes Option<T> as variable-length (1 byte for
+/// None, 1+sizeof(T) for Some). On Some→None transitions Anchor only
+/// rewrites the used prefix; trailing bytes go stale. So a static byte
+/// offset is unsafe whenever a variable-length predecessor exists.
+///
+/// The walk-plan walks the actual on-chain layout at execute time. Each op
+/// describes how to advance past one source-struct field; the resolver
+/// then reads `target_len` bytes at the final offset.
+///
+/// Currently supports fixed-size fields and `Option<FixedT>` predecessors.
+/// Vec/String and `Option<VariableT>` predecessors return an error so the
+/// generator fails loud rather than emitting wrong offsets.
+fn idl_walk_plan_to_field(
+    types: &serde_json::Value,
+    type_name: &str,
+    field_name: &str,
+) -> Result<(Vec<crate::types::FieldPathOp>, u16)> {
+    use crate::types::FieldPathOp;
+    let types_arr = types.as_array()
+        .ok_or_else(|| anyhow::anyhow!("IDL 'types' is not an array"))?;
+    let type_def = types_arr.iter()
+        .find(|t| t["name"].as_str() == Some(type_name))
+        .ok_or_else(|| anyhow::anyhow!("type '{}' not found in IDL", type_name))?;
+    let fields = type_def["type"]["fields"].as_array()
+        .ok_or_else(|| anyhow::anyhow!("type '{}' has no fields array", type_name))?;
+
+    let mut path: Vec<FieldPathOp> = Vec::new();
+    let mut fixed_run: u16 = 0; // accumulate consecutive fixed-size predecessors
+
+    for field in fields {
+        let fname = field["name"].as_str().unwrap_or("");
+        let ty = &field["type"];
+
+        if fname == field_name {
+            let target_size = idl_type_size(ty).ok_or_else(|| {
+                anyhow::anyhow!("target field '{}.{}' has unsupported type for seed", type_name, field_name)
+            })?;
+            if fixed_run > 0 {
+                path.push(FieldPathOp { op: "skip_fixed".to_string(), size: fixed_run });
+            }
+            return Ok((path, target_size));
+        }
+
+        // Option<FixedT> predecessor: emit SKIP_OPTION op.
+        if let Some(obj) = ty.as_object() {
+            if let Some(inner) = obj.get("option") {
+                let inner_size = idl_type_size(inner).ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "field '{}.{}' is Option<variable>; only Option<FixedT> is supported",
+                        type_name, fname
+                    )
+                })?;
+                if fixed_run > 0 {
+                    path.push(FieldPathOp { op: "skip_fixed".to_string(), size: fixed_run });
+                    fixed_run = 0;
+                }
+                path.push(FieldPathOp { op: "skip_option".to_string(), size: inner_size });
+                continue;
+            }
+            // vec, defined, etc. — not a fixed type and not Option<FixedT>.
+            anyhow::bail!(
+                "field '{}.{}' has unsupported type {} before target '{}'; Vec/String/nested-struct predecessors not yet supported",
+                type_name, fname, ty, field_name
+            );
+        }
+
+        // Fixed primitive: accumulate.
+        let size = idl_type_size(ty).ok_or_else(|| {
+            anyhow::anyhow!("field '{}.{}' has unsupported type for seed", type_name, fname)
+        })?;
+        fixed_run = fixed_run.checked_add(size).ok_or_else(|| {
+            anyhow::anyhow!("u16 offset overflow at field '{}.{}'", type_name, fname)
+        })?;
+    }
+
+    anyhow::bail!("field '{}' not found in type '{}'", field_name, type_name)
 }
 
 fn infer_account_source(

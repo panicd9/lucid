@@ -534,6 +534,34 @@ pub fn build_intent_bytes(
         seed_lit_pool_offsets.push((pool_off, lit_bytes.len() as u16));
     }
 
+    // Per-seed walk-plan offsets. Plan layout in byte_pool:
+    // [count:u8, [op:u8, size:u16 LE] * count]. None for non-account_field seeds.
+    let mut field_plan_pool_offsets: Vec<Option<u16>> = Vec::with_capacity(def.seeds.len());
+    for (i, seed) in def.seeds.iter().enumerate() {
+        if seed.seed_type != "account_field" {
+            field_plan_pool_offsets.push(None);
+            continue;
+        }
+        let path = seed.field_path.as_ref().ok_or_else(|| {
+            anyhow::anyhow!("account_field seed at index {} requires fieldPath", i)
+        })?;
+        if path.len() > u8::MAX as usize {
+            anyhow::bail!("account_field seed fieldPath has too many ops ({})", path.len());
+        }
+        let pool_off = byte_pool.len() as u16;
+        field_plan_pool_offsets.push(Some(pool_off));
+        byte_pool.push(path.len() as u8);
+        for op in path {
+            let code: u8 = match op.op.as_str() {
+                "skip_fixed" => FIELD_OP_SKIP_FIXED,
+                "skip_option" => FIELD_OP_SKIP_OPTION,
+                other => anyhow::bail!("Unknown fieldPath op '{}'", other),
+            };
+            byte_pool.push(code);
+            byte_pool.extend_from_slice(&op.size.to_le_bytes());
+        }
+    }
+
     // Param name pool offsets
     let mut param_name_offsets: Vec<(u16, u16)> = Vec::new();
     for param in &def.params {
@@ -762,7 +790,7 @@ pub fn build_intent_bytes(
 
     // Seed entries
     let mut seed_l_idx = 0;
-    for seed in &def.seeds {
+    for (seed_i, seed) in def.seeds.iter().enumerate() {
         match seed.seed_type.as_str() {
             "literal" => {
                 result.push(SEED_LITERAL);
@@ -793,17 +821,17 @@ pub fn build_intent_bytes(
             "account_field" => {
                 let ai = seed.account_index
                     .ok_or_else(|| anyhow::anyhow!("account_field seed requires accountIndex"))?;
-                let off = seed.field_offset
-                    .ok_or_else(|| anyhow::anyhow!("account_field seed requires fieldOffset"))?;
                 let len = seed.field_len
                     .ok_or_else(|| anyhow::anyhow!("account_field seed requires fieldLen"))?;
                 if len == 0 || len > 32 {
                     anyhow::bail!("account_field seed fieldLen must be 1..=32, got {}", len);
                 }
+                let plan_off = field_plan_pool_offsets[seed_i]
+                    .ok_or_else(|| anyhow::anyhow!("account_field seed at {} missing plan offset", seed_i))?;
                 result.push(SEED_ACCOUNT_FIELD);
                 result.push(0); // pad
                 result.push(ai);
-                result.extend_from_slice(&off.to_le_bytes());
+                result.extend_from_slice(&plan_off.to_le_bytes());
                 result.push(len);
             }
             other => anyhow::bail!("Unknown seed type '{}'", other),

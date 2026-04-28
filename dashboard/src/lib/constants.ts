@@ -115,6 +115,10 @@ export const SEED_PARAM = 1;
 export const SEED_ACCOUNT = 2;
 export const SEED_ACCOUNT_FIELD = 3;
 
+// SEED_ACCOUNT_FIELD walk-plan op codes (mirror programs/lucid).
+export const FIELD_OP_SKIP_FIXED = 0;
+export const FIELD_OP_SKIP_OPTION = 1;
+
 // Risk levels (for display, mapped from intent metadata)
 export type RiskLevel = 'critical' | 'high' | 'medium' | 'low';
 

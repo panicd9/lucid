@@ -32,6 +32,8 @@ import {
   SEED_PARAM,
   SEED_ACCOUNT,
   SEED_ACCOUNT_FIELD,
+  FIELD_OP_SKIP_FIXED,
+  FIELD_OP_SKIP_OPTION,
   ROLE_READONLY,
   ROLE_WRITABLE,
   ROLE_READONLY_SIGNER,
@@ -168,6 +170,10 @@ async function resolveCustomAccounts(
   if (!intentInfo) throw new Error('Intent account not found');
   const rawIntent = Buffer.from(intentInfo.data);
 
+  // Cache fetched account data so a single source account referenced by
+  // multiple SEED_ACCOUNT_FIELD seeds doesn't trigger duplicate round-trips.
+  const accountDataCache = new Map<string, Buffer>();
+
   // Parse header fields — IntentHeader: wallet(32) + target_program(32) + timelock(4) + active_proposals(2) + byte_pool_len(2) + bump(1) + ...
   const ih = rawIntent.subarray(PREFIX_LEN);
   const proposerCount = ih[78];
@@ -302,13 +308,12 @@ async function resolveCustomAccounts(
               break;
             }
             case SEED_ACCOUNT_FIELD: {
-              // Read N bytes at offset from another account's data, use as seed.
               const ai = seedData[0];
-              const off = seedData[1] | (seedData[2] << 8);
-              const len = seedData[3];
-              if (len === 0 || len > 32) {
+              const planOff = seedData[1] | (seedData[2] << 8);
+              const targetLen = seedData[3];
+              if (targetLen === 0 || targetLen > 32) {
                 throw new Error(
-                  `SEED_ACCOUNT_FIELD len must be 1..=32, got ${len}`
+                  `SEED_ACCOUNT_FIELD target_len must be 1..=32, got ${targetLen}`
                 );
               }
               if (ai >= results.length) {
@@ -316,19 +321,65 @@ async function resolveCustomAccounts(
                   `SEED_ACCOUNT_FIELD account index ${ai} out of range`
                 );
               }
+
+              // Read the plan from intent's byte pool.
+              const planStart = bytePoolOffset + planOff;
+              if (planStart + 1 > rawIntent.length) {
+                throw new Error('plan_offset out of bounds');
+              }
+              const opCount = rawIntent[planStart];
+              const planBytesStart = planStart + 1;
+              if (planBytesStart + opCount * 3 > rawIntent.length) {
+                throw new Error('plan body out of bounds');
+              }
+
               const srcAddr = new PublicKey(results[ai].address);
-              const info = await connection.getAccountInfo(srcAddr);
-              if (!info) {
+              const cacheKey = srcAddr.toBase58();
+              let data = accountDataCache.get(cacheKey);
+              if (!data) {
+                const info = await connection.getAccountInfo(srcAddr);
+                if (!info) {
+                  throw new Error(
+                    `SEED_ACCOUNT_FIELD: account ${cacheKey} not found`
+                  );
+                }
+                data = info.data;
+                accountDataCache.set(cacheKey, data);
+              }
+
+              let o = 8;
+              for (let i = 0; i < opCount; i++) {
+                const p = planBytesStart + i * 3;
+                const op = rawIntent[p];
+                const size = rawIntent[p + 1] | (rawIntent[p + 2] << 8);
+                if (op === FIELD_OP_SKIP_FIXED) {
+                  o += size;
+                  if (o > data.length) {
+                    throw new Error('plan SKIP_FIXED past end of data');
+                  }
+                } else if (op === FIELD_OP_SKIP_OPTION) {
+                  if (o >= data.length) {
+                    throw new Error('plan SKIP_OPTION read past end');
+                  }
+                  const tag = data[o];
+                  o += 1;
+                  if (tag !== 0) {
+                    o += size;
+                    if (o > data.length) {
+                      throw new Error('plan SKIP_OPTION Some past end');
+                    }
+                  }
+                } else {
+                  throw new Error(`unknown plan op ${op}`);
+                }
+              }
+
+              if (o + targetLen > data.length) {
                 throw new Error(
-                  `SEED_ACCOUNT_FIELD: account ${srcAddr.toBase58()} not found`
+                  `SEED_ACCOUNT_FIELD slice [${o}, ${o + targetLen}) exceeds account data len ${data.length}`
                 );
               }
-              if (off + len > info.data.length) {
-                throw new Error(
-                  `SEED_ACCOUNT_FIELD slice [${off}, ${off + len}) exceeds account data len ${info.data.length}`
-                );
-              }
-              seeds.push(Buffer.from(info.data.subarray(off, off + len)));
+              seeds.push(Buffer.from(data.subarray(o, o + targetLen)));
               break;
             }
           }

@@ -68,9 +68,21 @@ pub struct SeedDef {
     #[serde(default)]
     pub account_index: Option<u8>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub field_offset: Option<u16>,
+    pub field_path: Option<Vec<FieldPathOp>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub field_len: Option<u8>,
+}
+
+/// One step in a SEED_ACCOUNT_FIELD walk plan. The walker starts past the
+/// Anchor discriminator (offset 8) and processes ops in order, then reads
+/// `field_len` bytes at the final offset.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FieldPathOp {
+    /// "skip_fixed" — advance offset by `size`.
+    /// "skip_option" — read 1 byte tag; advance 1; if tag != 0, advance by `size`.
+    pub op: String,
+    pub size: u16,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -116,6 +128,10 @@ pub const SEED_LITERAL: u8 = 0;
 pub const SEED_PARAM: u8 = 1;
 pub const SEED_ACCOUNT: u8 = 2;
 pub const SEED_ACCOUNT_FIELD: u8 = 3;
+
+/// SEED_ACCOUNT_FIELD walk-plan op codes (mirror programs/lucid).
+pub const FIELD_OP_SKIP_FIXED: u8 = 0;
+pub const FIELD_OP_SKIP_OPTION: u8 = 1;
 
 /// Intent type constants
 pub const INTENT_TYPE_ADD: u8 = 0;
