@@ -310,9 +310,27 @@ fn build_remaining_accounts_for_custom(
                 pda
             }
             SOURCE_HAS_ONE => {
-                // HAS_ONE references another account's data — would require an extra RPC fetch.
-                // Skip for now; if a real intent uses it, this path needs implementation.
-                continue;
+                let src_idx = source_data[0] as usize;
+                let data_off = u16::from_le_bytes([source_data[1], source_data[2]]) as usize;
+                if src_idx >= remaining.len() {
+                    anyhow::bail!(
+                        "HAS_ONE source account index {} out of range (only {} accounts resolved so far)",
+                        src_idx,
+                        remaining.len()
+                    );
+                }
+                let src_addr = remaining[src_idx].pubkey;
+                let src_data = rpc::fetch_account(client, &src_addr).with_context(|| {
+                    format!("Failed to fetch HAS_ONE source account {}", src_addr)
+                })?;
+                if data_off + 32 > src_data.len() {
+                    anyhow::bail!(
+                        "HAS_ONE data offset {} + 32 exceeds source account length {}",
+                        data_off,
+                        src_data.len()
+                    );
+                }
+                Pubkey::from(<[u8; 32]>::try_from(&src_data[data_off..data_off + 32])?)
             }
             _ => continue,
         };
