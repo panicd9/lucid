@@ -1,4 +1,4 @@
-# Lucid — Intent-Based Multisig for Solana
+# Lucid — Human-readable multisig
 
 Signers read what they approve on their hardware wallet. Not a wrapper. The multisig.
 

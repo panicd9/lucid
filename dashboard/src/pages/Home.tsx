@@ -27,7 +27,7 @@ export default function Home() {
       <p className="text-lg text-neutral-200 mb-2 font-medium">See what you sign. On your Ledger.</p>
       <p className="text-sm text-neutral-500 max-w-md text-center mb-4">
         The multisig where hardware wallets display human-readable actions
-        instead of hex. Auto-generated rulesets verified against program source.
+        instead of hex. Auto-generated rulesets verified against program.
       </p>
 
       {/* CTAs */}
