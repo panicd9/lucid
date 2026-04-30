@@ -28,3 +28,6 @@ demo/wallets/
 demo/intents/
 
 .claude/
+
+# Superstack working artifacts (build/review context, security reports)
+.superstack/
