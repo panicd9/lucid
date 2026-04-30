@@ -1,0 +1,35 @@
+{
+  "name": "lucid-marketing-video",
+  "version": "1.0.0",
+  "description": "Lucid pitch + Twitter teaser videos (Remotion)",
+  "private": true,
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion render MainPitch out/main-pitch.mp4 --crf 18 --color-space bt709",
+    "build:twitter": "remotion render TwitterTeaser out/twitter-teaser.mp4 --crf 18 --color-space bt709",
+    "build:draft": "remotion render MainPitch out/main-pitch-draft.mp4 --crf 23",
+    "build:all": "npm run build && npm run build:twitter",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.454",
+    "@remotion/cli": "4.0.454",
+    "@remotion/captions": "4.0.454",
+    "@remotion/google-fonts": "4.0.454",
+    "@remotion/light-leaks": "4.0.454",
+    "@remotion/media-utils": "4.0.454",
+    "@remotion/noise": "4.0.454",
+    "@remotion/transitions": "4.0.454",
+    "@remotion/shapes": "4.0.454",
+    "@remotion/paths": "4.0.454",
+    "lucide-react": "^0.460.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.454"
+  },
+  "devDependencies": {
+    "@types/react": "19.0.0",
+    "@types/web": "0.0.166",
+    "typescript": "5.7.2"
+  }
+}

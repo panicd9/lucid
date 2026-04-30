@@ -89,15 +89,15 @@
 
 <div class="card section-copy" id="description">
 
-<p><strong>The problem.</strong> Nobody knows what they sign on Solana. The $280M Drift exploit (April 2026) proved it — state actors social-engineered multisig signers into approving transactions they couldn't read. The hardware wallet showed raw hex. The compromised UI said "routine config update." The transaction said "change admin authority to attacker." Every existing verification tool runs on the same compromised machine that can lie to the signer. The one trusted device — the Ledger — still shows meaningless bytes.</p>
+<p><strong>The problem.</strong> Multisig signers approve transactions they cannot read. <strong>$2 billion stolen in 18 months across four multisig hacks</strong>: Bybit ($1.46B, Feb 2025) — Lazarus pushed malicious JS into Safe's frontend, signers' Ledgers blind-signed a <code>delegatecall</code> the UI hid as a 30,000 ETH transfer. Drift ($285M, Apr 2026) — DPRK social-engineered Squads multisig signers into pre-signing durable-nonce governance transactions they couldn't fully verify on hardware. WazirX ($235M, Jul 2024) — Liminal-managed Safe UI displayed one transaction; signers approved another that swapped the implementation for a malicious contract. Radiant ($50M, Oct 2024) — malware showed a routine config change while hardware wallets signed <code>transferOwnership</code> on the lending pool. Every hack used hardware wallets. Every hack, the wallet couldn't read what was signed. Every hack, trust fell back to a UI that lied.</p>
 
-<p><strong>What Lucid does.</strong> A multisig where signers approve human-readable intents via <code>signMessage</code>, not opaque transactions via <code>signTransaction</code>. The Ledger displays the actual action in plain text: <code>approve add market 5 with oracle 9abc...def | wallet: drift-governance proposal: 42</code>. Protocols define their governance ruleset as verified intents auto-generated from their program's IDL — each intent specifies the exact CPI, parameters, and human-readable template. Proposers and approvers sign what they read, on their trusted device.</p>
+<p><strong>What Lucid does.</strong> A multisig where signers approve human-readable intents via <code>signMessage</code>, not opaque transactions via <code>signTransaction</code>. The Ledger displays the actual action in plain text: <code>approve add market 5 with oracle 9abc...def | wallet: drift-governance proposal: 42</code>. Protocols define their governance ruleset as verified intents auto-generated from their program's IDL — each intent specifies the exact CPI, parameters, and human-readable template. Proposers and approvers sign what they read, on the device itself, outside any compromised host.</p>
 
-<p><strong>Why Solana.</strong> Lucid exploits Solana's ed25519 precompile for on-chain signature verification of off-chain messages. The program reconstructs the human-readable message from stored intent definitions and proposal parameters, then verifies the signer's ed25519 signature against it — if the transaction was tampered with, the reconstructed message won't match and the signature fails. This is only possible because Solana exposes the ed25519 precompile as a native program.</p>
+<p><strong>Why Solana.</strong> Lucid exploits Solana's ed25519 precompile for on-chain signature verification of off-chain messages. The program reconstructs the human-readable message from stored intent definitions and proposal parameters, then verifies the signer's ed25519 signature against it — if anything is tampered between proposal and signing, the reconstructed message won't match the signature, and the program rejects the CPI. Sub-cent verification cost. This is only possible because Solana exposes the ed25519 precompile as a native program.</p>
 
-<p><strong>Technical execution.</strong> 3,500 LOC Pinocchio on-chain program with zero-copy accounts, 11 instructions, and a byte-pool pattern for variable-length intent data. TypeScript SDK with a two-tier verification engine: Tier 1 matches known programs by discriminator, Tier 2 performs structural validation against Anchor IDLs. Full React dashboard with Ledger WebHID signing, wallet creation, proposal tracking, timelock countdowns, and an interactive demo. 121 tests across Rust (LiteSVM with precompile support), SDK (vitest), and dashboard.</p>
+<p><strong>Technical execution.</strong> ~6,000 LOC Pinocchio on-chain program (not Anchor) with zero-copy accounts, 11 instructions, and a byte-pool pattern for variable-length intent data. TypeScript SDK with a two-tier verification engine: Tier 1 matches known programs by discriminator, Tier 2 performs structural validation against Anchor IDLs. Full React dashboard with direct Ledger WebHID signing (no wallet-adapter middlemen), wallet creation, proposal tracking, timelock countdowns, and an interactive demo. <strong>217 tests passing</strong> across Rust (LiteSVM with precompile support), CLI, SDK (vitest), and dashboard.</p>
 
-<p><strong>What's next.</strong> Mainnet deployment, integration with one live protocol (targeting governance admin keys), and a signMessage fallback for mobile wallets that can't use Ledger. Intent template hashing on-chain (SHA256 of the intent JSON stored in the account header) is designed but not yet implemented — it would let verifiers confirm intent authenticity without trusting the frontend.</p>
+<p><strong>What's next.</strong> Devnet deployment, integration with one live protocol (targeting governance admin keys), and a signMessage fallback for mobile wallets that can't use Ledger. Intent template hashing on-chain (SHA256 of the intent JSON stored in the account header) is designed but not yet implemented — it would let verifiers confirm intent authenticity without trusting the frontend.</p>
 
 </div>
 
@@ -106,54 +106,59 @@
 <!-- ═══════════════════════════════════════════════ -->
 
 <div class="stat-grid">
-  <div class="stat"><div class="stat-num">17K+</div><div class="stat-label">Lines of Code</div></div>
-  <div class="stat"><div class="stat-num">121</div><div class="stat-label">Tests</div></div>
+  <div class="stat"><div class="stat-num">22K+</div><div class="stat-label">Lines of Code</div></div>
+  <div class="stat"><div class="stat-num">217</div><div class="stat-label">Tests Passing</div></div>
   <div class="stat"><div class="stat-num">11</div><div class="stat-label">Instructions</div></div>
-  <div class="stat"><div class="stat-num">154</div><div class="stat-label">Source Files</div></div>
+  <div class="stat"><div class="stat-num">4</div><div class="stat-label">Surfaces Shipped</div></div>
 </div>
 
 <table>
   <tr><th>Component</th><th>Language</th><th>LOC</th><th>Tests</th></tr>
-  <tr><td>On-chain program</td><td>Rust (Pinocchio)</td><td>3,539</td><td>35</td></tr>
-  <tr><td>CLI</td><td>Rust</td><td>4,271</td><td>10</td></tr>
-  <tr><td>SDK</td><td>TypeScript</td><td>2,506</td><td>64</td></tr>
-  <tr><td>Dashboard</td><td>React + Tailwind</td><td>7,013</td><td>22</td></tr>
+  <tr><td>On-chain program</td><td>Rust (Pinocchio)</td><td>5,986</td><td>35</td></tr>
+  <tr><td>CLI</td><td>Rust</td><td>6,338</td><td>91</td></tr>
+  <tr><td>SDK</td><td>TypeScript</td><td>2,966</td><td>69</td></tr>
+  <tr><td>Dashboard</td><td>React + Tailwind</td><td>7,186</td><td>22</td></tr>
 </table>
 
 <!-- ═══════════════════════════════════════════════ -->
-<h2>3. Demo Video Script (2:50)</h2>
+<h2>3. Pitch Video Script (3:00)</h2>
 <!-- ═══════════════════════════════════════════════ -->
 
 <div class="card">
 
-<h3>0:00–0:20 — Hook</h3>
-<p>"In April 2026, North Korean state actors drained $280 million from Drift. The multisig signers approved the transaction. They had no idea what they signed — because their Ledger showed hex. This is what every multisig signer on Solana sees today."</p>
-<p><em>[Show the before panel from the dashboard — raw hex on a Ledger screen]</em></p>
+<h3>0:00–0:15 — Hook (the problem)</h3>
+<p>"Every multisig on Solana today — Squads, Realms, all of them — sends a transaction the hardware wallet can't read. The Ledger throws a 'blind signing' warning and asks you to accept the risk anyway. So signers fall back to trusting the multisig UI. When that UI is compromised, the hardware wallet you bought as your trust anchor offers zero protection."</p>
+<p><em>[Show problem slide from deck — blind-signing screenshot with hex hash]</em></p>
 
-<h3>0:20–0:40 — Solution</h3>
-<p>"Lucid is a multisig where signers read what they approve — in plain text, on their hardware wallet. Not on a screen that can lie. On the device that can't."</p>
-<p><em>[Show the after panel — human-readable message on Ledger: "approve add market 5 with oracle 9abc...def"]</em></p>
+<h3>0:15–0:45 — The stakes ($2B)</h3>
+<p>"Two billion dollars stolen in eighteen months across four multisig hacks. <strong>Bybit</strong>, February 2025 — $1.46 billion, the largest crypto theft in history. Lazarus pushed malicious JS into Safe's frontend; signers' Ledgers blind-signed a delegatecall the UI hid as a 30,000 ETH transfer. <strong>Drift</strong>, April 2026 — $285 million, the largest Solana DeFi protocol hack ever. <strong>WazirX</strong>, July 2024 — $235 million from India's largest exchange. <strong>Radiant</strong>, October 2024 — $50 million. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. The pattern doesn't change until the wallet itself can read the transaction."</p>
+<p><em>[Show stakes slide — 4-card grid with the hacks]</em></p>
 
-<h3>0:40–2:10 — Live Demo (90 seconds)</h3>
-<p><em>[Dashboard on localhost with local validator running]</em></p>
+<h3>0:45–1:00 — The solution</h3>
+<p>"Lucid uses signMessage instead of signTransaction. The hardware wallet renders the action in plain English, on the device itself — outside any compromised host. The on-chain program reconstructs the expected message from state and verifies the ed25519 signature; if anything was tampered, the signature won't match. Sub-cent cost."</p>
+<p><em>[Show solution slide — 3-card grid: intent definitions, plain-English signing, on-chain verify]</em></p>
+
+<h3>1:00–1:40 — Same device, different display (the proof)</h3>
+<p>"These are real recordings. Same Ledger device, same multisig flow."</p>
+<p><em>[Cut to side-by-side videos: <code>blind-signing.mp4</code> vs <code>lucid-signing.mp4</code>]</em></p>
+<p>"On the left — every multisig today. The device shows a 'blind signing' warning, asks you to override its safety check, then displays a message hash and a fee payer. You can't tell what you're signing. On the right — Lucid. The device shows the actual action in plain English. Trust moves back to the hardware wallet, where it belonged."</p>
+
+<h3>1:40–2:20 — Live demo (40 seconds)</h3>
+<p><em>[Dashboard on localhost with local validator]</em></p>
 <ul>
-  <li><strong>0:40</strong> — Show the home page. "This is the Lucid dashboard." Click "Try the Demo" to walk through the 5-step attack scenario.</li>
-  <li><strong>1:00</strong> — Navigate to the demo treasury wallet. Show the Ruleset page — intents with risk badges, approval thresholds, timelocks.</li>
-  <li><strong>1:10</strong> — Open the crowdfunding "withdraw" intent. "Each intent has a human-readable template, parameter constraints, and risk classification."</li>
-  <li><strong>1:20</strong> — Click "Propose." Fill in parameters. Show the message preview — this is what the Ledger will display. Click "Sign with Ledger."</li>
-  <li><strong>1:35</strong> — <em>[Cut to Ledger device]</em> The Ledger shows the human-readable message. Approve on device. Transaction sent.</li>
-  <li><strong>1:45</strong> — Switch to Proposals page. Show the proposal with approval progress. Click "Approve" with a second signer. Threshold reached.</li>
-  <li><strong>1:55</strong> — Timelock clears. Click "Execute." CPI fires from the vault PDA. Show the Solscan link — transaction confirmed.</li>
-  <li><strong>2:05</strong> — Navigate to Audit Log. All transactions visible with action types, timestamps, signatures.</li>
+  <li><strong>1:40</strong> — Open the demo treasury wallet. Ruleset page — intents with risk badges, thresholds, timelocks.</li>
+  <li><strong>1:50</strong> — Click "Propose" on a withdraw intent. Show the message preview: this is what the Ledger will display.</li>
+  <li><strong>2:00</strong> — Sign with Ledger. <em>[Cut to device]</em> Human-readable message on screen. Approve.</li>
+  <li><strong>2:10</strong> — Second signer approves. Threshold reached. Timelock clears. Click "Execute" — CPI fires. Audit log captures it.</li>
 </ul>
 
-<h3>2:10–2:40 — Technical Highlight (30 seconds)</h3>
-<p>"Under the hood: the program stores intent definitions as byte pools — variable-length account data with offset/length pairs. When a signer approves, the program reconstructs the human-readable message from the stored intent template and proposal parameters, then verifies the ed25519 signature via the precompile. If anything was tampered with — different accounts, different parameters, different instruction — the reconstructed message won't match the signature, and the CPI is rejected."</p>
-<p><em>[Show the architecture diagram from README for 5 seconds]</em></p>
+<h3>2:20–2:45 — What we built</h3>
+<p>"Complete system, not a hackathon prototype. Pinocchio for performance — not Anchor. Two-tier verification engine: Tier 1 matches known program discriminators, Tier 2 does structural matching against Anchor IDLs. <strong>217 tests</strong> across the stack. ~22,000 lines of code across program, CLI, SDK, and dashboard. Direct Ledger WebHID signing with no wallet-adapter middlemen."</p>
+<p><em>[Show "what we built" slide — 4 metrics + stack/features cards]</em></p>
 
-<h3>2:40–2:50 — Close</h3>
-<p>"Lucid. See what you sign. Built for Colosseum Frontier."</p>
-<p><em>[Show GitHub URL + program ID]</em></p>
+<h3>2:45–3:00 — Close</h3>
+<p>"Lucid. Read what you sign. Built for Colosseum Frontier."</p>
+<p><em>[Show closing slide — title + author + program ID]</em></p>
 
 </div>
 
@@ -183,10 +188,10 @@
 
 <h3>1:50–2:20 — Test Suite</h3>
 <p><em>[Terminal: run <code>bash test.sh</code> — show 11/11 passing]</em></p>
-<p>"121 tests across the stack. Rust integration tests use LiteSVM with precompile support — the tests sign actual ed25519 messages and verify them on-chain. SDK vitest covers intent generation, verification, and message envelope construction."</p>
+<p>"217 tests across the stack. Rust integration tests use LiteSVM with precompile support — the tests sign actual ed25519 messages and verify them on-chain. SDK vitest covers intent generation, verification, and message envelope construction."</p>
 
 <h3>2:20–2:30 — Close</h3>
-<p>"17,000 lines of code, 121 tests, built in 2 weeks. Lucid — the multisig where you see what you sign."</p>
+<p>"~22,000 lines of code, 217 tests, four surfaces shipped. Lucid — read what you sign."</p>
 
 </div>
 
@@ -196,16 +201,18 @@
 
 <ul class="checklist">
   <li><div class="check done">&#10003;</div> <strong>On-chain program</strong> — 11 instructions, zero-copy Pinocchio, compiles to SBF</li>
-  <li><div class="check done">&#10003;</div> <strong>Full test suite</strong> — 121 tests, 11/11 checks pass (bash test.sh)</li>
-  <li><div class="check done">&#10003;</div> <strong>Dashboard</strong> — Wallet creation, ruleset browser, proposals, Ledger signing, audit log, interactive demo</li>
-  <li><div class="check done">&#10003;</div> <strong>SDK</strong> — Intent generation, 2-tier verification, signing envelopes</li>
+  <li><div class="check done">&#10003;</div> <strong>Full test suite</strong> — 217 tests, 11/11 checks pass (bash test.sh)</li>
+  <li><div class="check done">&#10003;</div> <strong>Dashboard</strong> — Wallet creation, ruleset browser, proposals, direct Ledger WebHID signing, audit log, interactive demo</li>
+  <li><div class="check done">&#10003;</div> <strong>SDK</strong> — Intent generation, two-tier verification, signing envelopes</li>
   <li><div class="check done">&#10003;</div> <strong>CLI</strong> — Wallet management, intent generation, verification, demo flow</li>
   <li><div class="check done">&#10003;</div> <strong>README</strong> — Architecture, quick start, demo instructions</li>
   <li><div class="check done">&#10003;</div> <strong>Demo script</strong> — E2E flow with crowdfunding protocol + tamper detection</li>
+  <li><div class="check done">&#10003;</div> <strong>Pitch deck</strong> — 8-slide deck with embedded before/after Ledger recordings</li>
+  <li><div class="check done">&#10003;</div> <strong>Before/after recordings</strong> — Real Ledger device videos (blind-signing.mp4, lucid-signing.mp4)</li>
   <li><div class="check todo" style="border-color: var(--amber);">!</div> <strong>GitHub repo</strong> — Push to public repository</li>
   <li><div class="check todo" style="border-color: var(--amber);">!</div> <strong>Devnet deployment</strong> — Deploy program to devnet</li>
-  <li><div class="check todo" style="border-color: var(--amber);">!</div> <strong>Pitch video</strong> — Record 2:50 pitch video (script above)</li>
-  <li><div class="check todo" style="border-color: var(--amber);">!</div> <strong>Technical demo video</strong> — Record 2:30 technical walkthrough (script above)</li>
+  <li><div class="check todo" style="border-color: var(--amber);">!</div> <strong>Pitch video</strong> — Record 3:00 pitch video (script in Section 3)</li>
+  <li><div class="check todo" style="border-color: var(--amber);">!</div> <strong>Technical demo video</strong> — Record 2:30 technical walkthrough (script in Section 4)</li>
   <li><div class="check todo" style="border-color: var(--amber);">!</div> <strong>Dashboard hosted</strong> — Deploy dashboard to Vercel/Netlify for judges to try</li>
 </ul>
 
@@ -264,21 +271,31 @@ npx netlify deploy --prod --dir=dashboard/dist</code></pre>
 
 <h3>Why this should score high</h3>
 
-<p><strong>Functionality (30%):</strong> Working end-to-end. Wallet creation, intent registration, propose/approve/cancel/execute cycle with Ledger hardware signing. 121 tests passing. Interactive demo walkthrough. Judges can run <code>bash demo/run.sh</code> and see the full flow in 2 minutes.</p>
+<p><strong>Functionality (30%):</strong> Working end-to-end. Wallet creation, intent registration, propose/approve/cancel/execute cycle with direct Ledger WebHID signing. <strong>217 tests passing</strong>. Interactive demo walkthrough. Judges can run <code>bash demo/run.sh</code> and see the full flow including tamper detection in 2 minutes.</p>
 
-<p><strong>Innovation (25%):</strong> Novel primitive — no existing multisig uses <code>signMessage</code> for human-readable approval on hardware wallets. The ed25519 precompile verification of off-chain messages against on-chain state reconstruction is new. Auto-generated intents from IDLs with 2-tier verification is new. Closest comparable (Squads) uses <code>signTransaction</code> — signers see hex.</p>
+<p><strong>Innovation (25%):</strong> Novel primitive — no existing multisig uses <code>signMessage</code> for human-readable approval on hardware wallets. The ed25519 precompile verification of off-chain messages against on-chain state reconstruction is new. Auto-generated intents from IDLs with two-tier verification is new. Closest comparables — Squads and Realms — both use <code>signTransaction</code>, so signers must enable blind-signing on Ledger and see only hex.</p>
 
-<p><strong>Technical Execution (20%):</strong> Pinocchio (not Anchor) for zero-copy performance. Byte-pool pattern for variable-length on-chain data. LiteSVM integration tests with real ed25519 signatures. Clean separation: program / SDK / CLI / dashboard. 17K LOC, all tested.</p>
+<p><strong>Technical Execution (20%):</strong> Pinocchio (not Anchor) for zero-copy performance. Byte-pool pattern for variable-length on-chain data. LiteSVM integration tests with real ed25519 signatures verified on-chain. Direct Ledger WebHID — no wallet-adapter middlemen. Clean four-surface separation: program / CLI / SDK / dashboard. ~22K LOC, all tested.</p>
 
-<p><strong>Potential Impact (15%):</strong> Every protocol with admin keys is a target. Drift ($280M), Wormhole ($320M), Mango ($116M) — all were multisig signing failures. Lucid eliminates the attack vector at the hardware level. Public good: the signing primitive is open and protocol-agnostic.</p>
+<p><strong>Potential Impact (15%):</strong> $2B stolen in 18 months across four multisig hacks — Bybit ($1.46B), Drift ($285M), WazirX ($235M), Radiant ($50M). Every one used hardware wallets that couldn't read the transaction. Lucid eliminates the attack vector at the hardware level. Public good: the signing primitive is open and protocol-agnostic. Any program with admin keys can adopt it from the IDL.</p>
 
-<p><strong>Presentation (10%):</strong> Direct, technical, no fluff. Architecture diagram in README. Demo script with tamper detection. Dashboard is polished with animations, error handling, explorer links.</p>
+<p><strong>Presentation (10%):</strong> Direct, technical, no fluff. Architecture diagram in README. Real before/after Ledger recordings (<code>blind-signing.mp4</code>, <code>lucid-signing.mp4</code>) demonstrating the primitive on the device itself. Demo script with tamper detection. Dashboard is polished with animations, error handling, explorer links.</p>
+
+<h3>Comparison vs incumbents</h3>
+<table>
+  <tr><th></th><th>Squads</th><th>Realms</th><th style="color: var(--emerald);">Lucid</th></tr>
+  <tr><td>Multisig governance</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+  <tr><td>Time-locked execution</td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+  <tr><td>Hardware wallet support</td><td>&#10003; <span style="color: var(--muted); font-size: 0.75em;">(blind-signing required)</span></td><td>&#10003;</td><td>&#10003;</td></tr>
+  <tr><td><strong>Human-readable on device</strong></td><td style="color: var(--red);">&#10007;</td><td style="color: var(--red);">&#10007;</td><td style="color: var(--emerald);">&#10003;</td></tr>
+  <tr><td><strong>On-chain tamper detection</strong></td><td style="color: var(--red);">&#10007;</td><td style="color: var(--red);">&#10007;</td><td style="color: var(--emerald);">&#10003;</td></tr>
+</table>
 
 <h3>Positioning against winner patterns</h3>
 <ul>
   <li><strong>Infrastructure play:</strong> Like Bunkr (Grizzlython security winner) and Unruggable (Cypherpunk grand champion), Lucid is a security primitive. Grand champions are infrastructure.</li>
   <li><strong>Novel primitive:</strong> Like Ore (novel PoW on Solana), Lucid introduces something that didn't exist: human-readable hardware wallet signing for multisigs.</li>
-  <li><strong>Real attack prevention:</strong> Unlike theoretical security tools, Lucid addresses a specific $280M exploit with a concrete countermeasure.</li>
+  <li><strong>Real attack prevention:</strong> Unlike theoretical security tools, Lucid addresses a specific $2B pattern (Bybit, Drift, WazirX, Radiant) with a concrete countermeasure verifiable on the hardware wallet itself.</li>
 </ul>
 
 </div>
@@ -293,13 +310,13 @@ npx netlify deploy --prod --dir=dashboard/dist</code></pre>
 <p>Lucid</p>
 
 <h3>Tagline</h3>
-<p>Human-readable multisig.</p>
+<p>Human-readable multisig. Read what you sign.</p>
 
 <h3>One-liner</h3>
-<p>Lucid eliminates blind signing on Solana by making hardware wallets display human-readable governance actions instead of hex, verified on-chain via ed25519 precompile.</p>
+<p>$2B has been stolen in 18 months because multisig signers can't read what their hardware wallet signs. Lucid is the multisig where they can — plain English, on the device itself, verified on-chain via Solana's ed25519 precompile.</p>
 
 <h3>Categories</h3>
-<p>DeFi Infrastructure, Security, Public Good, Developer Tooling</p>
+<p>DeFi Infrastructure, Security, Public Good</p>
 
 <h3>Program ID</h3>
 <p><code>LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR</code></p>
@@ -308,7 +325,7 @@ npx netlify deploy --prod --dir=dashboard/dist</code></pre>
 <p>Pinocchio (on-chain), Rust CLI, TypeScript SDK, React + Tailwind + @solana/kit (dashboard), Ledger WebHID, LiteSVM (testing)</p>
 
 <h3>Team</h3>
-<p>Darko Panic — solo builder</p>
+<p><strong>Darko Panic</strong> — Senior Blockchain Engineer (Rust / Solana). Solo builder. Currently shipping €85M+ in tokenized real estate on Solana — 233 properties, 5 countries, ~1,400 investors. Email: <a href="mailto:darko@campfire.money">darko@campfire.money</a>.</p>
 
 </div>
 
