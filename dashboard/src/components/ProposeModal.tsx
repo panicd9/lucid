@@ -14,7 +14,7 @@ import {
 import { PublicKey, Connection } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { buildEd25519Instruction, buildProposeInstruction } from '../lib/instructions';
-import { buildMessageBody, buildOffchainEnvelope, formatExpiry } from '../lib/message';
+import { buildMessageBody, formatExpiry } from '../lib/message';
 import { encodeParamsData, renderTemplate, normalizeDecimal, resolveDecimals } from '../lib/params';
 import {
   RPC_ENDPOINTS,
@@ -210,16 +210,16 @@ export default function ProposeModal({
         proposalIndex,
         expiryStr
       );
-      const envelope = buildOffchainEnvelope(body);
+      const bodyBytes = new TextEncoder().encode(body);
 
-      const result = await signWithLedger(envelope, account.address);
+      const result = await signWithLedger(bodyBytes, account.address);
 
       // Fetch blockhash after signing — signing can take time and blockhash would go stale
       setStatus('sending');
       const rpc = createSolanaRpc(RPC_ENDPOINTS[network]);
       const { value: blockhash } = await rpc.getLatestBlockhash().send();
 
-      const ed25519Ix = buildEd25519Instruction(result.signature, result.publicKey, result.v0Envelope);
+      const ed25519Ix = buildEd25519Instruction(result.signature, result.publicKey, result.envelope);
 
       const [intentPda] = findIntentPDA(walletPk, intent.intentIndex);
       const [proposalPda] = findProposalPDA(intentPda, proposalIndex);

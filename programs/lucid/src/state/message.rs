@@ -4,16 +4,28 @@ use crate::state::accounts::*;
 use crate::state::byte_pool::*;
 use crate::state::constants::*;
 
-/// Build the full offchain message bytes for a proposal action.
+/// Maximum body length the on-chain reader assembles. Sized to the largest
+/// realistic Ledger-displayable body; messages above this fail at copy_to.
+pub const MAX_BODY_LEN: usize = 450;
+
+/// Build the canonical body bytes for a proposal action into the caller's buffer.
 ///
-/// Format:
-/// \xffsolana offchain + version(0) + format(0=ASCII) + length(u16 LE)
-/// + body: "{action} {rendered_template} | wallet: {name} ({base58_pda}); proposal: #{index}; expires: {timestamp}"
+/// Body format:
+///   "{action} {rendered_template} | wallet: {name} ({base58_pda}); proposal: #{index}; expires: {timestamp}"
 ///
-/// `wallet_pda` is included so signatures don't replay across two wallets that
-/// happen to share a name — the PDA is the cryptographic identity of the wallet
-/// that the signer is authorizing an action on.
+/// Returns the number of bytes written. The caller compares
+/// `body[..bytes_written]` byte-for-byte against the body extracted from the
+/// inbound envelope.
+///
+/// Takes the buffer by mutable reference so we don't memcpy a 450-byte array
+/// across the return in propose/approve/cancel — those ix paths run on every
+/// signature verification.
+///
+/// `wallet_pda` in the body prevents cross-wallet signature replay between
+/// wallets sharing a name — the PDA is the cryptographic identity of the
+/// wallet whose action the signer is authorizing.
 pub fn build_message(
+    body: &mut [u8; MAX_BODY_LEN],
     expiry_str: &[u8],
     action: &[u8],
     wallet_name: &[u8],
@@ -22,73 +34,30 @@ pub fn build_message(
     intent: &IntentHeader,
     intent_data: &[u8],
     params_data: &[u8],
-) -> Result<([u8; 512], usize), ProgramError> {
-    let mut buf = [0u8; 512];
-    let mut pos = 0;
-
-    // Build body first so we know the length
-    let mut body = [0u8; 450];
+) -> Result<usize, ProgramError> {
     let mut bpos = 0;
 
-    // action ("propose", "approve", "cancel")
-    copy_to(&mut body, &mut bpos, action)?;
+    copy_to(body, &mut bpos, action)?;
+    copy_to(body, &mut bpos, b" ")?;
 
-    // " "
-    copy_to(&mut body, &mut bpos, b" ")?;
+    render_template_into(body, &mut bpos, intent, intent_data, params_data, intent.intent_type)?;
 
-    // Render template with params
-    render_template_into(&mut body, &mut bpos, intent, intent_data, params_data, intent.intent_type)?;
-
-    // " | wallet: "
-    copy_to(&mut body, &mut bpos, b" | wallet: ")?;
-
-    // wallet name + " (" + base58 PDA + ")"
-    copy_to(&mut body, &mut bpos, wallet_name)?;
-    copy_to(&mut body, &mut bpos, b" (")?;
+    copy_to(body, &mut bpos, b" | wallet: ")?;
+    copy_to(body, &mut bpos, wallet_name)?;
+    copy_to(body, &mut bpos, b" (")?;
     let pda_b58 = base58_encode(wallet_pda);
-    copy_to(&mut body, &mut bpos, &pda_b58.0[..pda_b58.1])?;
-    copy_to(&mut body, &mut bpos, b")")?;
-    copy_to(&mut body, &mut bpos, b"; ")?;
+    copy_to(body, &mut bpos, &pda_b58.0[..pda_b58.1])?;
+    copy_to(body, &mut bpos, b")")?;
+    copy_to(body, &mut bpos, b"; ")?;
 
-    // "proposal: #"
-    copy_to(&mut body, &mut bpos, b"proposal: #")?;
-
-    // proposal index as decimal string
+    copy_to(body, &mut bpos, b"proposal: #")?;
     let idx_str = u64_to_decimal(proposal_index);
-    copy_to(&mut body, &mut bpos, &idx_str.0[..idx_str.1])?;
+    copy_to(body, &mut bpos, &idx_str.0[..idx_str.1])?;
 
-    // "; expires: "
-    copy_to(&mut body, &mut bpos, b"; expires: ")?;
+    copy_to(body, &mut bpos, b"; expires: ")?;
+    copy_to(body, &mut bpos, expiry_str)?;
 
-    // timestamp
-    copy_to(&mut body, &mut bpos, expiry_str)?;
-
-    // Now build the full message with offchain header
-    // \xffsolana offchain (16 bytes)
-    copy_to(&mut buf, &mut pos, OFFCHAIN_HEADER_PREFIX)?;
-
-    // version: 0
-    buf[pos] = 0;
-    pos += 1;
-
-    // format: 0 (ASCII)
-    buf[pos] = 0;
-    pos += 1;
-
-    // length: u16 LE
-    let body_len = bpos as u16;
-    buf[pos] = body_len as u8;
-    buf[pos + 1] = (body_len >> 8) as u8;
-    pos += 2;
-
-    // body
-    if pos + bpos > buf.len() {
-        return Err(ProgramError::InvalidInstructionData);
-    }
-    buf[pos..pos + bpos].copy_from_slice(&body[..bpos]);
-    pos += bpos;
-
-    Ok((buf, pos))
+    Ok(bpos)
 }
 
 /// Render the intent template with parameter substitution.

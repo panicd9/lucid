@@ -209,19 +209,16 @@ pub fn extract_and_verify_ed25519_for_propose(
     let proposer_index = find_in_proposers(intent_data, intent, &ed25519_ix.pubkey)?;
 
     let message = &ed25519_ix.message[..ed25519_ix.message_len];
-    let body = extract_message_body(message)?;
+    let body = extract_message_body(message, &ed25519_ix.pubkey)?;
     let expiry_str = validate_expiry(body, &clock)?;
 
-    let (expected, expected_len) = build_message(
-        expiry_str, b"propose", wallet_name, wallet_pda,
+    let mut expected = [0u8; MAX_BODY_LEN];
+    let expected_len = build_message(
+        &mut expected, expiry_str, b"propose", wallet_name, wallet_pda,
         proposal_index, intent, intent_data, params_data,
     )?;
 
-    // Compare body only — the Ed25519 precompile already verified the signature
-    // over the full envelope, so we only need to confirm the body content matches.
-    // This supports both legacy (20-byte header) and V0 (85-byte header) envelopes.
-    let expected_body = &expected[OFFCHAIN_HEADER_LEN_LEGACY..expected_len];
-    if expected_body != body {
+    if &expected[..expected_len] != body {
         return Err(ProgramError::Custom(ERR_MESSAGE_MISMATCH));
     }
 
@@ -244,43 +241,79 @@ pub fn extract_and_verify_ed25519(
     let approver_index = find_in_approvers(intent_data, intent, &ed25519_ix.pubkey)?;
 
     let message = &ed25519_ix.message[..ed25519_ix.message_len];
-    let body = extract_message_body(message)?;
+    let body = extract_message_body(message, &ed25519_ix.pubkey)?;
     let expiry_str = validate_expiry(body, &clock)?;
 
     let params = read_params_data(proposal_data, proposal)?;
 
-    let (expected, expected_len) = build_message(
-        expiry_str, action, wallet_name, wallet_pda,
+    let mut expected = [0u8; MAX_BODY_LEN];
+    let expected_len = build_message(
+        &mut expected, expiry_str, action, wallet_name, wallet_pda,
         proposal.proposal_index, intent, intent_data, params,
     )?;
 
-    let expected_body = &expected[OFFCHAIN_HEADER_LEN_LEGACY..expected_len];
-    if expected_body != body {
+    if &expected[..expected_len] != body {
         return Err(ProgramError::Custom(ERR_MESSAGE_MISMATCH));
     }
 
     Ok((ed25519_ix.pubkey, approver_index))
 }
 
-/// Extract body from an offchain message, supporting both legacy (20-byte header)
-/// and V0 (85-byte header with appDomain + signer pubkey) envelope formats.
-fn extract_message_body(message: &[u8]) -> Result<&[u8], ProgramError> {
-    if message.len() < OFFCHAIN_HEADER_LEN_LEGACY {
+/// Extract body from a Solana offchain message envelope. Accepts both
+/// sRFC 38 v1 (single-signer) and V0 (the format the released Ledger Solana
+/// app currently emits).
+///
+/// Validates:
+///   - prefix is "\xffsolana offchain"
+///   - version is 0 or 1
+///   - numSigners is exactly 1 (Lucid does not accept multi-signer envelopes)
+///   - the embedded signer pubkey matches the precompile-verified signer
+///
+/// Binding the envelope's embedded pubkey to the precompile-verified pubkey
+/// closes a malleability gap where someone could sign their own envelope but
+/// claim authorship attached to a different wallet's authorization scope.
+fn extract_message_body<'a>(message: &'a [u8], precompile_pubkey: &[u8; 32]) -> Result<&'a [u8], ProgramError> {
+    if message.len() < 17 {
         return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
     }
     if &message[..16] != OFFCHAIN_HEADER_PREFIX {
         return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
     }
 
-    // Detect V0: numSigners byte must be 0x01 (in legacy messages this offset is
-    // body text — printable ASCII, always > 0x1F — so this can never false-positive),
-    // and body length at V0 offset must be consistent with total message length.
-    if message.len() >= OFFCHAIN_HEADER_LEN_V0 && message[V0_NUM_SIGNERS_OFFSET] == 0x01 {
-        let v0_body_len = u16::from_le_bytes([message[V0_BODY_LEN_OFFSET], message[V0_BODY_LEN_OFFSET + 1]]) as usize;
-        if v0_body_len + OFFCHAIN_HEADER_LEN_V0 == message.len() {
-            return Ok(&message[OFFCHAIN_HEADER_LEN_V0..]);
-        }
+    match message[OFFCHAIN_VERSION_OFFSET] {
+        OFFCHAIN_VERSION_V1 => parse_v1(message, precompile_pubkey),
+        OFFCHAIN_VERSION_V0 => parse_v0(message, precompile_pubkey),
+        _ => Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER)),
     }
+}
 
-    Ok(&message[OFFCHAIN_HEADER_LEN_LEGACY..])
+fn parse_v1<'a>(message: &'a [u8], precompile_pubkey: &[u8; 32]) -> Result<&'a [u8], ProgramError> {
+    if message.len() < OFFCHAIN_HEADER_LEN_V1 {
+        return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
+    }
+    if message[V1_NUM_SIGNERS_OFFSET] != 0x01 {
+        return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
+    }
+    if &message[V1_SIGNERS_OFFSET..V1_SIGNERS_OFFSET + 32] != precompile_pubkey {
+        return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
+    }
+    Ok(&message[OFFCHAIN_HEADER_LEN_V1..])
+}
+
+fn parse_v0<'a>(message: &'a [u8], precompile_pubkey: &[u8; 32]) -> Result<&'a [u8], ProgramError> {
+    if message.len() < OFFCHAIN_HEADER_LEN_V0 {
+        return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
+    }
+    if message[V0_NUM_SIGNERS_OFFSET] != 0x01 {
+        return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
+    }
+    if &message[V0_SIGNERS_OFFSET..V0_SIGNERS_OFFSET + 32] != precompile_pubkey {
+        return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
+    }
+    // body length at V0_BODY_LEN_OFFSET (u16 LE), body starts at OFFCHAIN_HEADER_LEN_V0
+    let body_len = u16::from_le_bytes([message[V0_BODY_LEN_OFFSET], message[V0_BODY_LEN_OFFSET + 1]]) as usize;
+    if body_len + OFFCHAIN_HEADER_LEN_V0 != message.len() {
+        return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
+    }
+    Ok(&message[OFFCHAIN_HEADER_LEN_V0..])
 }

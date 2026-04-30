@@ -355,7 +355,7 @@ fn test_proposal_raw_byte_offsets() {
     // Build propose transaction (ed25519 precompile + propose ix)
     let params_data = vec![42u8; 8];
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", "test", "prop-off", &ws.wallet.to_string(), 0);
+    let message = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", "test", "prop-off", &ws.wallet.to_string(), 0);
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
     let propose_ix = instructions::propose(

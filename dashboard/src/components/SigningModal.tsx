@@ -12,7 +12,7 @@ import {
 } from '@solana/kit';
 import bs58 from 'bs58';
 import { buildEd25519Instruction, buildApproveInstruction, buildCancelInstruction, type LucidInstruction } from '../lib/instructions';
-import { buildMessageBody, buildOffchainEnvelope, formatExpiry } from '../lib/message';
+import { buildMessageBody, buildV0Envelope, formatExpiry } from '../lib/message';
 import { decodeParamsData, renderTemplate } from '../lib/params';
 import { RPC_ENDPOINTS } from '../lib/constants';
 import { CHAIN_MAP } from '../App';
@@ -88,21 +88,22 @@ export default function SigningModal({
       setErrorMsg('');
       setRecoveryMsg('');
 
-      const envelope = buildOffchainEnvelope(messageBody);
+      const bodyBytes = new TextEncoder().encode(messageBody);
 
       let sigBytes: Uint8Array;
       let pubkeyBytes: Uint8Array;
       let envelopeForIx: Uint8Array;
 
       if (method === 'ledger') {
-        const result = await signWithLedger(envelope, account.address);
+        const result = await signWithLedger(bodyBytes, account.address);
         sigBytes = result.signature;
         pubkeyBytes = result.publicKey;
-        envelopeForIx = result.v0Envelope;
+        envelopeForIx = result.envelope;
       } else {
+        pubkeyBytes = new Uint8Array(bs58.decode(account.address));
+        const envelope = buildV0Envelope(bodyBytes, pubkeyBytes);
         const { signature } = await signMessage({ message: envelope });
         sigBytes = new Uint8Array(signature);
-        pubkeyBytes = new Uint8Array(bs58.decode(account.address));
         envelopeForIx = envelope;
       }
 

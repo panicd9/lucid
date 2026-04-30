@@ -214,6 +214,7 @@ fn test_propose() {
 
     let expiry = ed25519::future_expiry();
     let message = ed25519::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), proposal_index,
     );
 
@@ -258,7 +259,7 @@ fn test_approve_reaches_threshold() {
 
     // Propose
     let expiry = ed25519::future_expiry();
-    let msg = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let result = setup::send_tx(
         &mut svm,
@@ -275,7 +276,7 @@ fn test_approve_reaches_threshold() {
     let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
 
     // Approve with approver 0
-    let msg = ed25519::build_offchain_message(&expiry, "approve", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.approvers[0].pubkey().to_bytes(), &expiry, "approve", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk0 = ed25519::keypair_to_signing_key(&ws.approvers[0]);
     let result = setup::send_tx(
         &mut svm,
@@ -293,12 +294,13 @@ fn test_approve_reaches_threshold() {
     assert_eq!(prop.status, helpers::STATUS_ACTIVE);
     assert_eq!(prop.approval_bitmap, 1); // bit 0 set
 
-    // Approve with approver 1
+    // Each signer needs their own envelope — the embedded pubkey must match the signer.
+    let msg1 = ed25519::build_offchain_message(&ws.approvers[1].pubkey().to_bytes(), &expiry, "approve", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk1 = ed25519::keypair_to_signing_key(&ws.approvers[1]);
     let result = setup::send_tx(
         &mut svm,
         &[
-            ed25519::create_ed25519_instruction(&sk1, &msg),
+            ed25519::create_ed25519_instruction(&sk1, &msg1),
             instructions::approve(&ws.wallet, &intent_pda, &proposal_pda),
         ],
         &ws.payer,
@@ -329,7 +331,7 @@ fn test_cancel_proposal() {
 
     // Propose
     let expiry = ed25519::future_expiry();
-    let msg = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let result = setup::send_tx(
         &mut svm,
@@ -346,7 +348,7 @@ fn test_cancel_proposal() {
     let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
 
     // Cancel with approver 0 (cancellation_threshold=1, so one cancel is enough)
-    let msg = ed25519::build_offchain_message(&expiry, "cancel", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.approvers[0].pubkey().to_bytes(), &expiry, "cancel", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk0 = ed25519::keypair_to_signing_key(&ws.approvers[0]);
     let result = setup::send_tx(
         &mut svm,
@@ -378,7 +380,7 @@ fn test_propose_with_named_template() {
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
 
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let message = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
 
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
@@ -406,7 +408,7 @@ fn test_approve_with_named_template() {
     let expiry = ed25519::future_expiry();
 
     // Propose
-    let msg = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let result = setup::send_tx(
         &mut svm,
@@ -423,7 +425,7 @@ fn test_approve_with_named_template() {
     let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
 
     // Approve with approver 0
-    let msg = ed25519::build_offchain_message(&expiry, "approve", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.approvers[0].pubkey().to_bytes(), &expiry, "approve", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk0 = ed25519::keypair_to_signing_key(&ws.approvers[0]);
     let result = setup::send_tx(
         &mut svm,
@@ -449,7 +451,7 @@ fn test_cancel_with_named_template() {
     let expiry = ed25519::future_expiry();
 
     // Propose
-    let msg = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let result = setup::send_tx(
         &mut svm,
@@ -466,7 +468,7 @@ fn test_cancel_with_named_template() {
     let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
 
     // Cancel with approver 0 (cancellation_threshold=1)
-    let msg = ed25519::build_offchain_message(&expiry, "cancel", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.approvers[0].pubkey().to_bytes(), &expiry, "cancel", &rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk0 = ed25519::keypair_to_signing_key(&ws.approvers[0]);
     let result = setup::send_tx(
         &mut svm,
@@ -502,7 +504,7 @@ fn test_propose_display_decimals_whole() {
 
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let message = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
 
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
@@ -528,7 +530,7 @@ fn test_propose_display_decimals_fractional() {
 
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let message = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
 
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
@@ -554,7 +556,7 @@ fn test_propose_display_decimals_small_amount() {
 
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let message = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
 
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
@@ -611,7 +613,7 @@ fn test_propose_dynamic_decimals_6() {
 
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let message = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
 
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
@@ -635,7 +637,7 @@ fn test_propose_dynamic_decimals_9() {
 
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let message = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
 
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
@@ -659,7 +661,7 @@ fn test_propose_dynamic_decimals_0() {
 
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let message = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", &rendered, wallet_name, &ws.wallet.to_string(), 0);
 
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);

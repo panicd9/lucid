@@ -1,10 +1,11 @@
 /**
  * Direct Ledger communication via WebHID.
  *
- * The Ledger Solana app v1.12+ requires the V0 off-chain message format
- * (with appDomain + signer pubkey), not the legacy format. The old
- * @ledgerhq/hw-app-solana library only sends legacy format, so we build
- * the V0 envelope and send the APDU ourselves.
+ * The on-chain Lucid reader accepts both V0 and sRFC 38 v1 envelopes, but the
+ * released Ledger Solana app (v1.12.x) only signs V0 — v1 support exists on
+ * the Ledger develop branch but hasn't shipped yet. We build V0 envelopes
+ * here and send the raw APDU; flip to buildV1Envelope once Ledger releases
+ * v1 support.
  *
  * IMPORTANT: TransportWebHID.create() must be called in a user-gesture
  * context (e.g. a click handler).
@@ -13,7 +14,7 @@ import TransportWebHID from '@ledgerhq/hw-transport-webhid';
 import type Transport from '@ledgerhq/hw-transport';
 import Solana from '@ledgerhq/hw-app-solana';
 import bs58 from 'bs58';
-import { OFFCHAIN_HEADER_LEN_LEGACY, buildV0Envelope } from './message';
+import { buildV0Envelope } from './message';
 
 /** Map Ledger status codes to user-friendly messages. */
 function friendlyLedgerError(err: unknown): Error {
@@ -107,9 +108,9 @@ async function openTransport(): Promise<TransportWebHID> {
 }
 
 export async function signWithLedger(
-  legacyEnvelope: Uint8Array,
+  body: Uint8Array,
   expectedAddress: string
-): Promise<{ signature: Uint8Array; publicKey: Uint8Array; v0Envelope: Uint8Array }> {
+): Promise<{ signature: Uint8Array; publicKey: Uint8Array; envelope: Uint8Array }> {
   let transport: TransportWebHID | null = null;
   try {
     transport = await openTransport();
@@ -140,15 +141,13 @@ export async function signWithLedger(
       );
     }
 
-    const body = legacyEnvelope.slice(OFFCHAIN_HEADER_LEN_LEGACY);
-
-    const v0Envelope = buildV0Envelope(body, pubkeyBytes);
+    const envelope = buildV0Envelope(body, pubkeyBytes);
 
     const pathBuf = buildPathBuffer(matchedPath);
     const numSigners = Buffer.from([1]);
-    const payload = Buffer.concat([numSigners, pathBuf, Buffer.from(v0Envelope)]);
+    const payload = Buffer.concat([numSigners, pathBuf, Buffer.from(envelope)]);
 
-    console.log('[Ledger] V0 envelope:', v0Envelope.length, 'bytes | APDU payload:', payload.length, 'bytes');
+    console.log('[Ledger] V0 envelope:', envelope.length, 'bytes | APDU payload:', payload.length, 'bytes');
     console.log('[Ledger] Path:', matchedPath, '| Body:', body.length, 'bytes');
 
     const response = await sendChunked(transport, INS_SIGN_OFFCHAIN, P1_CONFIRM, payload);
@@ -166,7 +165,7 @@ export async function signWithLedger(
     return {
       signature: new Uint8Array(signature),
       publicKey: pubkeyBytes,
-      v0Envelope,
+      envelope,
     };
   } catch (err) {
     throw friendlyLedgerError(err);

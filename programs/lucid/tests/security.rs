@@ -34,7 +34,7 @@ fn test_add_intent_rejected_after_first_proposal() {
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = ed25519::future_expiry();
     let rendered = "test action";
-    let msg = ed25519::build_offchain_message(&expiry, "propose", rendered, wallet_name, &ws.wallet.to_string(), 0);
+    let msg = ed25519::build_offchain_message(&ws.proposers[0].pubkey().to_bytes(), &expiry, "propose", rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk = ed25519::keypair_to_signing_key(&ws.proposers[0]);
 
     let result = setup::send_tx(

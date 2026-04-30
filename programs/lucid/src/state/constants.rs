@@ -94,17 +94,53 @@ pub const INSTRUCTIONS_SYSVAR_ID: [u8; 32] = [
     0xdb, 0xba, 0xcb, 0x5f, 0x08, 0x00, 0x00, 0x00,
 ];
 
-/// Solana offchain message header
-/// \xffsolana offchain (16) + version u8 (0) + format u8 (0 = ASCII) + length u16 LE
+/// Solana offchain message header.
+///
+/// The on-chain reader accepts BOTH formats:
+///
+///   sRFC 38 v1 (Anza, Dec 2025) — single-signer, 50-byte header:
+///     0..16  : "\xffsolana offchain"
+///     16     : version = 0x01
+///     17     : numSigners = 0x01
+///     18..50 : signer pubkey (32 bytes)
+///     50..end: UTF-8 body (no length prefix)
+///
+///   V0 (pre-SRFC, currently shipped by Ledger Solana app v1.12.x):
+///     0..16  : "\xffsolana offchain"
+///     16     : version = 0x00
+///     17..49 : application domain (32 bytes)
+///     49     : format = 0x00 (ASCII)
+///     50     : numSigners = 0x01
+///     51..83 : signer pubkey (32 bytes)
+///     83..85 : body length (u16 LE)
+///     85..end: body
+///
+/// Lucid emits v1 from the test helper and CLI, V0 from the dashboard until
+/// the Ledger Solana app ships sRFC 38 v1 support.
 pub const OFFCHAIN_HEADER_PREFIX: &[u8] = b"\xffsolana offchain";
-pub const OFFCHAIN_HEADER_LEN_LEGACY: usize = 20; // 16 prefix + 1 version + 1 format + 2 length
-/// V0 offchain message header (85 bytes)
-/// 16 prefix + 1 version + 32 appDomain + 1 format + 1 numSigners + 32 signerPubkey + 2 length
+/// Both V0 and v1 place the version byte right after the 16-byte prefix.
+pub const OFFCHAIN_VERSION_OFFSET: usize = 16;
+
+/// V1 (sRFC 38)
+pub const OFFCHAIN_VERSION_V1: u8 = 0x01;
+pub const OFFCHAIN_HEADER_LEN_V1: usize = 50;
+pub const V1_NUM_SIGNERS_OFFSET: usize = 17;
+pub const V1_SIGNERS_OFFSET: usize = 18;
+
+/// V0 (legacy, pre-SRFC)
+pub const OFFCHAIN_VERSION_V0: u8 = 0x00;
 pub const OFFCHAIN_HEADER_LEN_V0: usize = 85;
-/// V0 numSigners field offset: 16 prefix + 1 version + 32 appDomain + 1 format = 50
 pub const V0_NUM_SIGNERS_OFFSET: usize = 50;
-/// V0 body length field offset: 50 + 1 numSigners + 32 signerPubkey = 83
+pub const V0_SIGNERS_OFFSET: usize = 51;
 pub const V0_BODY_LEN_OFFSET: usize = 83;
+
+/// V0 application domain (32 bytes whose base58 reads "Luc1dMu1t1s1g111...111").
+/// The on-chain reader does not validate this field, but the dashboard +
+/// test-helper builders must agree byte-for-byte or signed envelopes diverge.
+pub const V0_APP_DOMAIN: [u8; 32] = [
+    0x05, 0x19, 0x83, 0xb5, 0xba, 0xd3, 0x97, 0x02, 0x71, 0x2c, 0x2d, 0xef, 0x47, 0xbf, 0x2c, 0xdc,
+    0x4c, 0x48, 0xfd, 0x4e, 0x1f, 0xd3, 0xf7, 0x56, 0x9d, 0x37, 0x78, 0x79, 0xc0, 0x00, 0x00, 0x00,
+];
 
 /// Event tag (Anchor-compatible)
 pub const EVENT_IX_TAG: u64 = 0x1d9acb512ea545e4;

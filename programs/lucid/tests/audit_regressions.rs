@@ -44,6 +44,7 @@ fn test_ed25519_cross_reference_rejected() {
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = edh::future_expiry();
     let msg = edh::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", "hello", wallet_name, &ws.wallet.to_string(), 0,
     );
     let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
@@ -193,6 +194,7 @@ fn execute_meta_remove_with_target(
     let remove_template_rendered = format!("remove intent #{}", target_index);
     let expiry = edh::future_expiry();
     let propose_msg = edh::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", &remove_template_rendered, wallet_name,
         &ws.wallet.to_string(), 0,
     );
@@ -217,6 +219,7 @@ fn execute_meta_remove_with_target(
     // 2) Approve to threshold (approval_threshold = 1 in this setup).
     let (proposal_pda, _) = pda::find_proposal_pda(&ws.intents[1], 0, &pid);
     let approve_msg = edh::build_offchain_message(
+        &ws.approvers[0].pubkey().to_bytes(),
         &expiry, "approve", &remove_template_rendered, wallet_name,
         &ws.wallet.to_string(), 0,
     );
@@ -281,6 +284,7 @@ fn test_meta_update_cross_wallet_rejected() {
     let rendered = format!("update intent #{}: <bytes>", target_index);
     let expiry = edh::future_expiry();
     let propose_msg = edh::build_offchain_message(
+        &a.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", &rendered, wallet_name, &a.wallet.to_string(), 0,
     );
     // The rendered template for the update meta-intent depends on
@@ -360,6 +364,7 @@ fn test_decimals_overflow_rejected_at_propose() {
     // would have produced so the test actively fails if the fix is removed.
     let rendered = "transfer (overflow) SOL";
     let msg = edh::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", rendered, wallet_name, &ws.wallet.to_string(), 0,
     );
     let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
@@ -431,6 +436,7 @@ fn test_decimals_param_non_u8_rejected_at_propose() {
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = edh::future_expiry();
     let msg = edh::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", "transfer ? hi", wallet_name, &ws.wallet.to_string(), 0,
     );
     let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
@@ -526,6 +532,7 @@ fn test_deactivate_intent_post_setup_rejected() {
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = edh::future_expiry();
     let propose_msg = edh::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", "x", wallet_name, &ws.wallet.to_string(), 0,
     );
     let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
@@ -617,6 +624,7 @@ fn test_source_has_one_account_substitution_rejected() {
 
     // Propose against the HAS_ONE intent. Body = "propose test cpi | wallet:..."
     let propose_msg = edh::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", "test cpi", wallet_name, &ws.wallet.to_string(), 0,
     );
     let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
@@ -633,6 +641,7 @@ fn test_source_has_one_account_substitution_rejected() {
     // Approve to threshold (=1).
     let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
     let approve_msg = edh::build_offchain_message(
+        &ws.approvers[0].pubkey().to_bytes(),
         &expiry, "approve", "test cpi", wallet_name, &ws.wallet.to_string(), 0,
     );
     let sk_approver = edh::keypair_to_signing_key(&ws.approvers[0]);
@@ -764,6 +773,7 @@ fn test_cross_wallet_replay_rejected() {
     // intent_b proposal #0. The propose body uses wallet B's PDA.
     let expiry = edh::future_expiry();
     let propose_msg_b = edh::build_offchain_message(
+        &b.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", "action", wallet_name, &b.wallet.to_string(), 0,
     );
     let sk_proposer = edh::keypair_to_signing_key(&b.proposers[0]);
@@ -782,6 +792,7 @@ fn test_cross_wallet_replay_rejected() {
     // Approver signs an approve message intended for wallet A's proposal #0
     // (their actual wallet). The body contains wallet A's PDA.
     let approve_msg_a = edh::build_offchain_message(
+        &a.approvers[0].pubkey().to_bytes(),
         &expiry, "approve", "action", wallet_name, &a.wallet.to_string(), 0,
     );
     let sk_approver = edh::keypair_to_signing_key(&a.approvers[0]);
@@ -835,6 +846,7 @@ fn test_freeze_wallet_post_setup_rejected() {
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = edh::future_expiry();
     let msg = edh::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", "x", wallet_name, &ws.wallet.to_string(), 0,
     );
     let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
@@ -902,6 +914,7 @@ fn test_timelock_not_reset_by_cancel_reapprove() {
 
     // Propose
     let propose_msg = edh::build_offchain_message(
+        &ws.proposers[0].pubkey().to_bytes(),
         &expiry, "propose", "x", wallet_name, &ws.wallet.to_string(), 0,
     );
     let propose_sk = edh::keypair_to_signing_key(&ws.proposers[0]);
@@ -917,6 +930,7 @@ fn test_timelock_not_reset_by_cancel_reapprove() {
 
     // First approve — establishes approved_at = T0.
     let approve_msg = edh::build_offchain_message(
+        &ws.approvers[0].pubkey().to_bytes(),
         &expiry, "approve", "x", wallet_name, &ws.wallet.to_string(), 0,
     );
     let approve_sk = edh::keypair_to_signing_key(&ws.approvers[0]);
@@ -935,6 +949,7 @@ fn test_timelock_not_reset_by_cancel_reapprove() {
 
     // Cancel — clears the approve bit, reverts status to ACTIVE.
     let cancel_msg = edh::build_offchain_message(
+        &ws.approvers[0].pubkey().to_bytes(),
         &expiry, "cancel", "x", wallet_name, &ws.wallet.to_string(), 0,
     );
     setup::send_tx(
@@ -1031,5 +1046,329 @@ fn test_oversized_ed25519_message_rejected() {
     assert!(
         result.is_err(),
         "load_ed25519_data must reject message_data_size > 512"
+    );
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// V0 envelope acceptance (Ledger compatibility)
+// ────────────────────────────────────────────────────────────────────────
+//
+// The on-chain reader accepts both sRFC 38 v1 and the older V0 envelope
+// because the released Ledger Solana app (v1.12.x) still emits V0. The rest
+// of the test suite exercises v1; this test exercises V0 end-to-end so
+// changes to `parse_v0` don't silently break the dashboard's Ledger flow.
+#[test]
+fn test_v0_envelope_accepted() {
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"v0-env", 1, 1, 1, 1, 0);
+
+    // Add a minimal custom intent (template "x" so the rendered body is just "x").
+    let mut builder = IntentDataBuilder::new();
+    builder.intent_type = helpers::INTENT_TYPE_CUSTOM;
+    builder.approval_threshold = 1;
+    builder.cancellation_threshold = 1;
+    builder.template = b"x".to_vec();
+    builder.proposers.push(ws.proposers[0].pubkey().to_bytes());
+    builder.approvers.push(ws.approvers[0].pubkey().to_bytes());
+    let ix = instructions::add_intent(&ws.wallet, 3, &builder.build(), &ws.approvers[0].pubkey());
+    setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]).unwrap();
+
+    let pid = helpers::program_id();
+    let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 3, &pid);
+    let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = edh::future_expiry();
+
+    // Propose with a V0 envelope.
+    let propose_msg = edh::build_offchain_message_v0(
+        &ws.proposers[0].pubkey().to_bytes(),
+        &expiry, "propose", "x", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    let propose_sk = edh::keypair_to_signing_key(&ws.proposers[0]);
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&propose_sk, &propose_msg),
+            instructions::propose(&ws.wallet, &intent_pda, 0, &[], &ws.payer.pubkey()),
+        ],
+        &ws.payer, &[&ws.payer],
+    )
+    .expect("propose with V0 envelope must succeed");
+
+    // Approve with a V0 envelope.
+    let approve_msg = edh::build_offchain_message_v0(
+        &ws.approvers[0].pubkey().to_bytes(),
+        &expiry, "approve", "x", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    let approve_sk = edh::keypair_to_signing_key(&ws.approvers[0]);
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&approve_sk, &approve_msg),
+            instructions::approve(&ws.wallet, &intent_pda, &proposal_pda),
+        ],
+        &ws.payer, &[&ws.payer],
+    )
+    .expect("approve with V0 envelope must succeed");
+
+    let prop = setup::read_proposal(&svm, &proposal_pda);
+    assert_eq!(prop.status, helpers::STATUS_APPROVED);
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// V0 envelope: signer-pubkey binding enforced
+// ────────────────────────────────────────────────────────────────────────
+//
+// Even via the V0 path, the embedded signer pubkey must match the
+// precompile-verified signer. Otherwise an attacker who learns a victim's
+// V0 signature could repackage it under their own pubkey to forge approval.
+#[test]
+fn test_v0_envelope_signer_binding_enforced() {
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"v0-bind", 1, 1, 1, 1, 0);
+
+    // Forge a V0 envelope claiming a victim pubkey but sign it with the
+    // attacker's key. The on-chain reader must reject the mismatch.
+    let victim_pubkey = ws.proposers[0].pubkey().to_bytes();
+    let attacker_sk = edh::keypair_to_signing_key(&Keypair::new());
+    let expiry = edh::future_expiry();
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let forged_msg = edh::build_offchain_message_v0(
+        &victim_pubkey,
+        &expiry, "propose", "x", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    let bad_precompile_ix = edh::create_ed25519_instruction(&attacker_sk, &forged_msg);
+
+    let propose_ix = instructions::propose(
+        &ws.wallet, &ws.intents[0], 0, &[], &ws.payer.pubkey(),
+    );
+    let result = setup::send_tx(
+        &mut svm, &[bad_precompile_ix, propose_ix], &ws.payer, &[&ws.payer],
+    );
+    assert!(
+        result.is_err(),
+        "V0 envelope with mismatched embedded signer pubkey must be rejected"
+    );
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// V1 envelope: signer-pubkey binding enforced
+// ────────────────────────────────────────────────────────────────────────
+//
+// Same threat as test_v0_envelope_signer_binding_enforced, against parse_v1.
+#[test]
+fn test_v1_envelope_signer_binding_enforced() {
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"v1-bind", 1, 1, 1, 1, 0);
+
+    let victim_pubkey = ws.proposers[0].pubkey().to_bytes();
+    let attacker_sk = edh::keypair_to_signing_key(&Keypair::new());
+    let expiry = edh::future_expiry();
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let forged_msg = edh::build_offchain_message(
+        &victim_pubkey,
+        &expiry, "propose", "x", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    let bad_precompile_ix = edh::create_ed25519_instruction(&attacker_sk, &forged_msg);
+
+    let propose_ix = instructions::propose(
+        &ws.wallet, &ws.intents[0], 0, &[], &ws.payer.pubkey(),
+    );
+    let result = setup::send_tx(
+        &mut svm, &[bad_precompile_ix, propose_ix], &ws.payer, &[&ws.payer],
+    );
+    assert!(
+        result.is_err(),
+        "v1 envelope with mismatched embedded signer pubkey must be rejected"
+    );
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// V0 envelope: cross-wallet replay rejected
+// ────────────────────────────────────────────────────────────────────────
+//
+// Mirrors test_cross_wallet_replay_rejected for the V0 path. The wallet PDA
+// in the body must prevent a V0-signed approval from one wallet replaying on
+// a sibling wallet that shares a name.
+#[test]
+fn test_v0_cross_wallet_replay_rejected() {
+    let mut svm = setup::new_svm();
+    let (a, b) = create_two_wallets_with_shared_approver(&mut svm, b"v0-twin");
+
+    // Add an identical custom intent on both wallets.
+    let proposer_pk = a.proposers[0].pubkey().to_bytes();
+    let approver_pk = a.approvers[0].pubkey().to_bytes();
+    let mk_intent = || {
+        let mut builder = IntentDataBuilder::new();
+        builder.intent_type = helpers::INTENT_TYPE_CUSTOM;
+        builder.approval_threshold = 1;
+        builder.cancellation_threshold = 1;
+        builder.template = b"action".to_vec();
+        builder.proposers.push(proposer_pk);
+        builder.approvers.push(approver_pk);
+        builder.build()
+    };
+    setup::send_tx(
+        &mut svm,
+        &[instructions::add_intent(&a.wallet, 3, &mk_intent(), &a.approvers[0].pubkey())],
+        &a.approvers[0], &[&a.approvers[0]],
+    ).unwrap();
+    setup::send_tx(
+        &mut svm,
+        &[instructions::add_intent(&b.wallet, 3, &mk_intent(), &b.approvers[0].pubkey())],
+        &b.approvers[0], &[&b.approvers[0]],
+    ).unwrap();
+
+    let pid = helpers::program_id();
+    let (intent_a, _) = pda::find_intent_pda(&a.wallet, 3, &pid);
+    let (intent_b, _) = pda::find_intent_pda(&b.wallet, 3, &pid);
+    let wallet_name = std::str::from_utf8(&a.name).unwrap(); // same as B's
+    let expiry = edh::future_expiry();
+
+    // Propose on wallet B (V0) so a proposal exists at intent_b proposal #0.
+    let propose_msg_b = edh::build_offchain_message_v0(
+        &b.proposers[0].pubkey().to_bytes(),
+        &expiry, "propose", "action", wallet_name, &b.wallet.to_string(), 0,
+    );
+    let sk_proposer = edh::keypair_to_signing_key(&b.proposers[0]);
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&sk_proposer, &propose_msg_b),
+            instructions::propose(&b.wallet, &intent_b, 0, &[], &b.payer.pubkey()),
+        ],
+        &b.payer, &[&b.payer],
+    ).unwrap();
+
+    let (proposal_b, _) = pda::find_proposal_pda(&intent_b, 0, &pid);
+
+    // Approver signs an approve message intended for wallet A (V0 envelope, A's PDA in body).
+    let approve_msg_a = edh::build_offchain_message_v0(
+        &a.approvers[0].pubkey().to_bytes(),
+        &expiry, "approve", "action", wallet_name, &a.wallet.to_string(), 0,
+    );
+    let sk_approver = edh::keypair_to_signing_key(&a.approvers[0]);
+
+    // Attacker submits the A-bound V0 envelope to wallet B's approve. The
+    // on-chain rebuild substitutes B's PDA into the expected body, breaking
+    // the byte match — ed25519 verify returns ERR_MESSAGE_MISMATCH.
+    let res = setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&sk_approver, &approve_msg_a),
+            instructions::approve(&b.wallet, &intent_b, &proposal_b),
+        ],
+        &b.payer, &[&b.payer],
+    );
+    assert!(
+        res.is_err(),
+        "V0 cross-wallet replay must be rejected by wallet-PDA-in-body"
+    );
+    let _ = intent_a;
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Unknown envelope version byte rejected
+// ────────────────────────────────────────────────────────────────────────
+//
+// extract_message_body's match arms cover only V0 (=0) and v1 (=1). Any other
+// version byte must hit the catch-all and reject. Guards against a future
+// refactor accidentally widening acceptance.
+#[test]
+fn test_unknown_envelope_version_rejected() {
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"v-bad", 1, 1, 1, 1, 0);
+
+    // Build a "v1-shaped" envelope but stamp version=2.
+    let signer_pubkey = ws.proposers[0].pubkey().to_bytes();
+    let body = b"propose anything";
+    let mut msg = Vec::with_capacity(50 + body.len());
+    msg.extend_from_slice(b"\xffsolana offchain"); // 16
+    msg.push(0x02); // ← unknown version
+    msg.push(0x01);
+    msg.extend_from_slice(&signer_pubkey);
+    msg.extend_from_slice(body);
+
+    let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
+    let precompile_ix = edh::create_ed25519_instruction(&sk, &msg);
+    let propose_ix = instructions::propose(
+        &ws.wallet, &ws.intents[0], 0, &[], &ws.payer.pubkey(),
+    );
+    let res = setup::send_tx(
+        &mut svm, &[precompile_ix, propose_ix], &ws.payer, &[&ws.payer],
+    );
+    assert!(res.is_err(), "Envelope with version byte 2 must be rejected");
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// V1 numSigners ≠ 1 rejected
+// ────────────────────────────────────────────────────────────────────────
+//
+// parse_v1 requires numSigners == 1. Tries 0, 2, 0xff and asserts each
+// is rejected before any body comparison.
+#[test]
+fn test_v1_num_signers_not_one_rejected() {
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"v1-cnt", 1, 1, 1, 1, 0);
+    let signer_pubkey = ws.proposers[0].pubkey().to_bytes();
+    let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
+
+    for &bad_count in &[0u8, 2u8, 0xffu8] {
+        let body = b"propose anything";
+        let mut msg = Vec::with_capacity(50 + body.len());
+        msg.extend_from_slice(b"\xffsolana offchain"); // 16
+        msg.push(0x01); // version = 1
+        msg.push(bad_count); // ← invalid numSigners
+        msg.extend_from_slice(&signer_pubkey);
+        msg.extend_from_slice(body);
+
+        let precompile_ix = edh::create_ed25519_instruction(&sk, &msg);
+        let propose_ix = instructions::propose(
+            &ws.wallet, &ws.intents[0], 0, &[], &ws.payer.pubkey(),
+        );
+        let res = setup::send_tx(
+            &mut svm, &[precompile_ix, propose_ix], &ws.payer, &[&ws.payer],
+        );
+        assert!(
+            res.is_err(),
+            "v1 envelope with numSigners={} must be rejected",
+            bad_count
+        );
+        svm.expire_blockhash();
+    }
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Empty-body envelope rejected
+// ────────────────────────────────────────────────────────────────────────
+//
+// An envelope of exactly 50 bytes (v1 header + 0-byte body) parses
+// structurally but should fail at expiry parsing or body comparison —
+// confirming no out-of-bounds read sneaks through on a zero-length body.
+#[test]
+fn test_empty_body_envelope_rejected() {
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"v1-emp", 1, 1, 1, 1, 0);
+    let signer_pubkey = ws.proposers[0].pubkey().to_bytes();
+    let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
+
+    let mut msg = Vec::with_capacity(50);
+    msg.extend_from_slice(b"\xffsolana offchain");
+    msg.push(0x01); // version
+    msg.push(0x01); // numSigners
+    msg.extend_from_slice(&signer_pubkey);
+    // No body bytes.
+    assert_eq!(msg.len(), 50);
+
+    let precompile_ix = edh::create_ed25519_instruction(&sk, &msg);
+    let propose_ix = instructions::propose(
+        &ws.wallet, &ws.intents[0], 0, &[], &ws.payer.pubkey(),
+    );
+    let res = setup::send_tx(
+        &mut svm, &[precompile_ix, propose_ix], &ws.payer, &[&ws.payer],
+    );
+    assert!(
+        res.is_err(),
+        "Envelope with empty body must be rejected (no panic, just error)"
     );
 }

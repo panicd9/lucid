@@ -1,17 +1,23 @@
 /**
- * Off-chain message building for Lucid.
+ * Off-chain message building for Lucid — sRFC 38 v1 (Anza, Dec 2025).
  *
- * Must produce byte-for-byte identical output to the on-chain build_message()
- * in programs/lucid/src/state/message.rs.
+ * Body format (must produce byte-for-byte identical output to on-chain
+ * build_message in programs/lucid/src/state/message.rs):
  *
- * Body format:
  *   {action} {rendered_template} | wallet: {name} ({pda_b58}); proposal: #{index}; expires: {DD Mon YYYY HH:MM:SS}
  *
  * The wallet PDA in base58 prevents cross-wallet signature replay between two
  * wallets that share a name.
  *
- * Envelope:
- *   \xffsolana offchain (16 bytes) + version(0) + format(0) + body_len(u16 LE) + body
+ * sRFC 38 v1 envelope (single-signer, 50-byte header):
+ *   0..16  : "\xffsolana offchain"
+ *   16     : version = 0x01
+ *   17     : numSigners = 0x01
+ *   18..50 : signer pubkey (32 bytes)
+ *   50..end: UTF-8 body (no length prefix, trailing variable-length)
+ *
+ * The envelope-embedded signer pubkey provides a complementary binding to the
+ * wallet-PDA-in-body for defense-in-depth replay protection.
  */
 
 const MONTHS = [
@@ -31,85 +37,75 @@ export function buildMessageBody(
   return `${action} ${rendered} | wallet: ${walletName} (${walletPdaB58}); proposal: #${proposalIndex}; expires: ${expiryStr}`;
 }
 
-/** Legacy offchain envelope header: prefix(16) + version(1) + format(1) + length(2) */
-export const OFFCHAIN_HEADER_LEN_LEGACY = 20;
-/** V0 offchain envelope header: prefix(16) + version(1) + appDomain(32) + format(1) + numSigners(1) + pubkey(32) + length(2) */
+/** sRFC 38 v1 single-signer envelope: prefix(16) + version(1) + numSigners(1) + pubkey(32) = 50 bytes. */
+export const OFFCHAIN_HEADER_LEN_V1 = 50;
+/** V0 envelope: prefix(16) + version(0) + appDomain(32) + format(1) + numSigners(1) + pubkey(32) + length(2) = 85 bytes. */
 export const OFFCHAIN_HEADER_LEN_V0 = 85;
 
-/**
- * Wrap a message body in the Solana off-chain message envelope.
- *
- * Layout:
- *   0xFF + "solana offchain" (15 bytes) = 16 bytes prefix
- *   version: 0x00
- *   format:  0x00 (ASCII)
- *   length:  u16 LE (body byte length)
- *   body:    ASCII bytes
- */
-export function buildOffchainEnvelope(body: string): Uint8Array {
-  const bodyBytes = new TextEncoder().encode(body);
-  const headerLen = OFFCHAIN_HEADER_LEN_LEGACY;
-  const buf = new Uint8Array(headerLen + bodyBytes.length);
+/** Module-level constants — encoded once, reused across every envelope build. */
+const PREFIX_BYTES = new TextEncoder().encode('solana offchain'); // 15 bytes
+/** 32-byte appDomain whose base58 reads "Luc1dMu1t1s1g111...111". */
+const V0_APP_DOMAIN = new Uint8Array([
+  0x05, 0x19, 0x83, 0xb5, 0xba, 0xd3, 0x97, 0x02, 0x71, 0x2c, 0x2d, 0xef, 0x47, 0xbf, 0x2c, 0xdc,
+  0x4c, 0x48, 0xfd, 0x4e, 0x1f, 0xd3, 0xf7, 0x56, 0x9d, 0x37, 0x78, 0x79, 0xc0, 0x00, 0x00, 0x00,
+]);
 
-  // \xffsolana offchain (16 bytes)
+/** Write the 16-byte "\xffsolana offchain" prefix to `buf` at offset 0. */
+function writePrefix(buf: Uint8Array): void {
   buf[0] = 0xff;
-  const prefix = new TextEncoder().encode('solana offchain');
-  buf.set(prefix, 1); // 15 bytes
+  buf.set(PREFIX_BYTES, 1);
+}
 
-  // version = 0
-  buf[16] = 0x00;
-  // format = 0 (ASCII)
-  buf[17] = 0x00;
+function requireSignerPubkey(signerPubkey: Uint8Array): void {
+  if (signerPubkey.length !== 32) {
+    throw new Error(`signerPubkey must be 32 bytes, got ${signerPubkey.length}`);
+  }
+}
 
-  // body length as u16 LE
-  buf[18] = bodyBytes.length & 0xff;
-  buf[19] = (bodyBytes.length >> 8) & 0xff;
-
-  // body
-  buf.set(bodyBytes, headerLen);
-
+/**
+ * Wrap a body in a sRFC 38 v1 single-signer offchain message envelope.
+ *
+ * The on-chain reader accepts v1, but the released Ledger Solana app
+ * (v1.12.x) does not support v1 yet — for Ledger signing use buildV0Envelope.
+ */
+export function buildV1Envelope(body: Uint8Array, signerPubkey: Uint8Array): Uint8Array {
+  requireSignerPubkey(signerPubkey);
+  const buf = new Uint8Array(OFFCHAIN_HEADER_LEN_V1 + body.length);
+  writePrefix(buf);
+  buf[16] = 0x01; // version
+  buf[17] = 0x01; // numSigners
+  buf.set(signerPubkey, 18);
+  buf.set(body, OFFCHAIN_HEADER_LEN_V1);
   return buf;
 }
 
 /**
- * Build V0 off-chain message envelope (Solana off-chain signing proposal, full spec).
+ * Wrap a body in a V0 offchain message envelope. The released Ledger Solana
+ * app (v1.12.x) signs this format; the on-chain reader accepts V0 alongside
+ * v1 until Ledger ships sRFC 38 support.
  *
  * Layout:
- *   \xffsolana offchain (16 bytes)
- *   version: 0x00 (1 byte)
- *   appDomain: 32 bytes ("lucid-multisig", zero-padded)
- *   format: 0x00 = ASCII (1 byte)
- *   numSigners: 0x01 (1 byte)
- *   signerPubkey: 32 bytes
- *   bodyLength: u16 LE (2 bytes)
- *   body: N bytes
+ *   0..16  : "\xffsolana offchain"
+ *   16     : version = 0x00
+ *   17..49 : application domain (32 bytes)
+ *   49     : format = 0x00 (ASCII)
+ *   50     : numSigners = 0x01
+ *   51..83 : signer pubkey (32 bytes)
+ *   83..85 : body length (u16 LE)
+ *   85..end: body
  */
 export function buildV0Envelope(body: Uint8Array, signerPubkey: Uint8Array): Uint8Array {
+  requireSignerPubkey(signerPubkey);
   const buf = new Uint8Array(OFFCHAIN_HEADER_LEN_V0 + body.length);
-  let pos = 0;
-
-  buf[pos++] = 0xff;
-  const prefix = new TextEncoder().encode('solana offchain');
-  buf.set(prefix, pos); pos += 15;
-
-  buf[pos++] = 0x00; // version
-
-  // appDomain: 32 bytes whose base58 encoding reads "Luc1dMu1t1s1g111...111"
-  buf.set([
-    0x05, 0x19, 0x83, 0xb5, 0xba, 0xd3, 0x97, 0x02, 0x71, 0x2c, 0x2d, 0xef, 0x47, 0xbf, 0x2c, 0xdc,
-    0x4c, 0x48, 0xfd, 0x4e, 0x1f, 0xd3, 0xf7, 0x56, 0x9d, 0x37, 0x78, 0x79, 0xc0, 0x00, 0x00, 0x00,
-  ], pos);
-  pos += 32;
-
-  buf[pos++] = 0x00; // format = ASCII
-  buf[pos++] = 0x01; // numSigners
-
-  buf.set(signerPubkey, pos); pos += 32;
-
-  buf[pos++] = body.length & 0xff;
-  buf[pos++] = (body.length >> 8) & 0xff;
-
-  buf.set(body, pos);
+  writePrefix(buf);
+  buf[16] = 0x00;            // version
+  buf.set(V0_APP_DOMAIN, 17);
+  buf[49] = 0x00;            // format = ASCII
+  buf[50] = 0x01;            // numSigners
+  buf.set(signerPubkey, 51);
+  buf[83] = body.length & 0xff;
+  buf[84] = (body.length >> 8) & 0xff;
+  buf.set(body, OFFCHAIN_HEADER_LEN_V0);
   return buf;
 }
 

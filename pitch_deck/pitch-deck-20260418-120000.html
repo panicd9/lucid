@@ -331,6 +331,10 @@
         Multisig signers approve transactions<br>they <span class="text-danger">cannot read</span>.
       </h1>
 
+      <p class="body animate-in" style="margin-top: 20px; max-width: 1000px; color: var(--c-text-secondary);">
+        Ethereum solved this with <span class="mono text-primary">ERC-7730</span> (2024) &mdash; Ledger's clear-signing standard, adopted by Uniswap, Aave, Lido, Safe, and 40+ others. <span class="text-danger">Solana has no equivalent.</span>
+      </p>
+
       <div class="divider animate-in"></div>
 
       <div class="grid-2 animate-in" style="margin-top: 32px;">
@@ -367,7 +371,7 @@
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Every multisig on Solana today — Squads, Realms, all of them — sends a transaction the hardware wallet can't read. The Ledger throws a 'blind signing' warning and asks you to accept the risk. So signers fall back to trusting the multisig UI. When that UI is compromised, the hardware wallet you bought as your trust anchor offers zero protection." Pause. "Let me show you what that's already cost."
+        "Every multisig on Solana today — Squads, Realms, all of them — sends a transaction the hardware wallet can't read. The Ledger throws a 'blind signing' warning and asks you to accept the risk. So signers fall back to trusting the multisig UI. When that UI is compromised, the hardware wallet you bought as your trust anchor offers zero protection." Pause. "Ethereum already solved this — ERC-7730, ratified in 2024, is Ledger's clear-signing standard for smart-contract calls. Uniswap shipped it. Aave shipped it. Lido. Safe. Forty-plus protocols in the registry today. Solana has nothing equivalent, anywhere." Pause. "Let me show you what that's already cost."
       </div>
     </div>
 
@@ -475,15 +479,75 @@
         </div>
       </div>
 
+      <p class="small animate-in" style="margin-top: 28px; color: var(--c-text-muted); text-align: center;">
+        Aligned with <a href="https://github.com/solana-foundation/SRFCs/discussions/3" class="mono text-primary" style="text-decoration: none;">sRFC 38</a> v1 (Anza, Dec 2025) &mdash; the on-chain verifier accepts v1 envelopes today; the dashboard ships V0 until Ledger's Solana app releases v1 support.
+      </p>
+
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Lucid uses signMessage instead of signTransaction. Any wallet that displays signed messages — Phantom, Backpack, hardware wallets — renders the action in plain English. The security guarantee gets stronger when signers use hardware wallets, because the host can't lie about what's on the device's own screen. The on-chain program reconstructs the expected message from state and verifies the ed25519 signature; if anything was tampered, the signature won't match."
+        "Lucid uses signMessage instead of signTransaction. Any wallet that displays signed messages — Phantom, Backpack, hardware wallets — renders the action in plain English. The security guarantee gets stronger when signers use hardware wallets, because the host can't lie about what's on the device's own screen. The on-chain program reconstructs the expected message from state and verifies the ed25519 signature; if anything was tampered, the signature won't match. We're aligned with sRFC 38, Anza's December 2025 standard for offchain message signing — the on-chain verifier already accepts v1; the dashboard emits V0 envelopes today because the released Ledger Solana app hasn't shipped v1 support yet, and we'll flip the switch when it does."
       </div>
     </div>
 
-    <!-- ======================== SLIDE 5: DEMO — BEFORE/AFTER ======================== -->
+    <!-- ======================== SLIDE 5: ON-DEVICE COMPARISON (TEXT) ======================== -->
     <div class="slide bg-default" style="padding: 60px 80px;">
-      <span class="caption animate-in">DEMO</span>
+      <span class="caption animate-in">SAME LEDGER. SAME MULTISIG FLOW.</span>
+
+      <h1 class="h2 animate-in" style="margin-top: 16px; margin-bottom: 32px; max-width: 1100px;">
+        What the device shows <span class="text-emphasis">when a signer approves.</span>
+      </h1>
+
+      <div class="grid-2 animate-in" style="flex: 1; align-items: stretch; gap: 40px;">
+        <!-- BEFORE (blind signing) -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--c-danger); box-shadow: 0 0 12px var(--c-danger);"></div>
+            <p class="caption" style="color: var(--c-danger); letter-spacing: 4px;">EVERY MULTISIG TODAY</p>
+          </div>
+          <div style="flex: 1; background: #0a0a0a; border: 2px solid var(--c-danger); border-radius: 16px; padding: 28px 32px; box-shadow: 0 0 80px rgba(239,68,68,0.15); display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px; color: var(--c-danger); font-size: 24px; font-weight: 700;">
+              <span style="font-size: 28px;">&#9888;</span> Blind signing ahead
+            </div>
+            <div style="color: var(--c-text-muted); font-size: 18px;">Unrecognized format</div>
+            <div style="color: var(--c-text-muted); font-size: 13px; letter-spacing: 2px; margin-top: 8px;">MESSAGE HASH</div>
+            <div class="mono" style="color: var(--c-danger); font-size: 17px; line-height: 1.5; word-break: break-all;">a3f9d8c7b6a5e4d3c2b1a0f9e8d7c6b5a4938271605f4e3d2c1b0a9f8e7d60c2d</div>
+            <div style="color: var(--c-text-muted); font-size: 13px; letter-spacing: 2px; margin-top: 4px;">FEE PAYER</div>
+            <div class="mono" style="color: var(--c-danger); font-size: 17px; line-height: 1.4; word-break: break-all;">7Hk2mPqRsTuVwXyZ3aBcDeFgHjKnNpQrStUvWxYz9bXr</div>
+            <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--c-border); color: var(--c-text-muted); font-size: 18px;">Accept risk and sign?</div>
+          </div>
+        </div>
+
+        <!-- AFTER (Lucid) -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--c-primary); box-shadow: 0 0 12px var(--c-primary);"></div>
+            <p class="caption text-primary" style="letter-spacing: 4px;">LUCID</p>
+          </div>
+          <div style="flex: 1; background: #0a0a0a; border: 2px solid var(--c-primary); border-radius: 16px; padding: 28px 32px; box-shadow: 0 0 80px rgba(16,185,129,0.20); display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 12px; color: var(--c-primary); font-size: 24px; font-weight: 700;">
+              <span style="font-size: 28px;">&#10003;</span> Sign Message
+            </div>
+            <div style="color: var(--c-text-muted); font-size: 18px;">Human-readable approval</div>
+            <div class="mono" style="margin-top: 8px; font-size: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
+              <div style="color: var(--c-text);">approve withdraw 50000 usdc to 9abc...def |</div>
+              <div style="color: var(--c-text-secondary);">wallet: drift-governance (Drft9...PDA);</div>
+              <div style="color: var(--c-text-secondary);">proposal: #42;</div>
+              <div class="text-primary">expires: 09 May 2026 12:00:00</div>
+            </div>
+            <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--c-border); color: var(--c-primary); font-size: 19px; font-weight: 700; letter-spacing: 1px;">Approve</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="notes-label">Speaker Notes</div>
+        "Same Ledger device, same multisig flow. Left: every multisig today — the device shows a 'blind signing' warning, asks the signer to override its safety check, then displays a 32-byte hash and a fee payer. You cannot tell what you are approving. Right: Lucid — the device displays the actual action in plain English: who is being paid, from which wallet, which proposal, when it expires. Trust moves back to the hardware wallet, which is the only surface a compromised host can't lie about."
+      </div>
+    </div>
+
+    <!-- ======================== SLIDE 6: DEMO — BEFORE/AFTER (VIDEO) ======================== -->
+    <div class="slide bg-default" style="padding: 60px 80px;">
+      <span class="caption animate-in">LIVE DEMO</span>
 
       <h1 class="h2 animate-in" style="margin-top: 16px; margin-bottom: 24px;">
         Same device. <span class="text-emphasis">Different display.</span>
@@ -511,7 +575,7 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 6: TRACTION / BUILT ======================== -->
+    <!-- ======================== SLIDE 7: TRACTION / BUILT ======================== -->
     <div class="slide bg-default">
       <span class="caption animate-in">WHAT WE BUILT</span>
 
@@ -548,6 +612,7 @@
             <div class="flex justify-between"><span class="small">CLI</span><span class="small text-primary">Rust / Clap</span></div>
             <div class="flex justify-between"><span class="small">SDK</span><span class="small text-primary">TypeScript / @solana/kit</span></div>
             <div class="flex justify-between"><span class="small">Dashboard</span><span class="small text-primary">React + Vite + Tailwind</span></div>
+            <div class="flex justify-between"><span class="small">Spec</span><span class="small text-primary">sRFC 38 v1 + V0 (dual-support)</span></div>
           </div>
         </div>
         <div class="card" style="padding: 24px;">
@@ -567,7 +632,7 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 7: COMPETITION ======================== -->
+    <!-- ======================== SLIDE 8: COMPETITION ======================== -->
     <div class="slide bg-alt">
       <span class="caption animate-in">LANDSCAPE</span>
 
@@ -630,7 +695,7 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 8: ASK + CONTACT ======================== -->
+    <!-- ======================== SLIDE 9: ASK + CONTACT ======================== -->
     <div class="slide bg-default" style="justify-content: center; align-items: center; text-align: center;">
       <span class="caption animate-in">COLOSSEUM FRONTIER</span>
 
@@ -642,23 +707,23 @@
         Read what you sign.
       </p>
 
-      <div class="divider animate-in" style="margin: 32px auto;"></div>
+      <div class="divider animate-in" style="margin: 44px auto;"></div>
 
       <div class="animate-in" style="display: flex; gap: 24px; align-items: center; max-width: 720px; margin: 0 auto;">
         <img src="darko.jpg" alt="Darko Panic" style="width: 130px; height: 130px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.08);">
         <div style="text-align: left;">
           <p class="body" style="color: var(--c-text); font-weight: 600;">
             Darko Panic <span class="text-muted" style="font-weight: 400;">&middot;</span>
-            <span class="text-primary">darko@campfire.money</span>
+            <span class="text-primary">darkopanic99@gmail.com</span>
           </p>
-          <p class="small" style="color: var(--c-text-secondary); margin-top: 4px;">Senior Blockchain Engineer &middot; Rust / Solana</p>
-          <p class="small" style="color: var(--c-text-muted); margin-top: 8px; line-height: 1.5;">
+          <p class="small" style="color: var(--c-text-secondary); margin-top: 8px;">Senior Blockchain Engineer at MetaWealth</p>
+          <p class="small" style="color: var(--c-text-muted); margin-top: 12px; line-height: 1.6;">
             Currently shipping &euro;85M+ tokenized real estate on Solana &mdash; 233 properties, 5 countries, ~1,400 investors.
           </p>
         </div>
       </div>
 
-      <div class="animate-in" style="margin-top: 40px;">
+      <div class="animate-in" style="margin-top: 64px;">
         <p class="small text-muted">
           Program: <span class="mono">LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR</span>
         </p>

@@ -275,15 +275,25 @@ pub fn render_template_with_params(template: &str, intent_data: &[u8], params_da
     result
 }
 
-/// Build the Solana offchain message envelope around a body string.
-/// Format: \xffsolana offchain + version(0) + format(0) + length(u16 LE) + body bytes.
-pub fn build_offchain_message(body: &str) -> Vec<u8> {
-    let mut message = Vec::new();
-    message.extend_from_slice(b"\xffsolana offchain");
-    message.push(0); // version
-    message.push(0); // format (ASCII)
-    message.extend_from_slice(&(body.as_bytes().len() as u16).to_le_bytes());
-    message.extend_from_slice(body.as_bytes());
+/// Build a sRFC 38 v1 single-signer offchain message envelope.
+///
+/// Layout:
+///   0..16  : "\xffsolana offchain"
+///   16     : version = 0x01
+///   17     : numSigners = 0x01
+///   18..50 : signer pubkey (32 bytes)
+///   50..end: UTF-8 body (no length prefix)
+pub fn build_offchain_message(signer_pubkey: &[u8; 32], body: &str) -> Vec<u8> {
+    use lucid::state::constants::{
+        OFFCHAIN_HEADER_LEN_V1, OFFCHAIN_HEADER_PREFIX, OFFCHAIN_VERSION_V1,
+    };
+    let body_bytes = body.as_bytes();
+    let mut message = Vec::with_capacity(OFFCHAIN_HEADER_LEN_V1 + body_bytes.len());
+    message.extend_from_slice(OFFCHAIN_HEADER_PREFIX);
+    message.push(OFFCHAIN_VERSION_V1);
+    message.push(0x01); // numSigners
+    message.extend_from_slice(signer_pubkey);
+    message.extend_from_slice(body_bytes);
     message
 }
 

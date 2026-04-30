@@ -65,7 +65,7 @@ pub fn propose(
         rendered, wallet_name, proposal_index, expiry_str
     );
 
-    let message = intent_utils::build_offchain_message(&body);
+    let message = intent_utils::build_offchain_message(&payer.pubkey().to_bytes(), &body);
 
     // Build Ed25519 precompile instruction
     let ed25519_ix = crate::rpc::build_ed25519_instruction(&payer, &message)?;

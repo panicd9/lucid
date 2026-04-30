@@ -1,14 +1,31 @@
 use ed25519_dalek::{Signer, SigningKey};
+use lucid::state::constants::V0_APP_DOMAIN;
 use solana_instruction::Instruction;
 
-use super::OFFCHAIN_HEADER_PREFIX;
+use super::{OFFCHAIN_HEADER_PREFIX, OFFCHAIN_HEADER_LEN_V1};
 
-/// Build the offchain message bytes.
-/// Format: \xffsolana offchain + version(0) + format(0=ASCII) + length(u16 LE) + body
+fn build_body(
+    expiry_str: &str,
+    action: &str,
+    rendered_template: &str,
+    wallet_name: &str,
+    wallet_pda_b58: &str,
+    proposal_index: u64,
+) -> String {
+    format!(
+        "{} {} | wallet: {} ({}); proposal: #{}; expires: {}",
+        action, rendered_template, wallet_name, wallet_pda_b58, proposal_index, expiry_str
+    )
+}
+
+/// Build a sRFC 38 v1 single-signer offchain message envelope:
+///   prefix(16) + version(1) + numSigners(1) + signerPubkey(32) + body
 ///
-/// `wallet_pda_b58` is the base58 of the wallet's 32-byte PDA — included in the
-/// body so signatures can't replay across wallets that share a name.
+/// `wallet_pda_b58` in the body prevents cross-wallet signature replay
+/// between wallets sharing a name; the embedded signer pubkey adds a
+/// complementary envelope-level binding to the signer's identity.
 pub fn build_offchain_message(
+    signer_pubkey: &[u8; 32],
     expiry_str: &str,
     action: &str,
     rendered_template: &str,
@@ -16,21 +33,45 @@ pub fn build_offchain_message(
     wallet_pda_b58: &str,
     proposal_index: u64,
 ) -> Vec<u8> {
-    let body = format!(
-        "{} {} | wallet: {} ({}); proposal: #{}; expires: {}",
-        action, rendered_template, wallet_name, wallet_pda_b58, proposal_index, expiry_str
-    );
+    let body = build_body(expiry_str, action, rendered_template, wallet_name, wallet_pda_b58, proposal_index);
+    let body_bytes = body.as_bytes();
 
+    let mut msg = Vec::with_capacity(OFFCHAIN_HEADER_LEN_V1 + body_bytes.len());
+    msg.extend_from_slice(OFFCHAIN_HEADER_PREFIX);
+    msg.push(0x01); // version
+    msg.push(0x01); // numSigners
+    msg.extend_from_slice(signer_pubkey);
+    msg.extend_from_slice(body_bytes);
+    msg
+}
+
+/// Build a V0 offchain message envelope (the format the released Ledger
+/// Solana app emits). Guards the on-chain `parse_v0` path from silent
+/// breakage:
+///   prefix(16) + version(0) + appDomain(32) + format(1) + numSigners(1)
+///   + signerPubkey(32) + bodyLen(u16 LE) + body
+pub fn build_offchain_message_v0(
+    signer_pubkey: &[u8; 32],
+    expiry_str: &str,
+    action: &str,
+    rendered_template: &str,
+    wallet_name: &str,
+    wallet_pda_b58: &str,
+    proposal_index: u64,
+) -> Vec<u8> {
+    let body = build_body(expiry_str, action, rendered_template, wallet_name, wallet_pda_b58, proposal_index);
     let body_bytes = body.as_bytes();
     let body_len = body_bytes.len() as u16;
 
-    let mut msg = Vec::new();
+    let mut msg = Vec::with_capacity(85 + body_bytes.len());
     msg.extend_from_slice(OFFCHAIN_HEADER_PREFIX);
-    msg.push(0); // version
-    msg.push(0); // format (ASCII)
+    msg.push(0x00); // version
+    msg.extend_from_slice(&V0_APP_DOMAIN);
+    msg.push(0x00); // format = ASCII
+    msg.push(0x01); // numSigners
+    msg.extend_from_slice(signer_pubkey);
     msg.extend_from_slice(&body_len.to_le_bytes());
     msg.extend_from_slice(body_bytes);
-
     msg
 }
 
@@ -144,8 +185,12 @@ mod tests {
         let vectors = load_vectors();
         assert!(!vectors.is_empty(), "Golden file must contain at least one vector");
 
+        // Pubkey is fixed; the test asserts on body content only.
+        let signer_pubkey = [0xABu8; 32];
+
         for v in &vectors {
             let msg = build_offchain_message(
+                &signer_pubkey,
                 &v.expiry,
                 &v.action,
                 &v.rendered_template,
@@ -154,8 +199,7 @@ mod tests {
                 v.proposal_index,
             );
 
-            // Skip the 20-byte offchain header (16 prefix + version + format + 2 length) to get body
-            let body = std::str::from_utf8(&msg[OFFCHAIN_HEADER_PREFIX.len() + 4..]).unwrap();
+            let body = std::str::from_utf8(&msg[OFFCHAIN_HEADER_LEN_V1..]).unwrap();
 
             assert_eq!(
                 body, v.expected_body,
