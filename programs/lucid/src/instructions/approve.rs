@@ -97,7 +97,14 @@ impl Approve {
             let approval_count = proposal.approval_bitmap.count_ones() as u8;
             if approval_count >= approval_threshold {
                 proposal.status = STATUS_APPROVED;
-                proposal.approved_at = clock.unix_timestamp;
+                // Only stamp approved_at on the first transition to APPROVED.
+                // Without this guard, a single approver whose vote is needed
+                // for threshold can cancel→re-approve to reset the timelock
+                // arbitrarily (cancel clears their approve bit and reverts
+                // status to ACTIVE, then re-approve refreshes approved_at).
+                if proposal.approved_at == 0 {
+                    proposal.approved_at = clock.unix_timestamp;
+                }
             }
         }
 

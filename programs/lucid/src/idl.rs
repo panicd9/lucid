@@ -120,7 +120,10 @@ pub enum LucidInstruction {
     #[account(2, signer, name = "authority", desc = "Approver of the intent")]
     DeactivateIntent = 3,
 
-    /// Freeze the wallet configuration permanently.
+    /// Permanently disable adding new intents (UPDATE / REMOVE meta-intent
+    /// proposals are still allowed via the standard threshold flow).
+    /// Setup-phase only: rejects with ERR_SETUP_PHASE_ONLY once the wallet
+    /// has any proposal.
     #[account(0, writable, name = "wallet", desc = "Wallet PDA")]
     #[account(1, name = "meta_intent", desc = "Any meta-intent PDA (for approver verification)")]
     #[account(2, signer, name = "authority", desc = "Approver")]

@@ -860,3 +860,176 @@ fn test_freeze_wallet_post_setup_rejected() {
     assert!(result.is_err(), "FreezeWallet must be rejected after the first proposal");
     assert_eq!(setup::read_wallet_state(&svm, &ws.wallet).frozen, 0);
 }
+
+// ────────────────────────────────────────────────────────────────────────
+// Lead 1: Approve/cancel timelock-reset
+// ────────────────────────────────────────────────────────────────────────
+//
+// approve must only stamp `approved_at` on the FIRST transition to APPROVED.
+// Otherwise a single approver whose vote is needed for threshold can
+// cancel→re-approve to refresh approved_at and push timelock arbitrarily.
+#[test]
+fn test_timelock_not_reset_by_cancel_reapprove() {
+    let mut svm = setup::new_svm();
+    // LiteSVM defaults to unix_timestamp = 0; the program uses approved_at == 0
+    // as the "unset" sentinel, so we advance to a realistic non-zero timestamp
+    // before approving. (Mainnet clock is always >> 0.)
+    advance_clock(&mut svm, 1_700_000_000);
+    // 2 approvers + cancel_threshold=2 so a single cancel doesn't immediately
+    // CANCEL the proposal (which would prevent re-approve). approval_threshold=1
+    // means a single approver controls the APPROVE state — exactly the tight
+    // quorum where the timelock-reset attack matters.
+    let ws = setup::create_test_wallet(&mut svm, b"tl-reset", 1, 2, 1, 2, 60);
+
+    // Add a custom intent during setup.
+    let mut builder = IntentDataBuilder::new();
+    builder.intent_type = helpers::INTENT_TYPE_CUSTOM;
+    builder.approval_threshold = 1;
+    builder.cancellation_threshold = 2;
+    builder.timelock_seconds = 60;
+    builder.template = b"x".to_vec();
+    builder.proposers.push(ws.proposers[0].pubkey().to_bytes());
+    builder.approvers.push(ws.approvers[0].pubkey().to_bytes());
+    builder.approvers.push(ws.approvers[1].pubkey().to_bytes());
+    let ix = instructions::add_intent(&ws.wallet, 3, &builder.build(), &ws.approvers[0].pubkey());
+    setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]).unwrap();
+
+    let pid = helpers::program_id();
+    let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 3, &pid);
+    let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = edh::future_expiry();
+
+    // Propose
+    let propose_msg = edh::build_offchain_message(
+        &expiry, "propose", "x", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    let propose_sk = edh::keypair_to_signing_key(&ws.proposers[0]);
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&propose_sk, &propose_msg),
+            instructions::propose(&ws.wallet, &intent_pda, 0, &[], &ws.payer.pubkey()),
+        ],
+        &ws.payer, &[&ws.payer],
+    )
+    .unwrap();
+
+    // First approve — establishes approved_at = T0.
+    let approve_msg = edh::build_offchain_message(
+        &expiry, "approve", "x", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    let approve_sk = edh::keypair_to_signing_key(&ws.approvers[0]);
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&approve_sk, &approve_msg),
+            instructions::approve(&ws.wallet, &intent_pda, &proposal_pda),
+        ],
+        &ws.payer, &[&ws.payer],
+    )
+    .unwrap();
+
+    let original_approved_at = setup::read_proposal(&svm, &proposal_pda).approved_at;
+    assert!(original_approved_at > 0, "approved_at must be set after first approve");
+
+    // Cancel — clears the approve bit, reverts status to ACTIVE.
+    let cancel_msg = edh::build_offchain_message(
+        &expiry, "cancel", "x", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&approve_sk, &cancel_msg),
+            instructions::cancel(&ws.wallet, &intent_pda, &proposal_pda),
+        ],
+        &ws.payer, &[&ws.payer],
+    )
+    .unwrap();
+
+    // Move clock forward — if the bug were present, the next approve would
+    // overwrite approved_at with this later timestamp. Also expire the
+    // blockhash so the re-approve tx isn't deduped as AlreadyProcessed.
+    advance_clock(&mut svm, 3600);
+    svm.expire_blockhash();
+
+    // Re-approve — must NOT update approved_at.
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&approve_sk, &approve_msg),
+            instructions::approve(&ws.wallet, &intent_pda, &proposal_pda),
+        ],
+        &ws.payer, &[&ws.payer],
+    )
+    .unwrap();
+
+    let after_reapprove = setup::read_proposal(&svm, &proposal_pda);
+    assert_eq!(
+        after_reapprove.approved_at, original_approved_at,
+        "approved_at must be the original timestamp, not refreshed by re-approve"
+    );
+    assert_eq!(after_reapprove.status, helpers::STATUS_APPROVED);
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Lead 2: Meta-intent self-removal protection
+// ────────────────────────────────────────────────────────────────────────
+//
+// execute_meta_remove and execute_meta_update must reject target_index < 3
+// so that signers cannot be tricked into approving "remove intent #0" without
+// realizing intent #0 is the ADD meta-intent, which would brick all future
+// intent additions.
+#[test]
+fn test_meta_remove_self_target_rejected() {
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"meta-self", 1, 1, 1, 1, 0);
+
+    // Try to remove meta-intent #0 (ADD) via the REMOVE meta-intent (#1).
+    // The propose body must match the on-chain template "remove intent #0".
+    let result = execute_meta_remove_with_target(&mut svm, &ws, 0, &ws.intents[0]);
+    assert!(
+        result.is_err(),
+        "execute_meta_remove must reject target_index < 3 (meta-intent protection)"
+    );
+
+    // Meta-intent #0 must still be active.
+    assert_eq!(setup::read_intent_header(&svm, &ws.intents[0]).approved, 1);
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// Lead 7: Oversized ed25519 message
+// ────────────────────────────────────────────────────────────────────────
+//
+// load_ed25519_data must reject the precompile if message_data_size > 512.
+// The signer signed N bytes; truncating to 512 would silently ignore trailing
+// bytes the signer attested to. With build_message bounded at 512, any larger
+// signed body is definitionally invalid.
+#[test]
+fn test_oversized_ed25519_message_rejected() {
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"big-msg", 1, 1, 1, 1, 0);
+
+    // Sign a > 512-byte message with the proposer's key. Content is irrelevant —
+    // load_ed25519_data should reject before any body comparison.
+    let huge_msg = vec![0x41u8; 600];
+    let proposer_sk = edh::keypair_to_signing_key(&ws.proposers[0]);
+    let precompile_ix = edh::create_ed25519_instruction(&proposer_sk, &huge_msg);
+
+    // Build any propose ix — we only need the program to invoke load_ed25519_data.
+    let pid = helpers::program_id();
+    let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 0, &pid); // any meta-intent
+    let propose_ix = instructions::propose(
+        &ws.wallet, &intent_pda, 0, &[], &ws.payer.pubkey(),
+    );
+
+    let result = setup::send_tx(
+        &mut svm,
+        &[precompile_ix, propose_ix],
+        &ws.payer, &[&ws.payer],
+    );
+    assert!(
+        result.is_err(),
+        "load_ed25519_data must reject message_data_size > 512"
+    );
+}

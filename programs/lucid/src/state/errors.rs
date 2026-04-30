@@ -16,6 +16,7 @@ pub const ERR_EXPIRED: u32 = 113;
 pub const ERR_NAME_TOO_LONG: u32 = 114;
 pub const ERR_NO_SIGNERS: u32 = 115;
 pub const ERR_TOO_MANY_SIGNERS: u32 = 129;
+pub const ERR_META_INTENT_PROTECTED: u32 = 130;
 pub const ERR_INVALID_THRESHOLD: u32 = 116;
 pub const ERR_WALLET_NOT_FROZEN: u32 = 117;
 pub const ERR_ACTIVE_PROPOSALS_EXIST: u32 = 118;

@@ -96,6 +96,13 @@ pub(super) fn execute_meta_remove(
     }
     let target_index = params[0];
 
+    // Meta-intents (indices 0/1/2) are governance infrastructure. A signer
+    // approving "remove intent #0" on a Ledger may not realize they are
+    // disabling all future ADDs. Reject self-targeted meta-removal.
+    if target_index < 3 {
+        return Err(ProgramError::Custom(ERR_META_INTENT_PROTECTED));
+    }
+
     // Bind accounts[6] to the executing wallet — without this any wallet's
     // approved REMOVE could deactivate intents in any other Lucid wallet at
     // the same numeric index.
@@ -132,6 +139,13 @@ pub(super) fn execute_meta_update(
         return Err(ProgramError::NotEnoughAccountKeys);
     }
     let target_index = params[0];
+
+    // Meta-intents (indices 0/1/2) are governance infrastructure — block
+    // self-targeted UPDATE for the same reason as REMOVE.
+    if target_index < 3 {
+        return Err(ProgramError::Custom(ERR_META_INTENT_PROTECTED));
+    }
+
     let def_len = u16::from_le_bytes([params[1], params[2]]) as usize;
     if params.len() < 3 + def_len {
         return Err(ProgramError::InvalidInstructionData);

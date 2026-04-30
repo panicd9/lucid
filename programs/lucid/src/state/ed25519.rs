@@ -93,6 +93,15 @@ fn load_ed25519_data(instructions_sysvar: &AccountView) -> Result<Ed25519DataOwn
         return Err(ProgramError::Custom(ERR_INVALID_ED25519_INSTRUCTION));
     }
 
+    // Defense-in-depth: reject before the silent .min(512) truncation below.
+    // The signer signed `message_data_size` bytes; if we silently truncated and
+    // compared only the prefix, trailing bytes the signer attested to would be
+    // ignored. With a 512-byte cap on legitimate bodies (build_message buf size),
+    // any larger message is definitionally invalid and shouldn't be accepted.
+    if message_data_size > 512 {
+        return Err(ProgramError::Custom(ERR_INVALID_ED25519_INSTRUCTION));
+    }
+
     let mut pubkey = [0u8; 32];
     pubkey.copy_from_slice(&data[pubkey_offset..pubkey_offset + 32]);
 
