@@ -4,12 +4,18 @@ use pinocchio::cpi::{Seed, Signer};
 use pinocchio::error::ProgramError;
 use pinocchio::ProgramResult;
 use crate::state::accounts::{self, *};
+use crate::state::byte_pool::find_in_approvers;
 use crate::state::constants::*;
 use crate::state::errors::*;
 
 pub struct AddIntentsBatch;
 
 impl AddIntentsBatch {
+    /// Accounts: [wallet, signer/payer, system_program, intent_0, ..., intent_{count-1}, add_meta_intent]
+    ///
+    /// `add_meta_intent` (last account) is intent index 0 — the ADD meta-intent
+    /// that holds the wallet's authority list. See AddIntent::process for the
+    /// rationale.
     pub fn process(data: &[u8], accounts: &mut [AccountView], program_id: &Address) -> ProgramResult {
         if accounts.len() < 3 {
             return Err(ProgramError::NotEnoughAccountKeys);
@@ -24,9 +30,30 @@ impl AddIntentsBatch {
         if count == 0 || count > MAX_BATCH_INTENTS {
             return Err(ProgramError::Custom(ERR_BATCH_TOO_LARGE));
         }
-        // remaining accounts start at index 3
-        if accounts.len() < 3 + count {
+        // remaining accounts: [intent_0..intent_{count-1}, add_meta_intent]
+        if accounts.len() < 3 + count + 1 {
             return Err(ProgramError::NotEnoughAccountKeys);
+        }
+        let meta_idx = 3 + count;
+        require_owner!(accounts[meta_idx], program_id); // add_meta_intent
+
+        // Verify accounts[meta_idx] is the wallet's ADD meta-intent (index 0) and
+        // the signer is in its approver list.
+        {
+            let wallet_address_for_meta = accounts[0].address().to_bytes();
+            let zero = [0u8];
+            let meta_seeds: &[&[u8]] = &[INTENT_SEED, &wallet_address_for_meta, &zero];
+            let (expected_meta_pda, _) = Address::find_program_address(meta_seeds, program_id);
+            if accounts[meta_idx].address() != &expected_meta_pda {
+                return Err(ProgramError::InvalidSeeds);
+            }
+            let mdata = accounts[meta_idx].try_borrow()?;
+            let meta = IntentHeader::from_bytes(&mdata)?;
+            if meta.wallet != wallet_address_for_meta {
+                return Err(ProgramError::InvalidAccountData);
+            }
+            let signer_key = accounts[1].address().to_bytes();
+            find_in_approvers(&mdata, meta, &signer_key)?;
         }
 
         let wallet_address = accounts[0].address().to_bytes();

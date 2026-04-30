@@ -43,6 +43,7 @@ export class IntentSigner {
       `intent #${opts.intentIndex}`,
       opts.params,
       this.walletAddress.slice(0, 8),
+      this.walletAddress,
       proposalIndex,
       'propose',
       expiry
@@ -78,6 +79,7 @@ export class IntentSigner {
       '',
       {},
       this.walletAddress.slice(0, 8),
+      this.walletAddress,
       proposalIndex,
       'approve',
       expiry
@@ -108,6 +110,7 @@ export class IntentSigner {
       '',
       {},
       this.walletAddress.slice(0, 8),
+      this.walletAddress,
       proposalIndex,
       'cancel',
       expiry
@@ -148,7 +151,11 @@ export class IntentSigner {
    * This is the message that would appear on a Ledger screen.
    *
    * On-chain format (matches programs/lucid/src/state/message.rs):
-   *   {action} {rendered_template} | wallet: {name}; proposal: #{index}; expires: {timestamp}
+   *   {action} {rendered_template} | wallet: {name} ({pda_b58}); proposal: #{index}; expires: {timestamp}
+   *
+   * The wallet PDA in base58 binds the signature to a specific wallet identity
+   * — without it, a victim's signature can replay across two wallets that
+   * happen to share a name.
    *
    * The full signed payload wraps this body in a Solana offchain message envelope
    * (\xffsolana offchain + version + format + length + body).
@@ -156,6 +163,7 @@ export class IntentSigner {
    * @param intentTemplate - The intent template string with {param} placeholders
    * @param params - Key-value map to fill into the template
    * @param walletName - Short wallet identifier
+   * @param walletPdaB58 - Base58-encoded wallet PDA (32-byte address)
    * @param proposalIndex - The proposal number
    * @param action - "propose" | "approve" | "cancel"
    * @param expiry - Timestamp string (DD Mon YYYY HH:MM:SS, e.g. "12 Apr 2026 18:00:00")
@@ -165,6 +173,7 @@ export class IntentSigner {
     intentTemplate: string,
     params: Record<string, any>,
     walletName: string,
+    walletPdaB58: string,
     proposalIndex: bigint,
     action: string,
     expiry: string
@@ -180,8 +189,8 @@ export class IntentSigner {
       );
     }
 
-    // "{action} {rendered_template} | wallet: {name}; proposal: #{index}; expires: {timestamp}"
+    // "{action} {rendered_template} | wallet: {name} ({pda_b58}); proposal: #{index}; expires: {timestamp}"
     const actionPart = filled ? `${action} ${filled}` : action;
-    return `${actionPart} | wallet: ${walletName}; proposal: #${proposalIndex}; expires: ${expiry}`;
+    return `${actionPart} | wallet: ${walletName} (${walletPdaB58}); proposal: #${proposalIndex}; expires: ${expiry}`;
   }
 }

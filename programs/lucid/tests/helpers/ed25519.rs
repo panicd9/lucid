@@ -5,16 +5,20 @@ use super::OFFCHAIN_HEADER_PREFIX;
 
 /// Build the offchain message bytes.
 /// Format: \xffsolana offchain + version(0) + format(0=ASCII) + length(u16 LE) + body
+///
+/// `wallet_pda_b58` is the base58 of the wallet's 32-byte PDA — included in the
+/// body so signatures can't replay across wallets that share a name.
 pub fn build_offchain_message(
     expiry_str: &str,
     action: &str,
     rendered_template: &str,
     wallet_name: &str,
+    wallet_pda_b58: &str,
     proposal_index: u64,
 ) -> Vec<u8> {
     let body = format!(
-        "{} {} | wallet: {}; proposal: #{}; expires: {}",
-        action, rendered_template, wallet_name, proposal_index, expiry_str
+        "{} {} | wallet: {} ({}); proposal: #{}; expires: {}",
+        action, rendered_template, wallet_name, wallet_pda_b58, proposal_index, expiry_str
     );
 
     let body_bytes = body.as_bytes();
@@ -122,6 +126,7 @@ mod tests {
         action: String,
         rendered_template: String,
         wallet_name: String,
+        wallet_pda_b58: String,
         proposal_index: u64,
         expiry: String,
         expected_body: String,
@@ -145,6 +150,7 @@ mod tests {
                 &v.action,
                 &v.rendered_template,
                 &v.wallet_name,
+                &v.wallet_pda_b58,
                 v.proposal_index,
             );
 

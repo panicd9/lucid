@@ -206,6 +206,7 @@ export default function ProposeModal({
         'propose',
         signedRendered,
         walletName,
+        walletAddress,
         proposalIndex,
         expiryStr
       );
@@ -430,7 +431,7 @@ export default function ProposeModal({
                 Message preview
               </label>
               <div className="bg-neutral-800/40 border border-neutral-800/50 rounded-lg p-3 text-sm text-emerald-300/90 font-mono break-all">
-                {buildMessageBody('propose', rendered, walletName, '?', expiryStr)}
+                {buildMessageBody('propose', rendered, walletName, walletAddress, '?', expiryStr)}
               </div>
             </div>
           )}

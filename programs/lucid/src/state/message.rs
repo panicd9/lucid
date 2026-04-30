@@ -8,11 +8,16 @@ use crate::state::constants::*;
 ///
 /// Format:
 /// \xffsolana offchain + version(0) + format(0=ASCII) + length(u16 LE)
-/// + body: "{action} {rendered_template} | wallet: {name}; proposal: #{index}; expires: {timestamp}"
+/// + body: "{action} {rendered_template} | wallet: {name} ({base58_pda}); proposal: #{index}; expires: {timestamp}"
+///
+/// `wallet_pda` is included so signatures don't replay across two wallets that
+/// happen to share a name — the PDA is the cryptographic identity of the wallet
+/// that the signer is authorizing an action on.
 pub fn build_message(
     expiry_str: &[u8],
     action: &[u8],
     wallet_name: &[u8],
+    wallet_pda: &[u8; 32],
     proposal_index: u64,
     intent: &IntentHeader,
     intent_data: &[u8],
@@ -37,8 +42,12 @@ pub fn build_message(
     // " | wallet: "
     copy_to(&mut body, &mut bpos, b" | wallet: ")?;
 
-    // wallet name + separator
+    // wallet name + " (" + base58 PDA + ")"
     copy_to(&mut body, &mut bpos, wallet_name)?;
+    copy_to(&mut body, &mut bpos, b" (")?;
+    let pda_b58 = base58_encode(wallet_pda);
+    copy_to(&mut body, &mut bpos, &pda_b58.0[..pda_b58.1])?;
+    copy_to(&mut body, &mut bpos, b")")?;
     copy_to(&mut body, &mut bpos, b"; ")?;
 
     // "proposal: #"
@@ -143,16 +152,33 @@ fn format_param_into(
     let entry = read_param_entry(intent_data, intent, param_index)?;
     let bytes = read_param_bytes(intent_data, intent, params_data, param_index)?;
 
-    // Resolve effective decimals: static field takes priority, then dynamic param ref
+    // Resolve effective decimals: static field takes priority, then dynamic param ref.
+    //
+    // u64_to_decimal_scaled below calls 10u64.pow(decimals as u32). With cargo's
+    // default release profile (overflow-checks=false) `decimals = 20` makes pow
+    // wrap, producing wildly wrong values on the Ledger display ("0.00000001 SOL"
+    // for what is actually a 1 SOL transfer) — defeating Lucid's signer-sees-
+    // what-they-sign guarantee. Bound at <=19 (largest decimals where 10^d still
+    // fits in u64, since 10^19 ≈ 1.0e19 < 2^64-1 ≈ 1.8e19).
     let decimals = if entry.display_decimals > 0 {
         entry.display_decimals
     } else if entry.decimals_param > 0 {
         let ref_index = entry.decimals_param - 1;
+        // Reading the first byte of the referenced param only makes sense if it
+        // is itself a u8 — otherwise `ref_bytes[0]` is the LSB of a u16/u64/string-
+        // length/pubkey, which the user does not see and may not even control.
+        let ref_entry = read_param_entry(intent_data, intent, ref_index)?;
+        if ref_entry.param_type != PARAM_TYPE_U8 {
+            return Err(ProgramError::InvalidInstructionData);
+        }
         let ref_bytes = read_param_bytes(intent_data, intent, params_data, ref_index)?;
         ref_bytes[0]
     } else {
         0
     };
+    if decimals > 19 {
+        return Err(ProgramError::InvalidInstructionData);
+    }
 
     match entry.param_type {
         PARAM_TYPE_ADDRESS => {

@@ -76,6 +76,7 @@ impl Approve {
                 proposal,
                 &pdata,
                 wallet_name,
+                &wallet_address,
                 b"approve",
             )?;
             approver_index = idx;

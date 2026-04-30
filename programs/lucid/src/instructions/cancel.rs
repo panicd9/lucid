@@ -70,6 +70,7 @@ impl Cancel {
                 proposal,
                 &pdata,
                 wallet_name,
+                &wallet_address,
                 b"cancel",
             )?;
             canceller_index = idx;

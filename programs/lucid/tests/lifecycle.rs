@@ -81,10 +81,10 @@ fn test_add_intent_during_setup() {
     let intent_data = builder.build();
 
     let ix = instructions::add_intent(
-        &ws.wallet, 3, &intent_data, &ws.payer.pubkey(),
+        &ws.wallet, 3, &intent_data, &ws.approvers[0].pubkey(),
     );
 
-    let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
+    let result = setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]);
     assert!(result.is_ok(), "AddIntent failed: {:?}", result.err());
 
     let wallet = setup::read_wallet_state(&svm, &ws.wallet);
@@ -114,10 +114,10 @@ fn test_add_intents_batch() {
     }
 
     let ix = instructions::add_intents_batch(
-        &ws.wallet, 3, &intents, &ws.payer.pubkey(),
+        &ws.wallet, 3, &intents, &ws.approvers[0].pubkey(),
     );
 
-    let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
+    let result = setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]);
     assert!(result.is_ok(), "AddIntentsBatch failed: {:?}", result.err());
 
     let wallet = setup::read_wallet_state(&svm, &ws.wallet);
@@ -143,9 +143,9 @@ fn test_deactivate_intent() {
     builder.approvers.push(ws.approvers[0].pubkey().to_bytes());
 
     let ix = instructions::add_intent(
-        &ws.wallet, 3, &builder.build(), &ws.payer.pubkey(),
+        &ws.wallet, 3, &builder.build(), &ws.approvers[0].pubkey(),
     );
-    let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
+    let result = setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]);
     assert!(result.is_ok());
 
     // Deactivate intent 3
@@ -231,8 +231,8 @@ fn test_intent_header_raw_byte_offsets() {
     builder.approvers.push(ws.approvers[1].pubkey().to_bytes());
 
     let intent_data = builder.build();
-    let ix = instructions::add_intent(&ws.wallet, 3, &intent_data, &ws.payer.pubkey());
-    let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
+    let ix = instructions::add_intent(&ws.wallet, 3, &intent_data, &ws.approvers[0].pubkey());
+    let result = setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]);
     assert!(result.is_ok(), "AddIntent failed: {:?}", result.err());
 
     let pid = helpers::program_id();
@@ -345,8 +345,8 @@ fn test_proposal_raw_byte_offsets() {
     builder.approvers.push(ws.approvers[1].pubkey().to_bytes());
 
     let intent_data = builder.build();
-    let ix = instructions::add_intent(&ws.wallet, 3, &intent_data, &ws.payer.pubkey());
-    setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]).unwrap();
+    let ix = instructions::add_intent(&ws.wallet, 3, &intent_data, &ws.approvers[0].pubkey());
+    setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]).unwrap();
 
     let pid = helpers::program_id();
     let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 3, &pid);
@@ -355,7 +355,7 @@ fn test_proposal_raw_byte_offsets() {
     // Build propose transaction (ed25519 precompile + propose ix)
     let params_data = vec![42u8; 8];
     let expiry = ed25519::future_expiry();
-    let message = ed25519::build_offchain_message(&expiry, "propose", "test", "prop-off", 0);
+    let message = ed25519::build_offchain_message(&expiry, "propose", "test", "prop-off", &ws.wallet.to_string(), 0);
     let signing_key = ed25519::keypair_to_signing_key(&ws.proposers[0]);
     let ed25519_ix = ed25519::create_ed25519_instruction(&signing_key, &message);
     let propose_ix = instructions::propose(

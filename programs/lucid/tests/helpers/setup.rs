@@ -79,6 +79,12 @@ pub fn create_test_wallet(
     let proposers: Vec<Keypair> = (0..num_proposers).map(|_| Keypair::new()).collect();
     let approvers: Vec<Keypair> = (0..num_approvers).map(|_| Keypair::new()).collect();
 
+    // Approvers may need to pay rent for setup-phase AddIntent calls
+    // (signer must be in the wallet approver list under the post-audit auth model).
+    for a in &approvers {
+        airdrop(svm, &a.pubkey(), 100_000_000_000);
+    }
+
     let proposer_addrs: Vec<Address> = proposers.iter().map(|k| k.pubkey()).collect();
     let approver_addrs: Vec<Address> = approvers.iter().map(|k| k.pubkey()).collect();
 

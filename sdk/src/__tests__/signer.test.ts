@@ -17,6 +17,7 @@ interface MessageVector {
   action: string;
   rendered_template: string;
   wallet_name: string;
+  wallet_pda_b58: string;
   proposal_index: number;
   expiry: string;
   expected_body: string;
@@ -41,6 +42,7 @@ describe('IntentSigner.buildMessage', () => {
           v.rendered_template,
           {}, // params already rendered in the vector
           v.wallet_name,
+          v.wallet_pda_b58,
           BigInt(v.proposal_index),
           v.action,
           v.expiry
@@ -50,18 +52,23 @@ describe('IntentSigner.buildMessage', () => {
     }
   });
 
+  // Stand-in PDA for non-vector test cases — content is not asserted, only
+  // that the new-signature buildMessage accepts it without throwing.
+  const PDA = 'PdaTesT11111111111111111111111111111111111';
+
   describe('template param substitution', () => {
     it('fills template params before producing message', () => {
       const msg = signer.buildMessage(
         'transfer {amount} to {recipient}',
         { amount: '1000', recipient: 'Bob' },
         'treasury',
+        PDA,
         42n,
         'propose',
         '01 Jan 2026 00:00:00'
       );
       expect(msg).toBe(
-        'propose transfer 1000 to Bob | wallet: treasury; proposal: #42; expires: 01 Jan 2026 00:00:00'
+        `propose transfer 1000 to Bob | wallet: treasury (${PDA}); proposal: #42; expires: 01 Jan 2026 00:00:00`
       );
     });
 
@@ -70,6 +77,7 @@ describe('IntentSigner.buildMessage', () => {
         'transfer {amount} to {recipient}',
         { amount: '500' },
         'vault',
+        PDA,
         1n,
         'propose',
         '01 Jan 2026 00:00:00'
@@ -82,6 +90,7 @@ describe('IntentSigner.buildMessage', () => {
         '{amount} tokens ({amount} lamports)',
         { amount: '999' },
         'w',
+        PDA,
         1n,
         'propose',
         'exp'
@@ -95,7 +104,7 @@ describe('IntentSigner.buildMessage', () => {
       const msg = signer.buildMessage(
         'set {fee.rate} bps',
         { 'fee.rate': '50' },
-        'w', 1n, 'propose', 'exp'
+        'w', PDA, 1n, 'propose', 'exp'
       );
       expect(msg).toContain('set 50 bps');
     });
@@ -104,7 +113,7 @@ describe('IntentSigner.buildMessage', () => {
       const msg = signer.buildMessage(
         'call {fn(x)} now',
         { 'fn(x)': 'doThing' },
-        'w', 1n, 'propose', 'exp'
+        'w', PDA, 1n, 'propose', 'exp'
       );
       expect(msg).toContain('call doThing now');
     });
@@ -113,7 +122,7 @@ describe('IntentSigner.buildMessage', () => {
       const msg = signer.buildMessage(
         'set {a|b} value',
         { 'a|b': '42' },
-        'w', 1n, 'propose', 'exp'
+        'w', PDA, 1n, 'propose', 'exp'
       );
       expect(msg).toContain('set 42 value');
     });
@@ -122,7 +131,7 @@ describe('IntentSigner.buildMessage', () => {
       const msg = signer.buildMessage(
         'pay {$amount}',
         { '$amount': '100' },
-        'w', 1n, 'propose', 'exp'
+        'w', PDA, 1n, 'propose', 'exp'
       );
       expect(msg).toContain('pay 100');
     });
@@ -131,7 +140,7 @@ describe('IntentSigner.buildMessage', () => {
       const msg = signer.buildMessage(
         'set {rate*100+1}',
         { 'rate*100+1': '5000' },
-        'w', 1n, 'propose', 'exp'
+        'w', PDA, 1n, 'propose', 'exp'
       );
       expect(msg).toContain('set 5000');
     });
@@ -140,7 +149,7 @@ describe('IntentSigner.buildMessage', () => {
       const msg = signer.buildMessage(
         'set {path\\to}',
         { 'path\\to': '/foo' },
-        'w', 1n, 'propose', 'exp'
+        'w', PDA, 1n, 'propose', 'exp'
       );
       expect(msg).toContain('set /foo');
     });
@@ -149,7 +158,7 @@ describe('IntentSigner.buildMessage', () => {
       const msg = signer.buildMessage(
         'transfer {amount} to {dest}',
         { '.*': 'INJECTED' },
-        'w', 1n, 'propose', 'exp'
+        'w', PDA, 1n, 'propose', 'exp'
       );
       expect(msg).toContain('{amount}');
       expect(msg).toContain('{dest}');

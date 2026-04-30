@@ -62,6 +62,29 @@ fn load_ed25519_data(instructions_sysvar: &AccountView) -> Result<Ed25519DataOwn
         return Err(ProgramError::Custom(ERR_INVALID_ED25519_INSTRUCTION));
     }
 
+    // SignatureOffsets layout (Solana ed25519 precompile):
+    //   u16 signature_offset           data[2..4]
+    //   u16 signature_instruction_idx  data[4..6]
+    //   u16 public_key_offset          data[6..8]
+    //   u16 public_key_instruction_idx data[8..10]
+    //   u16 message_data_offset        data[10..12]
+    //   u16 message_data_size          data[12..14]
+    //   u16 message_instruction_idx    data[14..16]
+    //
+    // When any *_instruction_idx is not 0xFFFF, the precompile reads the
+    // corresponding bytes from a sibling instruction's data, but this code
+    // reads pubkey/message from the precompile's own data. Allowing the two
+    // to point at different bytes lets an attacker make the precompile
+    // verify one (sig, pk, msg) triple while we read a forged pubkey and
+    // message stuffed into the precompile's own data — full signer forgery.
+    // Require self-referencing offsets only.
+    let sig_ix_idx = u16::from_le_bytes([data[4], data[5]]);
+    let pk_ix_idx = u16::from_le_bytes([data[8], data[9]]);
+    let msg_ix_idx = u16::from_le_bytes([data[14], data[15]]);
+    if sig_ix_idx != u16::MAX || pk_ix_idx != u16::MAX || msg_ix_idx != u16::MAX {
+        return Err(ProgramError::Custom(ERR_INVALID_ED25519_INSTRUCTION));
+    }
+
     let pubkey_offset = u16::from_le_bytes([data[6], data[7]]) as usize;
     let message_data_offset = u16::from_le_bytes([data[10], data[11]]) as usize;
     let message_data_size = u16::from_le_bytes([data[12], data[13]]) as usize;
@@ -168,6 +191,7 @@ pub fn extract_and_verify_ed25519_for_propose(
     intent_data: &[u8],
     intent: &IntentHeader,
     wallet_name: &[u8],
+    wallet_pda: &[u8; 32],
     proposal_index: u64,
     params_data: &[u8],
 ) -> Result<([u8; 32], u8), ProgramError> {
@@ -180,7 +204,7 @@ pub fn extract_and_verify_ed25519_for_propose(
     let expiry_str = validate_expiry(body, &clock)?;
 
     let (expected, expected_len) = build_message(
-        expiry_str, b"propose", wallet_name,
+        expiry_str, b"propose", wallet_name, wallet_pda,
         proposal_index, intent, intent_data, params_data,
     )?;
 
@@ -203,6 +227,7 @@ pub fn extract_and_verify_ed25519(
     proposal: &Proposal,
     proposal_data: &[u8],
     wallet_name: &[u8],
+    wallet_pda: &[u8; 32],
     action: &[u8],
 ) -> Result<([u8; 32], u8), ProgramError> {
     let clock = Clock::get()?;
@@ -216,7 +241,7 @@ pub fn extract_and_verify_ed25519(
     let params = read_params_data(proposal_data, proposal)?;
 
     let (expected, expected_len) = build_message(
-        expiry_str, action, wallet_name,
+        expiry_str, action, wallet_name, wallet_pda,
         proposal.proposal_index, intent, intent_data, params,
     )?;
 

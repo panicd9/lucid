@@ -52,7 +52,9 @@ pub fn create_wallet(
     ix
 }
 
-/// Build an AddIntent instruction
+/// Build an AddIntent instruction. Appends the wallet's ADD meta-intent
+/// (intent index 0) as a 5th account so the program can verify the signer is
+/// in the wallet's approver list.
 pub fn add_intent(
     wallet: &Address,
     intent_index: u8,
@@ -61,6 +63,7 @@ pub fn add_intent(
 ) -> Instruction {
     let pid = program_id();
     let (intent_pda, _) = pda::find_intent_pda(wallet, intent_index, &pid);
+    let (add_meta_pda, _) = pda::find_intent_pda(wallet, 0, &pid);
 
     let mut ix = AddIntentBuilder::new()
         .wallet(*wallet)
@@ -68,13 +71,17 @@ pub fn add_intent(
         .payer(*payer)
         .instruction();
 
+    // Auth proof: signer must be in this meta-intent's approver list.
+    ix.accounts.push(AccountMeta::new_readonly(add_meta_pda, false));
+
     let mut data = vec![ADD_INTENT_DISCRIMINATOR];
     data.extend_from_slice(intent_data_raw);
     ix.data = data;
     ix
 }
 
-/// Build an AddIntentsBatch instruction
+/// Build an AddIntentsBatch instruction. The ADD meta-intent (index 0) is
+/// appended after the per-intent PDAs as the auth-proof account.
 pub fn add_intents_batch(
     wallet: &Address,
     start_index: u8,
@@ -90,6 +97,8 @@ pub fn add_intents_batch(
         let (intent_pda, _) = pda::find_intent_pda(wallet, start_index + i as u8, &pid);
         builder.add_remaining_account(AccountMeta::new(intent_pda, false));
     }
+    let (add_meta_pda, _) = pda::find_intent_pda(wallet, 0, &pid);
+    builder.add_remaining_account(AccountMeta::new_readonly(add_meta_pda, false));
 
     let mut ix = builder.instruction();
 

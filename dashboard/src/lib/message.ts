@@ -5,7 +5,10 @@
  * in programs/lucid/src/state/message.rs.
  *
  * Body format:
- *   {action} {rendered_template} | wallet: {name}; proposal: #{index}; expires: {DD Mon YYYY HH:MM:SS}
+ *   {action} {rendered_template} | wallet: {name} ({pda_b58}); proposal: #{index}; expires: {DD Mon YYYY HH:MM:SS}
+ *
+ * The wallet PDA in base58 prevents cross-wallet signature replay between two
+ * wallets that share a name.
  *
  * Envelope:
  *   \xffsolana offchain (16 bytes) + version(0) + format(0) + body_len(u16 LE) + body
@@ -21,10 +24,11 @@ export function buildMessageBody(
   action: string,
   rendered: string,
   walletName: string,
+  walletPdaB58: string,
   proposalIndex: bigint | number | string,
   expiryStr: string
 ): string {
-  return `${action} ${rendered} | wallet: ${walletName}; proposal: #${proposalIndex}; expires: ${expiryStr}`;
+  return `${action} ${rendered} | wallet: ${walletName} (${walletPdaB58}); proposal: #${proposalIndex}; expires: ${expiryStr}`;
 }
 
 /** Legacy offchain envelope header: prefix(16) + version(1) + format(1) + length(2) */

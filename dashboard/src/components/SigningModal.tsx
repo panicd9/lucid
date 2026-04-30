@@ -74,6 +74,7 @@ export default function SigningModal({
     action,
     rendered,
     walletName,
+    walletAddress,
     proposal.proposalIndex,
     expiryStr
   );

@@ -23,6 +23,20 @@ impl DeactivateIntent {
 
         let wallet_addr = accounts[0].address().to_bytes();
 
+        // Setup-phase only (matches IDL doc): once any proposal has been
+        // created, intent removal must go through the meta-REMOVE proposal
+        // flow so that approval_threshold signers must agree. Without this
+        // gate, any single approver could unilaterally deactivate any intent
+        // — including the meta-intents themselves, which would permanently
+        // brick the wallet's governance.
+        {
+            let wdata = accounts[0].try_borrow()?;
+            let wallet = Wallet::from_bytes(&wdata)?;
+            if wallet.proposal_index > 0 {
+                return Err(ProgramError::Custom(ERR_SETUP_PHASE_ONLY));
+            }
+        }
+
         // Verify signer is an approver of this intent
         {
             let idata = accounts[1].try_borrow()?;

@@ -87,8 +87,7 @@ Instruction discriminators: 0-4 (wallet lifecycle), 10-12 (propose/approve/cance
 
 Signers approve via `signMessage` (not `signTransaction`). The Ledger displays human-readable text:
 ```
-expires 2026-04-10 12:00:00: approve add market 5 with oracle 9abc...def
-| wallet: drift-governance proposal: 42
+approve add market 5 with oracle 9abc...def | wallet: drift-governance (Drft9...PDA); proposal: #42; expires: 10 Apr 2026 12:00:00
 ```
 
 The program reconstructs the message from on-chain state and verifies the ed25519 signature via the precompile.

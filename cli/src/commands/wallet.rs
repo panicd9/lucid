@@ -342,6 +342,10 @@ pub fn add_intents(
 
         let (intent_pda, _) =
             pda::find_intent_pda(&wallet_pubkey, current_intent_count, &program_id);
+        // The ADD meta-intent (index 0) is the on-chain authority anchor for
+        // setup-phase intent additions; the program reads its approver list
+        // to verify the signer is allowed to add intents.
+        let (add_meta_pda, _) = pda::find_intent_pda(&wallet_pubkey, 0, &program_id);
 
         // Build AddIntent instruction: [disc=1, intent_data...]
         let mut data = Vec::new();
@@ -353,6 +357,7 @@ pub fn add_intents(
             AccountMeta::new(intent_pda, false),
             AccountMeta::new(payer.pubkey(), true),
             AccountMeta::new_readonly(solana_sdk::system_program::ID, false),
+            AccountMeta::new_readonly(add_meta_pda, false),
         ];
 
         let ix = Instruction::new_with_bytes(program_id, &data, accounts);

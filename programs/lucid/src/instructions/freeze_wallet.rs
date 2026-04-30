@@ -23,6 +23,17 @@ impl FreezeWallet {
 
         let wallet_addr = accounts[0].address().to_bytes();
 
+        // Setup-phase only: a single approver mustn't be able to permanently
+        // brick a live wallet by freezing it. After the first proposal, freeze
+        // would have to flow through the propose/approve threshold path.
+        {
+            let wdata = accounts[0].try_borrow()?;
+            let wallet = Wallet::from_bytes(&wdata)?;
+            if wallet.proposal_index > 0 {
+                return Err(ProgramError::Custom(ERR_SETUP_PHASE_ONLY));
+            }
+        }
+
         // Verify meta-intent belongs to this wallet and signer is an approver
         {
             let idata = accounts[1].try_borrow()?;

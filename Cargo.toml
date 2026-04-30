@@ -1,3 +1,6 @@
 [workspace]
 resolver = "2"
 members = ["programs/lucid", "clients/rust", "cli"]
+
+[profile.release]
+overflow-checks = true

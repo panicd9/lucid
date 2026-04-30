@@ -24,8 +24,8 @@ fn test_add_intent_rejected_after_first_proposal() {
     builder.approvers.push(ws.approvers[0].pubkey().to_bytes());
     let intent_data = builder.build();
 
-    let ix = instructions::add_intent(&ws.wallet, 3, &intent_data, &ws.payer.pubkey());
-    let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
+    let ix = instructions::add_intent(&ws.wallet, 3, &intent_data, &ws.approvers[0].pubkey());
+    let result = setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]);
     assert!(result.is_ok());
 
     // Propose on intent 3 to move past setup phase
@@ -34,7 +34,7 @@ fn test_add_intent_rejected_after_first_proposal() {
     let wallet_name = std::str::from_utf8(&ws.name).unwrap();
     let expiry = ed25519::future_expiry();
     let rendered = "test action";
-    let msg = ed25519::build_offchain_message(&expiry, "propose", rendered, wallet_name, 0);
+    let msg = ed25519::build_offchain_message(&expiry, "propose", rendered, wallet_name, &ws.wallet.to_string(), 0);
     let sk = ed25519::keypair_to_signing_key(&ws.proposers[0]);
 
     let result = setup::send_tx(
@@ -61,8 +61,8 @@ fn test_add_intent_rejected_after_first_proposal() {
     builder2.proposers.push(ws.proposers[0].pubkey().to_bytes());
     builder2.approvers.push(ws.approvers[0].pubkey().to_bytes());
 
-    let ix = instructions::add_intent(&ws.wallet, 4, &builder2.build(), &ws.payer.pubkey());
-    let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
+    let ix = instructions::add_intent(&ws.wallet, 4, &builder2.build(), &ws.approvers[0].pubkey());
+    let result = setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]);
     assert!(result.is_err(), "AddIntent should fail after setup phase");
 }
 
@@ -93,8 +93,8 @@ fn test_frozen_wallet_rejects_add_intent() {
     builder.approval_threshold = 1;
     builder.cancellation_threshold = 1;
 
-    let ix = instructions::add_intent(&ws.wallet, 3, &builder.build(), &ws.payer.pubkey());
-    let result = setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]);
+    let ix = instructions::add_intent(&ws.wallet, 3, &builder.build(), &ws.approvers[0].pubkey());
+    let result = setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]);
     assert!(result.is_err(), "Should fail: wallet is frozen");
 }
 
@@ -143,8 +143,8 @@ fn test_deactivate_by_non_approver_rejected() {
     builder.proposers.push(ws.proposers[0].pubkey().to_bytes());
     builder.approvers.push(ws.approvers[0].pubkey().to_bytes());
 
-    let ix = instructions::add_intent(&ws.wallet, 3, &builder.build(), &ws.payer.pubkey());
-    setup::send_tx(&mut svm, &[ix], &ws.payer, &[&ws.payer]).unwrap();
+    let ix = instructions::add_intent(&ws.wallet, 3, &builder.build(), &ws.approvers[0].pubkey());
+    setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]]).unwrap();
 
     let pid = helpers::program_id();
     let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 3, &pid);

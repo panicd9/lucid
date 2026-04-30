@@ -32,6 +32,12 @@ impl Propose {
             data[..8].try_into().map_err(|_| ProgramError::InvalidInstructionData)?
         );
         let params_data = &data[8..];
+        // Cap params at execute's stack buffer size so an oversized payload
+        // can't sneak past propose and then panic copy_from_slice in execute,
+        // leaving the proposal stuck in STATUS_APPROVED forever.
+        if params_data.len() > MAX_PARAMS_DATA_LEN {
+            return Err(ProgramError::InvalidInstructionData);
+        }
 
         let clock = Clock::get()?;
         let wallet_address = accounts[0].address().to_bytes();
@@ -79,6 +85,7 @@ impl Propose {
                 &idata,
                 intent,
                 wallet_name,
+                &wallet_address,
                 current_proposal_index,
                 params_data,
             )?;

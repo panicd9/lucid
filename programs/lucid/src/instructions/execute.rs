@@ -124,8 +124,8 @@ impl Execute {
                 )?;
             }
             INTENT_TYPE_ADD => execute_meta_add(accounts, &params_buf[..params_len], &wallet_address, program_id)?,
-            INTENT_TYPE_REMOVE => execute_meta_remove(accounts, &params_buf[..params_len])?,
-            INTENT_TYPE_UPDATE => execute_meta_update(accounts, &params_buf[..params_len])?,
+            INTENT_TYPE_REMOVE => execute_meta_remove(accounts, &params_buf[..params_len], &wallet_address, program_id)?,
+            INTENT_TYPE_UPDATE => execute_meta_update(accounts, &params_buf[..params_len], &wallet_address, program_id)?,
             _ => return Err(ProgramError::InvalidInstructionData),
         }
 
@@ -419,10 +419,26 @@ fn resolve_address_inner(
             Ok(pda.to_bytes())
         }
         SOURCE_HAS_ONE => {
+            // entry.source_data[0] is the AccountEntry index whose pubkey at
+            // offset (source_data[1..3]) we want to read. The same index also
+            // identifies the slot in `remaining` where the supplied account
+            // must appear.
             let src_idx = entry.source_data[0] as usize;
             let data_off = u16::from_le_bytes([entry.source_data[1], entry.source_data[2]]) as usize;
-            if src_idx >= remaining.len() {
+            if src_idx >= remaining.len() || src_idx >= intent.account_count as usize {
                 return Err(ProgramError::NotEnoughAccountKeys);
+            }
+            // Verify the supplied account matches what the intent's account
+            // entry at the same index resolves to. Without this check, an
+            // attacker could pass a forged source account and inject any
+            // chosen pubkey into vault-signed CPI account slots.
+            // (Mirrors the SEED_ACCOUNT_FIELD verification above.)
+            let src_entry = read_account_entry(intent_data, intent, src_idx as u8)?;
+            let expected = resolve_address_inner(
+                intent_data, intent, src_entry, params_data, remaining, vault_address, depth + 1,
+            )?;
+            if remaining[src_idx].address().to_bytes() != expected {
+                return Err(ProgramError::Custom(ERR_ACCOUNT_MISMATCH));
             }
             let adata = remaining[src_idx].try_borrow()?;
             if data_off + 32 > adata.len() {
@@ -514,14 +530,33 @@ fn execute_meta_add(
     Ok(())
 }
 
-fn execute_meta_remove(accounts: &mut [AccountView], params: &[u8]) -> Result<(), ProgramError> {
+fn execute_meta_remove(
+    accounts: &mut [AccountView],
+    params: &[u8],
+    wallet_address: &[u8; 32],
+    program_id: &Address,
+) -> Result<(), ProgramError> {
     if params.is_empty() || accounts.len() < 7 {
         return Err(ProgramError::NotEnoughAccountKeys);
     }
     let target_index = params[0];
 
+    // Bind accounts[6] to the executing wallet — without this any wallet's
+    // approved REMOVE could deactivate intents in any other Lucid wallet at
+    // the same numeric index.
+    require_owner!(accounts[6], program_id);
+    let index_bytes = [target_index];
+    let intent_seeds: &[&[u8]] = &[INTENT_SEED, wallet_address.as_slice(), &index_bytes];
+    let (expected_pda, _) = Address::find_program_address(intent_seeds, program_id);
+    if accounts[6].address() != &expected_pda {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
     let mut idata = accounts[6].try_borrow_mut()?;
     let intent = IntentHeader::from_bytes_mut(&mut idata)?;
+    if intent.wallet != *wallet_address {
+        return Err(ProgramError::InvalidAccountData);
+    }
     if intent.intent_index != target_index {
         return Err(ProgramError::InvalidAccountData);
     }
@@ -532,7 +567,12 @@ fn execute_meta_remove(accounts: &mut [AccountView], params: &[u8]) -> Result<()
     Ok(())
 }
 
-fn execute_meta_update(accounts: &mut [AccountView], params: &[u8]) -> Result<(), ProgramError> {
+fn execute_meta_update(
+    accounts: &mut [AccountView],
+    params: &[u8],
+    wallet_address: &[u8; 32],
+    program_id: &Address,
+) -> Result<(), ProgramError> {
     if params.len() < 4 || accounts.len() < 7 {
         return Err(ProgramError::NotEnoughAccountKeys);
     }
@@ -543,8 +583,22 @@ fn execute_meta_update(accounts: &mut [AccountView], params: &[u8]) -> Result<()
     }
     let new_def = &params[3..3 + def_len];
 
+    // Bind accounts[6] to the executing wallet — without this any wallet's
+    // approved UPDATE could rewrite intents in any other Lucid wallet at
+    // the same numeric index, taking over their vault.
+    require_owner!(accounts[6], program_id);
+    let index_bytes = [target_index];
+    let intent_seeds: &[&[u8]] = &[INTENT_SEED, wallet_address.as_slice(), &index_bytes];
+    let (expected_pda, _) = Address::find_program_address(intent_seeds, program_id);
+    if accounts[6].address() != &expected_pda {
+        return Err(ProgramError::InvalidSeeds);
+    }
+
     let mut idata = accounts[6].try_borrow_mut()?;
     let intent = IntentHeader::from_bytes_mut(&mut idata)?;
+    if intent.wallet != *wallet_address {
+        return Err(ProgramError::InvalidAccountData);
+    }
     if intent.intent_index != target_index {
         return Err(ProgramError::InvalidAccountData);
     }

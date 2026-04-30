@@ -4,35 +4,39 @@
     "action": "propose",
     "rendered_template": "transfer 1000000 to 7xKXtg2CzLrSHkGSoK1ifGMKuA3bN3",
     "wallet_name": "treasury",
+    "wallet_pda_b58": "Trea5uRy11111111111111111111111111111111111",
     "proposal_index": 42,
     "expiry": "01 Jan 2026 00:00:00",
-    "expected_body": "propose transfer 1000000 to 7xKXtg2CzLrSHkGSoK1ifGMKuA3bN3 | wallet: treasury; proposal: #42; expires: 01 Jan 2026 00:00:00"
+    "expected_body": "propose transfer 1000000 to 7xKXtg2CzLrSHkGSoK1ifGMKuA3bN3 | wallet: treasury (Trea5uRy11111111111111111111111111111111111); proposal: #42; expires: 01 Jan 2026 00:00:00"
   },
   {
     "description": "Approve with rendered template",
     "action": "approve",
     "rendered_template": "transfer 1000000 to 7xKXtg2CzLrSHkGSoK1ifGMKuA3bN3",
     "wallet_name": "treasury",
+    "wallet_pda_b58": "Trea5uRy11111111111111111111111111111111111",
     "proposal_index": 7,
     "expiry": "01 Jun 2026 00:00:00",
-    "expected_body": "approve transfer 1000000 to 7xKXtg2CzLrSHkGSoK1ifGMKuA3bN3 | wallet: treasury; proposal: #7; expires: 01 Jun 2026 00:00:00"
+    "expected_body": "approve transfer 1000000 to 7xKXtg2CzLrSHkGSoK1ifGMKuA3bN3 | wallet: treasury (Trea5uRy11111111111111111111111111111111111); proposal: #7; expires: 01 Jun 2026 00:00:00"
   },
   {
     "description": "Cancel with rendered template",
     "action": "cancel",
     "rendered_template": "withdraw 500000 to 9pMqrDXojQi8K3HZkfPBSm1GFiqMqLf9",
     "wallet_name": "vault-ops",
+    "wallet_pda_b58": "VauLtopS1111111111111111111111111111111111",
     "proposal_index": 0,
     "expiry": "31 Dec 2026 23:59:59",
-    "expected_body": "cancel withdraw 500000 to 9pMqrDXojQi8K3HZkfPBSm1GFiqMqLf9 | wallet: vault-ops; proposal: #0; expires: 31 Dec 2026 23:59:59"
+    "expected_body": "cancel withdraw 500000 to 9pMqrDXojQi8K3HZkfPBSm1GFiqMqLf9 | wallet: vault-ops (VauLtopS1111111111111111111111111111111111); proposal: #0; expires: 31 Dec 2026 23:59:59"
   },
   {
     "description": "Large proposal index",
     "action": "propose",
     "rendered_template": "set admin to 5ZWj7a1f8tWkjBESHKgrLmXshuXxqeY9SYcfbshpAqPG",
     "wallet_name": "governance",
+    "wallet_pda_b58": "Govern4nce11111111111111111111111111111111",
     "proposal_index": 999999,
     "expiry": "15 Mar 2027 12:00:00",
-    "expected_body": "propose set admin to 5ZWj7a1f8tWkjBESHKgrLmXshuXxqeY9SYcfbshpAqPG | wallet: governance; proposal: #999999; expires: 15 Mar 2027 12:00:00"
+    "expected_body": "propose set admin to 5ZWj7a1f8tWkjBESHKgrLmXshuXxqeY9SYcfbshpAqPG | wallet: governance (Govern4nce11111111111111111111111111111111); proposal: #999999; expires: 15 Mar 2027 12:00:00"
   }
 ]
