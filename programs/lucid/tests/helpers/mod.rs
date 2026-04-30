@@ -45,6 +45,8 @@ pub const PARAM_TYPE_U128: u8 = 8;
 pub const SOURCE_STATIC: u8 = 0;
 pub const SOURCE_PARAM: u8 = 1;
 pub const SOURCE_VAULT: u8 = 2;
+pub const SOURCE_PDA: u8 = 3;
+pub const SOURCE_HAS_ONE: u8 = 4;
 
 /// Data segment types
 pub const SEGMENT_LITERAL: u8 = 0;

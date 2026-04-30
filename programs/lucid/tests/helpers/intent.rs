@@ -2,7 +2,8 @@ use super::{
     INTENT_TYPE_CUSTOM, INTENT_HEADER_LEN, PARAM_ENTRY_SIZE, ACCOUNT_ENTRY_SIZE,
     INSTRUCTION_ENTRY_SIZE, DATA_SEGMENT_ENTRY_SIZE, SEED_ENTRY_SIZE,
     PARAM_TYPE_U64, PARAM_TYPE_ADDRESS,
-    SOURCE_STATIC, SOURCE_PARAM, SOURCE_VAULT, SEGMENT_LITERAL, SEGMENT_PARAM,
+    SOURCE_STATIC, SOURCE_PARAM, SOURCE_VAULT, SOURCE_HAS_ONE,
+    SEGMENT_LITERAL, SEGMENT_PARAM,
 };
 
 /// Builder for constructing raw intent data bytes that match on-chain IntentHeader + arrays + byte_pool.
@@ -240,6 +241,162 @@ impl IntentDataBuilder {
             + (self.data_segments.len() * DATA_SEGMENT_ENTRY_SIZE)
             + (self.seeds.len() * SEED_ENTRY_SIZE)
             + byte_pool_len
+    }
+
+    // ── CPI-intent builder helpers ────────────────────────────────────
+    //
+    // These produce the entries the on-chain `execute_custom_cpi` resolver
+    // walks. They make a CUSTOM intent's account/instruction/segment layout
+    // expressible without hand-poking `source_data: [u8; 4]` bytes.
+    //
+    // **Ordering constraint:** add params first, THEN call the static-account
+    // / literal-segment helpers. They compute byte_pool offsets relative to
+    // the position where `byte_pool_extra` will start (after template +
+    // param names), so adding params after these helpers shifts everything.
+
+    /// Offset (within the final byte_pool) of the next byte that
+    /// `byte_pool_extra` will occupy. Used by helpers that need to record an
+    /// absolute byte_pool offset in an entry's source/segment data.
+    fn next_extra_offset(&self) -> u16 {
+        let base: usize = 4
+            + self.template.len()
+            + self.params.iter().map(|p| p.name.len()).sum::<usize>()
+            + self.byte_pool_extra.len();
+        base as u16
+    }
+
+    /// Set the target program ID and return `&mut Self` for chaining.
+    pub fn with_target_program(&mut self, program: [u8; 32]) -> &mut Self {
+        self.target_program = program;
+        self
+    }
+
+    /// Append a SOURCE_STATIC account whose pubkey is stored in the byte_pool.
+    /// Returns the new account's index.
+    pub fn add_static_account(
+        &mut self,
+        address: [u8; 32],
+        writable: bool,
+        is_signer: bool,
+    ) -> u8 {
+        let off = self.next_extra_offset();
+        self.byte_pool_extra.extend_from_slice(&address);
+        let mut source_data = [0u8; 4];
+        source_data[0..2].copy_from_slice(&off.to_le_bytes());
+        let idx = self.accounts.len() as u8;
+        self.accounts.push(AccountDef {
+            source: SOURCE_STATIC,
+            writable: writable as u8,
+            is_signer: is_signer as u8,
+            source_data,
+        });
+        idx
+    }
+
+    /// Append a SOURCE_VAULT account — at execute time the resolver fills
+    /// it with the wallet's vault PDA. Returns the new account's index.
+    pub fn add_vault_account(&mut self, writable: bool, is_signer: bool) -> u8 {
+        let idx = self.accounts.len() as u8;
+        self.accounts.push(AccountDef {
+            source: SOURCE_VAULT,
+            writable: writable as u8,
+            is_signer: is_signer as u8,
+            source_data: [0; 4],
+        });
+        idx
+    }
+
+    /// Append a SOURCE_PARAM account — pubkey is taken from the value of
+    /// `param_index` at proposal time. Returns the new account's index.
+    pub fn add_param_account(
+        &mut self,
+        param_index: u8,
+        writable: bool,
+        is_signer: bool,
+    ) -> u8 {
+        let mut source_data = [0u8; 4];
+        source_data[0] = param_index;
+        let idx = self.accounts.len() as u8;
+        self.accounts.push(AccountDef {
+            source: SOURCE_PARAM,
+            writable: writable as u8,
+            is_signer: is_signer as u8,
+            source_data,
+        });
+        idx
+    }
+
+    /// Append a SOURCE_HAS_ONE account — pubkey is read from another
+    /// account's data at the given offset. `src_account_index` is the index
+    /// of an earlier-added AccountEntry whose resolved address must match
+    /// the supplied account at the same `remaining[]` slot at execute time.
+    /// Returns the new account's index.
+    pub fn add_has_one_account(
+        &mut self,
+        src_account_index: u8,
+        data_offset: u16,
+        writable: bool,
+        is_signer: bool,
+    ) -> u8 {
+        let mut source_data = [0u8; 4];
+        source_data[0] = src_account_index;
+        source_data[1..3].copy_from_slice(&data_offset.to_le_bytes());
+        let idx = self.accounts.len() as u8;
+        self.accounts.push(AccountDef {
+            source: SOURCE_HAS_ONE,
+            writable: writable as u8,
+            is_signer: is_signer as u8,
+            source_data,
+        });
+        idx
+    }
+
+    /// Append a SEGMENT_LITERAL data segment whose bytes are stored in the
+    /// byte_pool. Returns the new segment's index.
+    pub fn add_literal_segment(&mut self, bytes: &[u8]) -> u8 {
+        let off = self.next_extra_offset();
+        let len = bytes.len() as u16;
+        self.byte_pool_extra.extend_from_slice(bytes);
+        let mut segment_data = [0u8; 4];
+        segment_data[0..2].copy_from_slice(&off.to_le_bytes());
+        segment_data[2..4].copy_from_slice(&len.to_le_bytes());
+        let idx = self.data_segments.len() as u8;
+        self.data_segments.push(DataSegmentDef {
+            segment_type: SEGMENT_LITERAL,
+            segment_data,
+        });
+        idx
+    }
+
+    /// Append a SEGMENT_PARAM data segment — bytes come from the value of
+    /// `param_index` at proposal time. Returns the new segment's index.
+    pub fn add_param_segment(&mut self, param_index: u8) -> u8 {
+        let mut segment_data = [0u8; 4];
+        segment_data[0] = param_index;
+        let idx = self.data_segments.len() as u8;
+        self.data_segments.push(DataSegmentDef {
+            segment_type: SEGMENT_PARAM,
+            segment_data,
+        });
+        idx
+    }
+
+    /// Append an InstructionEntry that references prior account/segment indices.
+    pub fn add_instruction(
+        &mut self,
+        program_account_index: u8,
+        account_start_index: u8,
+        account_count: u8,
+        data_segment_start_index: u8,
+        data_segment_count: u8,
+    ) {
+        self.instructions.push(InstructionDef {
+            program_account_index,
+            account_start_index,
+            account_count,
+            data_segment_start_index,
+            data_segment_count,
+        });
     }
 }
 

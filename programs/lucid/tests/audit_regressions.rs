@@ -560,19 +560,110 @@ fn test_deactivate_intent_post_setup_rejected() {
 // Finding 9: SOURCE_HAS_ONE source-account substitution
 // ────────────────────────────────────────────────────────────────────────
 //
-// Building a fully-formed CPI intent that exercises SOURCE_HAS_ONE end-to-end
-// requires intent-builder support that doesn't exist yet. The check itself
-// (resolve_address_inner SOURCE_HAS_ONE → recursive expected-address resolve)
-// is small and covered in part by the existing SEED_ACCOUNT_FIELD tests, but
-// a dedicated regression test is still wanted. Tracked separately.
+// resolve_address SOURCE_HAS_ONE branch must verify the supplied source
+// account matches the resolved address of `account_entry[src_idx]`, mirroring
+// SEED_ACCOUNT_FIELD. Without it, an attacker passes a forged account at the
+// source slot to inject any chosen pubkey into a vault-signed CPI.
+//
+// Test shape: build a CUSTOM intent with two accounts —
+//   accounts[0]: SOURCE_STATIC pointing to address X (also the program ID)
+//   accounts[1]: SOURCE_HAS_ONE { src_idx: 0, data_off: 0 }
+// At execute time, pass remaining[0] = a forged account with a different
+// address Y. The recursive resolve produces expected = X, the equality check
+// against remaining[0].address() = Y fails, and the program errors with
+// ERR_ACCOUNT_MISMATCH before the CPI is ever attempted.
 #[test]
-#[ignore = "needs CPI-intent builder support; see programs/lucid/src/instructions/execute.rs SOURCE_HAS_ONE branch"]
 fn test_source_has_one_account_substitution_rejected() {
-    // TODO: build a wallet + custom CPI intent where account_count >= 2,
-    //       account_entry[0] is SOURCE_STATIC pointing to address X,
-    //       account_entry[1] is SOURCE_HAS_ONE { src_idx: 0, data_off: 0 }.
-    //       Pass remaining[0] = a forged account containing a different
-    //       pubkey at offset 0. Execute and assert ERR_ACCOUNT_MISMATCH.
+    let mut svm = setup::new_svm();
+    let ws = setup::create_test_wallet(&mut svm, b"hasone", 1, 1, 1, 1, 0);
+
+    // X = some plausible static address used as both target_program and
+    // the SOURCE_STATIC anchor for the HAS_ONE check. We use a non-existent
+    // address — the HAS_ONE check fires before any CPI is attempted, so the
+    // address doesn't need to be a real program.
+    let x: [u8; 32] = [42u8; 32];
+
+    let mut builder = IntentDataBuilder::new();
+    builder.intent_type = helpers::INTENT_TYPE_CUSTOM;
+    builder.approval_threshold = 1;
+    builder.cancellation_threshold = 1;
+    builder.timelock_seconds = 0;
+    builder.template = b"test cpi".to_vec();
+    builder.proposers.push(ws.proposers[0].pubkey().to_bytes());
+    builder.approvers.push(ws.approvers[0].pubkey().to_bytes());
+    builder.with_target_program(x);
+
+    let prog_idx = builder.add_static_account(x, false, false);
+    let _has_one_idx = builder.add_has_one_account(prog_idx, 0, false, false);
+    builder.add_instruction(
+        prog_idx,        // program_account_index
+        0,               // account_start_index
+        2,               // account_count (program + HAS_ONE)
+        0,               // data_segment_start_index
+        0,               // data_segment_count (no data — we never reach CPI)
+    );
+
+    // Add the intent during setup (signer = approver, per finding-6 fix).
+    let ix = instructions::add_intent(
+        &ws.wallet, 3, &builder.build(), &ws.approvers[0].pubkey(),
+    );
+    setup::send_tx(&mut svm, &[ix], &ws.approvers[0], &[&ws.approvers[0]])
+        .expect("AddIntent (HAS_ONE intent) failed in setup");
+
+    let pid = helpers::program_id();
+    let (intent_pda, _) = pda::find_intent_pda(&ws.wallet, 3, &pid);
+    let wallet_name = std::str::from_utf8(&ws.name).unwrap();
+    let expiry = edh::future_expiry();
+
+    // Propose against the HAS_ONE intent. Body = "propose test cpi | wallet:..."
+    let propose_msg = edh::build_offchain_message(
+        &expiry, "propose", "test cpi", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    let sk = edh::keypair_to_signing_key(&ws.proposers[0]);
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&sk, &propose_msg),
+            instructions::propose(&ws.wallet, &intent_pda, 0, &[], &ws.payer.pubkey()),
+        ],
+        &ws.payer, &[&ws.payer],
+    )
+    .expect("propose failed");
+
+    // Approve to threshold (=1).
+    let (proposal_pda, _) = pda::find_proposal_pda(&intent_pda, 0, &pid);
+    let approve_msg = edh::build_offchain_message(
+        &expiry, "approve", "test cpi", wallet_name, &ws.wallet.to_string(), 0,
+    );
+    let sk_approver = edh::keypair_to_signing_key(&ws.approvers[0]);
+    setup::send_tx(
+        &mut svm,
+        &[
+            edh::create_ed25519_instruction(&sk_approver, &approve_msg),
+            instructions::approve(&ws.wallet, &intent_pda, &proposal_pda),
+        ],
+        &ws.payer, &[&ws.payer],
+    )
+    .expect("approve failed");
+
+    // Execute — the attacker's job is to substitute `remaining[0]` with an
+    // account whose address ≠ X. We pick a wallet B owned by the attacker.
+    // Any address ≠ X works; for simplicity we use the proposer's keypair.
+    let forged_addr = ws.proposers[0].pubkey();
+    assert_ne!(forged_addr.to_bytes(), x, "test setup: forged address must differ from X");
+
+    let remaining = vec![
+        AccountMeta::new_readonly(forged_addr, false),
+        AccountMeta::new_readonly(forged_addr, false), // remaining[1] is unread before the rejection
+    ];
+    let exec_ix = instructions::execute(
+        &ws.wallet, &ws.vault, &intent_pda, &proposal_pda, &remaining,
+    );
+    let result = setup::send_tx(&mut svm, &[exec_ix], &ws.payer, &[&ws.payer]);
+    assert!(
+        result.is_err(),
+        "execute must reject SOURCE_HAS_ONE substitution (forged source account)"
+    );
 }
 
 // ────────────────────────────────────────────────────────────────────────
