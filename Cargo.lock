@@ -3136,7 +3136,6 @@ dependencies = [
  "chrono",
  "clap",
  "colored",
- "ed25519-dalek 1.0.1",
  "hex",
  "serde",
  "serde_json",

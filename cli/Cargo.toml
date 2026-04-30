@@ -20,7 +20,6 @@ colored = "2"
 shellexpand = "3"
 chrono = "0.4"
 hex = "0.4"
-ed25519-dalek = "1.0"
 
 [dev-dependencies]
 tempfile = "3"
