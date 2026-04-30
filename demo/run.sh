@@ -215,7 +215,7 @@ $LUCID wallet add-intents \
   --proposers "$WALLET1,$LEDGER" \
   --approvers "$WALLET1,$WALLET2,$LEDGER" \
   --approval-threshold 2 \
-  --keypair "$KEYPAIR" \
+  --keypair "$WALLETS/wallet1.json" \
   --url "$RPC"
 echo ""
 
@@ -226,7 +226,7 @@ $LUCID wallet add-intents \
   --proposers "$WALLET1,$LEDGER" \
   --approvers "$WALLET1,$WALLET2,$LEDGER" \
   --approval-threshold 2 \
-  --keypair "$KEYPAIR" \
+  --keypair "$WALLETS/wallet1.json" \
   --url "$RPC"
 echo ""
 
@@ -237,7 +237,7 @@ $LUCID wallet add-intents \
   --proposers "$WALLET1,$LEDGER" \
   --approvers "$WALLET1,$LEDGER" \
   --approval-threshold 1 \
-  --keypair "$KEYPAIR" \
+  --keypair "$WALLETS/wallet1.json" \
   --url "$RPC"
 echo ""
 
@@ -248,7 +248,7 @@ $LUCID wallet add-intents \
   --proposers "$WALLET1,$LEDGER" \
   --approvers "$WALLET1,$LEDGER" \
   --approval-threshold 1 \
-  --keypair "$KEYPAIR" \
+  --keypair "$WALLETS/wallet1.json" \
   --url "$RPC"
 echo ""
 
@@ -259,7 +259,7 @@ $LUCID wallet add-intents \
   --proposers "$WALLET1,$LEDGER" \
   --approvers "$WALLET1,$WALLET2,$LEDGER" \
   --approval-threshold 2 \
-  --keypair "$KEYPAIR" \
+  --keypair "$WALLETS/wallet1.json" \
   --url "$RPC"
 echo ""
 
@@ -270,7 +270,7 @@ $LUCID wallet add-intents \
   --proposers "$WALLET1,$LEDGER" \
   --approvers "$WALLET1,$WALLET2,$LEDGER" \
   --approval-threshold 2 \
-  --keypair "$KEYPAIR" \
+  --keypair "$WALLETS/wallet1.json" \
   --url "$RPC"
 echo ""
 
@@ -281,7 +281,7 @@ $LUCID wallet add-intents \
   --proposers "$WALLET1,$LEDGER" \
   --approvers "$WALLET1,$LEDGER" \
   --approval-threshold 2 \
-  --keypair "$KEYPAIR" \
+  --keypair "$WALLETS/wallet1.json" \
   --url "$RPC"
 echo ""
 
@@ -292,7 +292,7 @@ $LUCID wallet add-intents \
   --proposers "$WALLET1,$LEDGER" \
   --approvers "$WALLET1,$LEDGER" \
   --approval-threshold 2 \
-  --keypair "$KEYPAIR" \
+  --keypair "$WALLETS/wallet1.json" \
   --url "$RPC"
 echo ""
 
