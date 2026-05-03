@@ -11,6 +11,7 @@ import RiskBadge, { inferRiskLevel } from './RiskBadge';
 import TimelockDisplay from './TimelockDisplay';
 import AddressDisplay from './AddressDisplay';
 import ProposeModal from './ProposeModal';
+import TemplateHashVerify from './TemplateHashVerify';
 
 interface Props {
   intent: IntentAccount;
@@ -107,6 +108,9 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
         <div className="px-5 pb-5 pt-1 space-y-5">
           {/* Divider */}
           <div className="h-[1px] bg-gradient-to-r from-transparent via-neutral-700/50 to-transparent" />
+
+          {/* Template hash + verify */}
+          <TemplateHashVerify onChainHash={intent.templateHash} />
 
           {/* Summary row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
