@@ -57,6 +57,7 @@ export type IntentHeader = {
   instructionCount: number;
   dataSegmentCount: number;
   seedCount: number;
+  templateHash: ReadonlyUint8Array;
   reserved: ReadonlyUint8Array;
 };
 
@@ -83,6 +84,7 @@ export function getIntentHeaderEncoder(): FixedSizeEncoder<IntentHeaderArgs> {
     ["instructionCount", getU8Encoder()],
     ["dataSegmentCount", getU8Encoder()],
     ["seedCount", getU8Encoder()],
+    ["templateHash", fixEncoderSize(getBytesEncoder(), 32)],
     ["reserved", fixEncoderSize(getBytesEncoder(), 3)],
   ]);
 }
@@ -108,6 +110,7 @@ export function getIntentHeaderDecoder(): FixedSizeDecoder<IntentHeader> {
     ["instructionCount", getU8Decoder()],
     ["dataSegmentCount", getU8Decoder()],
     ["seedCount", getU8Decoder()],
+    ["templateHash", fixDecoderSize(getBytesDecoder(), 32)],
     ["reserved", fixDecoderSize(getBytesDecoder(), 3)],
   ]);
 }
@@ -174,5 +177,5 @@ export async function fetchAllMaybeIntentHeader(
 }
 
 export function getIntentHeaderSize(): number {
-  return 88;
+  return 120;
 }

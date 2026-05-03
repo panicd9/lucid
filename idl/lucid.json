@@ -501,6 +501,15 @@
             }
           },
           {
+            "name": "createKey",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
             "name": "name",
             "type": {
               "array": [
@@ -540,6 +549,15 @@
         "fields": [
           {
             "name": "wallet",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "targetProgram",
             "type": {
               "array": [
                 "u8",
@@ -610,6 +628,15 @@
           {
             "name": "seedCount",
             "type": "u8"
+          },
+          {
+            "name": "templateHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           },
           {
             "name": "reserved",

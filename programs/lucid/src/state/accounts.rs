@@ -93,13 +93,18 @@ pub struct IntentHeader {
     pub instruction_count: u8,
     pub data_segment_count: u8,
     pub seed_count: u8,
+    /// SHA256 of the canonical template-only projection of the intent JSON.
+    /// Set by the client and stored verbatim — off-chain verifiers re-derive
+    /// from the JSON to compare. See `cli/src/intent_utils.rs` for the
+    /// projection.
+    pub template_hash: [u8; 32],
     pub _reserved: [u8; 3],
 }
 
-assert_no_padding!(IntentHeader, 88);
+assert_no_padding!(IntentHeader, 120);
 
 impl IntentHeader {
-    pub const DATA_LEN: usize = 88;
+    pub const DATA_LEN: usize = 120;
     pub const HEADER_LEN: usize = PREFIX_LEN + Self::DATA_LEN;
     pub const DISCRIMINATOR: u8 = DISC_INTENT;
 

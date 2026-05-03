@@ -117,6 +117,7 @@ export interface IntentAccount {
   instructionCount: number;
   dataSegmentCount: number;
   seedCount: number;
+  templateHash: Uint8Array;
   // Variable data
   proposers: PublicKey[];
   approvers: PublicKey[];
@@ -128,7 +129,7 @@ export interface IntentAccount {
   template: string;
 }
 
-const INTENT_HEADER_MIN_LEN = PREFIX_LEN + 88;
+const INTENT_HEADER_MIN_LEN = PREFIX_LEN + 120;
 
 export function deserializeIntent(data: Buffer): IntentAccount {
   if (data.length < INTENT_HEADER_MIN_LEN) {
@@ -168,6 +169,9 @@ export function deserializeIntent(data: Buffer): IntentAccount {
   const instructionCount = data[offset++];
   const dataSegmentCount = data[offset++];
   const seedCount = data[offset++];
+
+  const templateHash = new Uint8Array(data.subarray(offset, offset + 32));
+  offset += 32;
 
   offset += 3; // reserved
 
@@ -321,6 +325,7 @@ export function deserializeIntent(data: Buffer): IntentAccount {
     instructionCount,
     dataSegmentCount,
     seedCount,
+    templateHash,
     proposers,
     approvers,
     params,

@@ -636,6 +636,8 @@ pub fn build_intent_bytes(
     result.push(def.data_segments.len() as u8);
     // seed_count: u8
     result.push(def.seeds.len() as u8);
+    // template_hash: 32 bytes
+    result.extend_from_slice(&intent_utils::compute_template_hash(def));
     // reserved: 3 bytes
     result.extend_from_slice(&[0u8; 3]);
 

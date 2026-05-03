@@ -60,6 +60,7 @@ function buildIntentBuffer(opts: {
   instructionCount?: number;
   dataSegmentCount?: number;
   seedCount?: number;
+  templateHash?: Buffer;
   proposers?: Buffer[];
   approvers?: Buffer[];
   params?: Buffer[];
@@ -88,7 +89,7 @@ function buildIntentBuffer(opts: {
     seedCount * SEED_ENTRY_SIZE +
     bytePool.length;
 
-  const totalLen = PREFIX_LEN + 88 + variableLen;
+  const totalLen = PREFIX_LEN + 120 + variableLen;
   const buf = Buffer.alloc(totalLen, 0);
 
   let offset = 0;
@@ -131,9 +132,15 @@ function buildIntentBuffer(opts: {
   buf[offset++] = dataSegmentCount;
   buf[offset++] = seedCount;
 
+  // template_hash (32 bytes) — left zeroed in test fixtures
+  if (opts.templateHash) {
+    opts.templateHash.copy(buf, offset);
+  }
+  offset += 32;
+
   offset += 3; // reserved
 
-  // We should now be at PREFIX_LEN + 88 = 90
+  // We should now be at PREFIX_LEN + 120 = 122
   // Proposers
   for (const p of opts.proposers ?? []) {
     p.copy(buf, offset);
@@ -421,7 +428,7 @@ describe('deserializeIntent', () => {
   it('throws when proposer_count > 16', () => {
     // Build a buffer with proposerCount=17 in the header but don't bother adding actual proposer data
     // The validation for MAX_SIGNERS happens before the length check
-    const buf = Buffer.alloc(PREFIX_LEN + 88, 0);
+    const buf = Buffer.alloc(PREFIX_LEN + 120, 0);
     buf[0] = DISC_INTENT;
     buf[1] = 1;
     // proposerCount is at offset PREFIX_LEN + 32 + 32 + 4 + 2 + 2 + 1 + 1 + 1 + 1 + 1 + 1 = PREFIX_LEN + 78
@@ -432,7 +439,7 @@ describe('deserializeIntent', () => {
 
   it('throws when data is truncated for declared arrays', () => {
     // Create header that claims 2 proposers but buffer is too short
-    const buf = Buffer.alloc(PREFIX_LEN + 88, 0);
+    const buf = Buffer.alloc(PREFIX_LEN + 120, 0);
     buf[0] = DISC_INTENT;
     buf[1] = 1;
     // proposerCount at offset PREFIX_LEN + 78

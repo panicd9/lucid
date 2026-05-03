@@ -98,7 +98,7 @@ pub struct VerificationInfo {
 /// On-chain Wallet account layout (after 2-byte prefix)
 pub const PREFIX_LEN: usize = 2;
 pub const WALLET_DATA_LEN: usize = 80;
-pub const INTENT_HEADER_LEN: usize = 88;
+pub const INTENT_HEADER_LEN: usize = 120;
 pub const PROPOSAL_DATA_LEN: usize = 168;
 
 /// Param type constants (matching on-chain)

@@ -45,7 +45,7 @@ import { findIntentPDA, findVaultPDA, findEventAuthorityPDA } from './pda';
 import { deserializeWallet } from './deserialize';
 import type { IntentAccount, ProposalAccount } from './deserialize';
 
-const INTENT_HEADER_SIZE = 88; // header size after PREFIX_LEN (distinct from constants.ts INTENT_HEADER_SIZE which includes prefix)
+const INTENT_HEADER_SIZE = 120; // header size after PREFIX_LEN (distinct from constants.ts INTENT_HEADER_SIZE which includes prefix)
 
 export interface ResolvedAccount {
   address: Address;

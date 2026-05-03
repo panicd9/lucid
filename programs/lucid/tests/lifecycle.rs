@@ -240,26 +240,27 @@ fn test_intent_header_raw_byte_offsets() {
     let data = setup::get_account_data(&svm, &intent_pda).unwrap();
     let ih = &data[helpers::PREFIX_LEN..];
 
-    // IntentHeader layout (88 bytes):
-    //   0-31:  wallet (32)
-    //  32-63:  target_program (32)
-    //  64-67:  timelock_seconds (u32)
-    //  68-69:  active_proposal_count (u16)
-    //  70-71:  byte_pool_len (u16)
-    //  72:     bump
-    //  73:     intent_index
-    //  74:     intent_type
-    //  75:     approved
-    //  76:     approval_threshold
-    //  77:     cancellation_threshold
-    //  78:     proposer_count
-    //  79:     approver_count
-    //  80:     param_count
-    //  81:     account_count
-    //  82:     instruction_count
-    //  83:     data_segment_count
-    //  84:     seed_count
-    //  85-87:  reserved
+    // IntentHeader layout (120 bytes):
+    //   0-31:   wallet (32)
+    //  32-63:   target_program (32)
+    //  64-67:   timelock_seconds (u32)
+    //  68-69:   active_proposal_count (u16)
+    //  70-71:   byte_pool_len (u16)
+    //  72:      bump
+    //  73:      intent_index
+    //  74:      intent_type
+    //  75:      approved
+    //  76:      approval_threshold
+    //  77:      cancellation_threshold
+    //  78:      proposer_count
+    //  79:      approver_count
+    //  80:      param_count
+    //  81:      account_count
+    //  82:      instruction_count
+    //  83:      data_segment_count
+    //  84:      seed_count
+    //  85-116:  template_hash (32)
+    //  117-119: reserved
 
     // Verify wallet pubkey stored correctly
     assert_eq!(&ih[0..32], ws.wallet.as_ref());
@@ -298,8 +299,8 @@ fn test_intent_header_raw_byte_offsets() {
     assert_eq!(ih[80], typed.param_count, "param_count offset wrong");
     assert_eq!(ih[81], typed.account_count, "account_count offset wrong");
 
-    // Verify proposer/approver arrays start at offset 88
-    let proposers_start = 88;
+    // Verify proposer/approver arrays start at offset 120
+    let proposers_start = 120;
     assert_eq!(
         &ih[proposers_start..proposers_start + 32],
         ws.proposers[0].pubkey().as_ref(),
@@ -319,7 +320,7 @@ fn test_intent_header_raw_byte_offsets() {
     );
 
     // Verify byte pool: template header (4 bytes) + template
-    let bp_start = 88 + (1 * 32) + (2 * 32); // header + proposers + approvers
+    let bp_start = 120 + (1 * 32) + (2 * 32); // header + proposers + approvers
     let tmpl_offset = u16::from_le_bytes([ih[bp_start], ih[bp_start + 1]]) as usize;
     let tmpl_len = u16::from_le_bytes([ih[bp_start + 2], ih[bp_start + 3]]) as usize;
     assert_eq!(tmpl_offset, 0);

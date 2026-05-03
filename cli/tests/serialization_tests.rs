@@ -216,27 +216,28 @@ fn proposal_approved_at_offset_120() {
 // =========================================================================
 // IntentHeader layout tests
 // =========================================================================
-// IntentHeader on-chain layout (PREFIX_LEN = 2, DATA_LEN = 88):
+// IntentHeader on-chain layout (PREFIX_LEN = 2, DATA_LEN = 120):
 //   [disc:1, version:1] -- prefix (2)
-//   pd[0..32]:  wallet (Pubkey)
-//   pd[32..64]: target_program (Pubkey)
-//   pd[64..68]: timelock_seconds (u32)
-//   pd[68..70]: active_proposal_count (u16)
-//   pd[70..72]: byte_pool_len (u16)
-//   pd[72]:     bump (u8)
-//   pd[73]:     intent_index (u8)
-//   pd[74]:     intent_type (u8)
-//   pd[75]:     approved (u8)
-//   pd[76]:     approval_threshold (u8)
-//   pd[77]:     cancellation_threshold (u8)
-//   pd[78]:     proposer_count (u8)
-//   pd[79]:     approver_count (u8)
-//   pd[80]:     param_count (u8)
-//   pd[81]:     account_count (u8)
-//   pd[82]:     instruction_count (u8)
-//   pd[83]:     data_segment_count (u8)
-//   pd[84]:     seed_count (u8)
-//   pd[85..88]: reserved (3 bytes)
+//   pd[0..32]:    wallet (Pubkey)
+//   pd[32..64]:   target_program (Pubkey)
+//   pd[64..68]:   timelock_seconds (u32)
+//   pd[68..70]:   active_proposal_count (u16)
+//   pd[70..72]:   byte_pool_len (u16)
+//   pd[72]:       bump (u8)
+//   pd[73]:       intent_index (u8)
+//   pd[74]:       intent_type (u8)
+//   pd[75]:       approved (u8)
+//   pd[76]:       approval_threshold (u8)
+//   pd[77]:       cancellation_threshold (u8)
+//   pd[78]:       proposer_count (u8)
+//   pd[79]:       approver_count (u8)
+//   pd[80]:       param_count (u8)
+//   pd[81]:       account_count (u8)
+//   pd[82]:       instruction_count (u8)
+//   pd[83]:       data_segment_count (u8)
+//   pd[84]:       seed_count (u8)
+//   pd[85..117]:  template_hash (32 bytes)
+//   pd[117..120]: reserved (3 bytes)
 
 #[test]
 fn intent_header_intent_type_at_offset_74() {
@@ -305,10 +306,10 @@ fn intent_header_byte_pool_offset_calculation() {
         + seed_count * SEED_ENTRY_SIZE;
 
     // Manual calculation:
-    //   88 + 64 + 96 + 16 + 16 + 8 + 12 + 6 = 306
-    let manual = 88 + (2 * 32) + (3 * 32) + (1 * 16) + (2 * 8) + (1 * 8) + (2 * 6) + (1 * 6);
+    //   120 + 64 + 96 + 16 + 16 + 8 + 12 + 6 = 338
+    let manual = 120 + (2 * 32) + (3 * 32) + (1 * 16) + (2 * 8) + (1 * 8) + (2 * 6) + (1 * 6);
     assert_eq!(expected_offset, manual, "byte_pool_offset formula must match manual calc");
-    assert_eq!(expected_offset, 306);
+    assert_eq!(expected_offset, 338);
 
     // Build a buffer large enough and verify we can write/read the byte pool
     // at the computed offset (relative to data start, i.e. after PREFIX_LEN).

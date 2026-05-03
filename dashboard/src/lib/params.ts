@@ -70,7 +70,7 @@ function parseScaledBigInt(val: string, decimals: number): bigint {
   return BigInt(whole) * 10n ** BigInt(decimals) + BigInt(frac);
 }
 
-const INTENT_HEADER_DATA_LEN = 88;
+const INTENT_HEADER_DATA_LEN = 120;
 
 /**
  * Render a meta-intent definition blob as a human-readable summary.

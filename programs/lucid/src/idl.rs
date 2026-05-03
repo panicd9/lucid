@@ -43,6 +43,7 @@ pub struct Vault {
 #[derive(ShankAccount)]
 pub struct IntentHeader {
     pub wallet: [u8; 32],
+    pub target_program: [u8; 32],
     pub timelock_seconds: u32,
     pub active_proposal_count: u16,
     pub byte_pool_len: u16,
@@ -59,6 +60,7 @@ pub struct IntentHeader {
     pub instruction_count: u8,
     pub data_segment_count: u8,
     pub seed_count: u8,
+    pub template_hash: [u8; 32],
     pub reserved: [u8; 3],
 }
 

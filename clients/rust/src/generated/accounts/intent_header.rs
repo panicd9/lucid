@@ -28,11 +28,12 @@ pub struct IntentHeader {
     pub instruction_count: u8,
     pub data_segment_count: u8,
     pub seed_count: u8,
+    pub template_hash: [u8; 32],
     pub reserved: [u8; 3],
 }
 
 impl IntentHeader {
-    pub const LEN: usize = 88;
+    pub const LEN: usize = 120;
 
     #[inline(always)]
     pub fn from_bytes(data: &[u8]) -> Result<Self, std::io::Error> {

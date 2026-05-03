@@ -1,10 +1,64 @@
 use anyhow::{Context, Result};
+use sha2::{Digest, Sha256};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::pubkey::Pubkey;
 
 use crate::pda;
 use crate::rpc;
 use crate::types::*;
+
+/// SHA256 of the canonical template-only projection of an intent definition.
+///
+/// Excludes per-wallet config and policy fields (`riskLevel`,
+/// `timelockSeconds`, `verification`) so the same template across wallets
+/// produces the same hash. The TS SDK mirrors this in
+/// `sdk/src/templateHash.ts` — a locked cross-language hex test catches
+/// drift.
+///
+/// **Do not enable serde_json's `preserve_order` feature** — this function
+/// relies on the default `BTreeMap`-backed `Map` for sorted-key output.
+pub fn compute_template_hash(def: &IntentDefinition) -> [u8; 32] {
+    let projected = serde_json::json!({
+        "version": def.version,
+        "programId": def.program_id,
+        "discriminator": def.discriminator,
+        "params": def.params.iter().map(|p| serde_json::json!({
+            "name": p.name,
+            "paramType": p.param_type,
+            "constraintType": p.constraint_type,
+            "constraintValue": p.constraint_value,
+            "displayDecimals": p.display_decimals,
+            "decimalsParam": p.decimals_param,
+        })).collect::<Vec<_>>(),
+        "accounts": def.accounts.iter().map(|a| serde_json::json!({
+            "name": a.name,
+            "source": a.source,
+            "writable": a.writable,
+            "isSigner": a.is_signer,
+            "sourceData": a.source_data,
+        })).collect::<Vec<_>>(),
+        "dataSegments": def.data_segments.iter().map(|d| serde_json::json!({
+            "segmentType": d.segment_type,
+            "data": d.data,
+            "paramIndex": d.param_index,
+        })).collect::<Vec<_>>(),
+        "seeds": def.seeds.iter().map(|s| serde_json::json!({
+            "seedType": s.seed_type,
+            "value": s.value,
+            "paramIndex": s.param_index,
+            "accountIndex": s.account_index,
+            "fieldPath": s.field_path,
+            "fieldLen": s.field_len,
+        })).collect::<Vec<_>>(),
+        "template": def.template,
+    });
+
+    let canonical = serde_json::to_string(&projected)
+        .expect("template projection always serializes");
+    let mut hasher = Sha256::new();
+    hasher.update(canonical.as_bytes());
+    hasher.finalize().into()
+}
 
 // ─── Typed Wallet deserialization ────────────────────────────────────
 

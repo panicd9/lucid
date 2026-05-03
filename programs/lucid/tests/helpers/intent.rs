@@ -114,7 +114,7 @@ impl IntentDataBuilder {
 
         let byte_pool_len = byte_pool.len() as u16;
 
-        // Build the IntentHeader (88 bytes)
+        // Build the IntentHeader (120 bytes)
         let mut data = Vec::new();
 
         // wallet: [u8; 32]
@@ -153,10 +153,13 @@ impl IntentDataBuilder {
         data.push(data_segment_count);
         // seed_count: u8
         data.push(seed_count);
+        // template_hash: [u8; 32] — left zeroed in test fixtures; production
+        // intents have the real canonical hash written here by the CLI.
+        data.extend_from_slice(&[0u8; 32]);
         // _reserved: [u8; 3]
         data.extend_from_slice(&[0u8; 3]);
 
-        assert_eq!(data.len(), 88, "IntentHeader must be 88 bytes");
+        assert_eq!(data.len(), 120, "IntentHeader must be 120 bytes");
 
         // Proposers (N * 32 bytes)
         for p in &self.proposers {
