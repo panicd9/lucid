@@ -16,7 +16,7 @@ const steps: Step[] = [
         <div className="bg-neutral-900/60 rounded-lg px-4 py-3 border border-neutral-700/30">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="text-xs font-heading text-emerald-400 tracking-wide">Drift Governance</span>
+            <span className="text-xs font-semibold text-emerald-400">Drift Governance</span>
           </div>
           <p className="text-sm text-neutral-300 font-mono">add market 5 with oracle 9abc...def</p>
         </div>
@@ -39,7 +39,7 @@ const steps: Step[] = [
         <div className="bg-red-500/5 rounded-lg px-4 py-3 border border-red-500/15">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse-glow" />
-            <span className="text-xs font-heading text-red-300 tracking-wide">Tampered Transaction</span>
+            <span className="text-xs font-semibold text-red-300">Tampered Transaction</span>
           </div>
           <p className="text-sm text-neutral-500 font-mono line-through">add market 5 with oracle 9abc...def</p>
           <p className="text-sm text-red-300 font-mono mt-1">drain vault to attacker wallet 7xyz...abc</p>
@@ -154,7 +154,7 @@ export default function Demo() {
     <div className="flex flex-col items-center pt-12 pb-16">
       {/* Header */}
       <div className="text-center mb-10">
-        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-neutral-100 tracking-wide mb-3">
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-neutral-100 mb-3">
           See Lucid in Action
         </h1>
         <p className="text-sm text-neutral-500 max-w-md mx-auto">
@@ -192,7 +192,7 @@ export default function Demo() {
               <span className="shrink-0 w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-sm font-heading font-bold text-emerald-400">
                 {currentStep + 1}
               </span>
-              <h2 className="text-lg font-heading font-semibold text-neutral-100 tracking-wide">
+              <h2 className="text-lg font-heading font-semibold text-neutral-100">
                 {steps[currentStep].title}
               </h2>
             </div>

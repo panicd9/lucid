@@ -151,7 +151,7 @@ export default function ExecuteModal({
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800/50">
-          <h3 id="execute-modal-title" className="text-lg font-semibold text-neutral-100 font-heading tracking-wide">
+          <h3 id="execute-modal-title" className="text-lg font-semibold text-neutral-100 font-heading">
             Execute
             <span className="text-sm font-normal text-neutral-500 ml-2 font-body">Proposal #{proposal.proposalIndex.toString()}</span>
           </h3>

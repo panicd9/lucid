@@ -137,7 +137,7 @@ export default function Home() {
 
       {/* How It Works */}
       <div className="w-full max-w-6xl mt-24">
-        <h2 className="text-2xl font-heading text-neutral-100 text-center tracking-[4px] mb-3">
+        <h2 className="text-2xl font-heading text-neutral-100 text-center mb-3">
           HOW IT WORKS
         </h2>
         <p className="text-sm text-neutral-500 text-center mb-14 max-w-lg mx-auto">

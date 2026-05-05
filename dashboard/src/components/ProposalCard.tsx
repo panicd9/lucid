@@ -103,7 +103,7 @@ export default function ProposalCard({ proposal, walletName, walletAddress, netw
           {/* Top row */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-mono text-neutral-500 font-heading">
+              <span className="text-sm font-mono text-neutral-500">
                 #{proposal.proposalIndex.toString()}
               </span>
               <ProposalStatusBadge status={proposal.status} />

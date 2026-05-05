@@ -434,7 +434,7 @@ export default function CreateWallet({ network }: Props) {
     <div className="flex flex-col items-center pt-8 pb-16">
       {/* Header */}
       <div className="text-center mb-10">
-        <h1 className="text-2xl font-heading font-bold text-neutral-100 tracking-wide mb-2">
+        <h1 className="text-2xl font-heading font-bold text-neutral-100 mb-2">
           Create Wallet
         </h1>
         <p className="text-sm text-neutral-500">Set up a new Lucid multisig wallet on Solana</p>

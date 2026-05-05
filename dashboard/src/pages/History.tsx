@@ -211,7 +211,7 @@ export default function History({ network }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-50 font-heading tracking-wide mb-1">
+          <h1 className="text-2xl font-bold text-neutral-50 font-heading mb-1">
             Audit Log
           </h1>
           <p className="text-sm text-neutral-500">Transaction history for {walletData?.wallet.name}</p>

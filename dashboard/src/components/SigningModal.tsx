@@ -175,7 +175,7 @@ export default function SigningModal({
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800/50">
-          <h3 id="signing-modal-title" className="text-lg font-semibold text-neutral-100 font-heading tracking-wide capitalize">
+          <h3 id="signing-modal-title" className="text-lg font-semibold text-neutral-100 font-heading capitalize">
             {action} Proposal
             <span className="text-sm font-normal text-neutral-500 ml-2 font-body">#{proposal.proposalIndex.toString()}</span>
           </h3>

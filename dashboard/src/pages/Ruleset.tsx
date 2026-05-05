@@ -72,7 +72,7 @@ export default function Ruleset({ network }: Props) {
           <div className="flex items-start justify-between mb-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-neutral-50 font-heading tracking-wide">
+                <h1 className="text-2xl font-bold text-neutral-50 font-heading">
                   {wallet.name}
                 </h1>
                 <FrozenStatusBadge frozen={wallet.frozen} />
@@ -142,7 +142,7 @@ export default function Ruleset({ network }: Props) {
         <section className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-500/30" />
-            <h2 className="text-base font-semibold text-neutral-200 font-heading tracking-wide">Meta-Intents</h2>
+            <h2 className="text-base font-semibold text-neutral-200 font-heading">Meta-Intents</h2>
             <span className="text-[10px] text-neutral-500 bg-neutral-800/60 px-2.5 py-1 rounded-full border border-neutral-700/40 uppercase tracking-wider">
               Governance
             </span>
@@ -166,7 +166,7 @@ export default function Ruleset({ network }: Props) {
       <section>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-emerald-500/30" />
-          <h2 className="text-base font-semibold text-neutral-200 font-heading tracking-wide">Protocol Intents</h2>
+          <h2 className="text-base font-semibold text-neutral-200 font-heading">Protocol Intents</h2>
           <span className="text-[10px] text-neutral-500 bg-neutral-800/60 px-2.5 py-1 rounded-full border border-neutral-700/40 uppercase tracking-wider">
             {protocolIntents.length} intent{protocolIntents.length !== 1 ? 's' : ''}
           </span>

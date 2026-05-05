@@ -90,7 +90,7 @@ export default function Proposals({ network }: Props) {
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-neutral-50 font-heading tracking-wide">
+            <h1 className="text-2xl font-bold text-neutral-50 font-heading">
               Proposals
             </h1>
             {proposals.length > 0 && (

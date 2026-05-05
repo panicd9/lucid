@@ -19,7 +19,7 @@ export default function WalletDisambiguation({ name, candidates, pathSuffix = ''
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       </div>
-      <h2 className="text-xl font-bold text-neutral-100 mb-1 font-heading tracking-wide">Multiple wallets named "{name}"</h2>
+      <h2 className="text-xl font-bold text-neutral-100 mb-1 font-heading">Multiple wallets named "{name}"</h2>
       <p className="text-sm text-neutral-500 mb-8">Select which wallet you want to view</p>
 
       <div className="w-full max-w-lg space-y-2">

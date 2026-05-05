@@ -44,7 +44,7 @@ export default function IntentCard({ intent, walletAddress, walletName, network,
         aria-label={`${intent.template || `Intent #${intent.intentIndex}`} — ${expanded ? 'collapse' : 'expand'} details`}
       >
         {/* Index badge */}
-        <span className="shrink-0 w-9 h-9 rounded-lg bg-neutral-800/60 border border-neutral-700/30 flex items-center justify-center text-sm font-mono text-neutral-400 font-heading">
+        <span className="shrink-0 w-9 h-9 rounded-lg bg-neutral-800/60 border border-neutral-700/30 flex items-center justify-center text-sm font-mono text-neutral-400">
           {intent.intentIndex}
         </span>
 

@@ -278,7 +278,7 @@ export default function ProposeModal({
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-800/50 sticky top-0 bg-neutral-900/95 backdrop-blur-xl z-10">
-          <h3 id="propose-modal-title" className="text-lg font-semibold text-neutral-100 font-heading tracking-wide">
+          <h3 id="propose-modal-title" className="text-lg font-semibold text-neutral-100 font-heading">
             New Proposal
             <span className="text-sm font-normal text-neutral-500 ml-2 font-body">Intent #{intent.intentIndex}</span>
           </h3>
