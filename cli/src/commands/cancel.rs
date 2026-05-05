@@ -56,8 +56,8 @@ pub fn cancel(
 
     // Build offchain message
     let body = format!(
-        "cancel {} | wallet: {}; proposal: #{}; expires: {}",
-        rendered, wallet_name, proposal_index, expiry_str
+        "cancel {} | wallet: {} ({}); proposal: #{}; expires: {}",
+        rendered, wallet_name, wallet_pubkey, proposal_index, expiry_str
     );
 
     let message = intent_utils::build_offchain_message(&payer.pubkey().to_bytes(), &body);

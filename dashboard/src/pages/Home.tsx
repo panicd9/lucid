@@ -218,18 +218,18 @@ export default function Home() {
                 What Lucid signers read
               </p>
             </div>
-            <div className="bg-neutral-900/80 p-5 font-mono text-xs leading-relaxed">
+            <div className="bg-neutral-900/80 p-5 font-mono text-xs leading-relaxed break-all">
               <p className="text-emerald-300/80">
-                approve <span className="text-emerald-400">add market 5</span>
+                approve <span className="text-emerald-400">add market 5 with oracle 9abc...def</span>
               </p>
-              <p className="text-emerald-300/80">
-                with oracle <span className="text-emerald-400">9abc...def</span>
+              <p className="text-neutral-500 mt-2">
+                | wallet: <span className="text-neutral-400">drift-governance</span> <span className="text-neutral-400">(5jHk...uV2y)</span>;
               </p>
-              <p className="text-emerald-300/80 mt-2 text-neutral-500">
-                | wallet: <span className="text-neutral-400">drift-governance</span>
+              <p className="text-neutral-500">
+                proposal: <span className="text-neutral-400">#42</span>;
               </p>
-              <p className="text-emerald-300/80 text-neutral-500">
-                | proposal: <span className="text-neutral-400">42</span>
+              <p className="text-neutral-500">
+                expires: <span className="text-neutral-400">10 Apr 2026 12:00:00</span>
               </p>
               <p className="text-emerald-400/80 mt-2 text-[10px] flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
