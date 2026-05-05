@@ -445,6 +445,28 @@
       </div>
     </div>
 
+    <!-- ======================== SLIDE 3.5: HARDWARE WALLETS WEREN'T THE GAP ======================== -->
+    <div class="slide bg-default" style="justify-content: center; align-items: center; text-align: center;">
+      <span class="caption animate-in" style="color: var(--c-danger);">AFTER THE $285M HACK</span>
+
+      <div class="animate-in" style="margin-top: 32px; max-width: 880px; width: 100%;">
+        <img src="drift%20multisig%20cold%20wallet.png" alt="Drift Protocol tweet: To emphasize for full clarity, all multi-sig signers are cold wallets." style="width: 100%; border-radius: 12px; border: 1px solid var(--c-border); display: block;" />
+      </div>
+
+      <h2 class="h2 animate-in" style="margin-top: 48px; max-width: 1000px;">
+        Hardware wallets weren't the gap.
+      </h2>
+
+      <p class="body animate-in" style="margin-top: 16px; max-width: 880px;">
+        Every signer on a cold wallet. <span class="text-danger">$285M still gone.</span> The key was safe — the signer was blind.
+      </p>
+
+      <div class="notes">
+        <div class="notes-label">Speaker Notes</div>
+        "After the hack, Drift specifically confirmed: every multisig signer used cold wallets. They wanted to make clear they were following best practice. And they still lost two hundred and eighty-five million dollars. The hardware wallet's job is to protect the private key. It doesn't tell the human what they're signing. That's a different problem — and that's the one Lucid solves."
+      </div>
+    </div>
+
     <!-- ======================== SLIDE 4: AGITATE + SOLUTION ======================== -->
     <div class="slide bg-alt">
       <span class="caption animate-in">THE SOLUTION</span>
@@ -480,12 +502,12 @@
       </div>
 
       <p class="small animate-in" style="margin-top: 28px; color: var(--c-text-muted); text-align: center;">
-        Aligned with <a href="https://github.com/solana-foundation/SRFCs/discussions/3" class="mono text-primary" style="text-decoration: none;">sRFC 38</a> v1 (Anza, Dec 2025) &mdash; the on-chain verifier accepts v1 envelopes today; the dashboard ships V0 until Ledger's Solana app releases v1 support.
+        Aligned with <a href="https://github.com/solana-foundation/SRFCs/discussions/3" class="mono text-primary" style="text-decoration: none;">sRFC 38: Offchain Message Specification Version 1</a> &mdash; Anza, December 2025.
       </p>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Lucid uses signMessage instead of signTransaction. Any wallet that displays signed messages — Phantom, Backpack, hardware wallets — renders the action in plain English. The security guarantee gets stronger when signers use hardware wallets, because the host can't lie about what's on the device's own screen. The on-chain program reconstructs the expected message from state and verifies the ed25519 signature; if anything was tampered, the signature won't match. We're aligned with sRFC 38, Anza's December 2025 standard for offchain message signing — the on-chain verifier already accepts v1; the dashboard emits V0 envelopes today because the released Ledger Solana app hasn't shipped v1 support yet, and we'll flip the switch when it does."
+        "Lucid uses signMessage instead of signTransaction. Any wallet that displays signed messages — Phantom, Backpack, hardware wallets — renders the action in plain English. The security guarantee gets stronger when signers use hardware wallets, because the host can't lie about what's on the device's own screen. The on-chain program reconstructs the expected message from state and verifies the ed25519 signature; if anything was tampered, the signature won't match. We're aligned with sRFC 38: Offchain Message Specification Version 1 — Anza's standard for human-readable offchain signing, published December 2025."
       </div>
     </div>
 
@@ -703,8 +725,8 @@
         <span class="text-emphasis">LUCID</span>
       </h1>
 
-      <p class="h3 animate-in" style="color: var(--c-text-secondary); margin-top: 16px; max-width: 700px;">
-        Read what you sign.
+      <p class="h2 animate-in" style="margin-top: 32px; max-width: 1100px;">
+        Blind signing as the only option <span class="text-danger">is unacceptable.</span>
       </p>
 
       <div class="divider animate-in" style="margin: 44px auto;"></div>
