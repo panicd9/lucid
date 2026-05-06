@@ -13,7 +13,7 @@ fn build_body(
     proposal_index: u64,
 ) -> String {
     format!(
-        "{} {} | wallet: {} ({}); proposal: #{}; expires: {}",
+        "{} {} | wallet: {} ({}); proposal: #{}; expires: {};",
         action, rendered_template, wallet_name, wallet_pda_b58, proposal_index, expiry_str
     )
 }
@@ -135,14 +135,14 @@ pub fn render_custom_template(template: &str, params: &[String]) -> String {
     result
 }
 
-/// Build a future expiry timestamp string (DD Mon YYYY HH:MM:SS)
+/// Build a future expiry timestamp string (DD Mon YYYY HH:MM:SS UTC)
 pub fn future_expiry() -> String {
-    "01 Jan 2030 00:00:00".to_string()
+    "01 Jan 2030 00:00:00 UTC".to_string()
 }
 
-/// Build an expired timestamp string (DD Mon YYYY HH:MM:SS)
+/// Build an expired timestamp string (DD Mon YYYY HH:MM:SS UTC)
 pub fn past_expiry() -> String {
-    "01 Jan 2020 00:00:00".to_string()
+    "01 Jan 2020 00:00:00 UTC".to_string()
 }
 
 /// Convert a solana_keypair::Keypair to an ed25519_dalek::SigningKey

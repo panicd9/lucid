@@ -445,7 +445,7 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 3.5: HARDWARE WALLETS WEREN'T THE GAP ======================== -->
+    <!-- ======================== SLIDE 4: HARDWARE WALLETS WEREN'T THE GAP ======================== -->
     <div class="slide bg-default" style="justify-content: center; align-items: center; text-align: center;">
       <span class="caption animate-in" style="color: var(--c-danger);">AFTER THE $285M HACK</span>
 
@@ -467,7 +467,7 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 4: AGITATE + SOLUTION ======================== -->
+    <!-- ======================== SLIDE 5: AGITATE + SOLUTION ======================== -->
     <div class="slide bg-alt">
       <span class="caption animate-in">THE SOLUTION</span>
 
@@ -511,7 +511,7 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 5: ON-DEVICE COMPARISON (TEXT) ======================== -->
+    <!-- ======================== SLIDE 6: ON-DEVICE COMPARISON (TEXT) ======================== -->
     <div class="slide bg-default" style="padding: 60px 80px;">
       <span class="caption animate-in">SAME LEDGER. SAME MULTISIG FLOW.</span>
 
@@ -551,10 +551,10 @@
             </div>
             <div style="color: var(--c-text-muted); font-size: 18px;">Human-readable approval</div>
             <div class="mono" style="margin-top: 8px; font-size: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
-              <div style="color: var(--c-text);">approve withdraw 50000 usdc to 9abc...def |</div>
-              <div style="color: var(--c-text-secondary);">wallet: drift-governance (Drft9...PDA);</div>
+              <div style="color: var(--c-text);">approve withdraw 50000 USDC to 9abcD3F2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4def |</div>
+              <div style="color: var(--c-text-secondary);">wallet: dao-governance (7Hk2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4kP9zU2A);</div>
               <div style="color: var(--c-text-secondary);">proposal: #42;</div>
-              <div class="text-primary">expires: 09 May 2026 12:00:00</div>
+              <div class="text-primary">expires: 09 May 2026 12:00:00 UTC;</div>
             </div>
             <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--c-border); color: var(--c-primary); font-size: 19px; font-weight: 700; letter-spacing: 0.04em;">Approve</div>
           </div>
@@ -567,7 +567,7 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 6: DEMO — BEFORE/AFTER (VIDEO) ======================== -->
+    <!-- ======================== SLIDE 7: DEMO — BEFORE/AFTER (VIDEO) ======================== -->
     <div class="slide bg-default" style="padding: 60px 80px;">
       <span class="caption animate-in">LIVE DEMO</span>
 
@@ -597,127 +597,97 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 7: TRACTION / BUILT ======================== -->
+    <!-- ======================== SLIDE 8: TRACTION / BUILT ======================== -->
     <div class="slide bg-default">
       <span class="caption animate-in">WHAT WE BUILT</span>
 
       <h1 class="h1 animate-in" style="margin-top: 16px;">
-        A complete system. <span class="text-emphasis">Not a prototype.</span>
+        Complete <span class="text-emphasis">multisig platform.</span>
       </h1>
 
       <div class="divider animate-in"></div>
 
-      <div class="grid-4 animate-in" style="margin-top: 32px;">
-        <div class="metric-card">
-          <div class="metric-value">217</div>
-          <div class="metric-label">Tests passing</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-value">11</div>
-          <div class="metric-label">On-chain instructions</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-value">4</div>
-          <div class="metric-label">Surfaces: program &middot; CLI &middot; SDK &middot; dashboard</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-value" style="font-size: 56px;">LIVE</div>
-          <div class="metric-label">Devnet &middot; <span class="mono">LUC5Tb&hellip;JJWR</span></div>
-        </div>
-      </div>
-
       <div class="grid-2 animate-in" style="margin-top: 32px;">
+        <div class="card" style="padding: 24px;">
+          <p class="caption text-primary" style="margin-bottom: 12px;">KEY FEATURES</p>
+          <div class="flex flex-col gap-xs">
+            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Two-tier verification (native programs + IDL structural)</span></div>
+            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Auto-generates intents from any Anchor IDL</span></div>
+            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">On-chain message reconstruction &rarr; tampering rejected by ed25519 mismatch</span></div>
+          </div>
+        </div>
         <div class="card" style="padding: 24px;">
           <p class="caption text-primary" style="margin-bottom: 12px;">STACK</p>
           <div class="flex flex-col gap-xs">
-            <div class="flex justify-between"><span class="small">On-chain program</span><span class="small text-primary">Pinocchio (not Anchor)</span></div>
+            <div class="flex justify-between"><span class="small">On-chain program</span><span class="small text-primary">Pinocchio</span></div>
             <div class="flex justify-between"><span class="small">CLI</span><span class="small text-primary">Rust / Clap</span></div>
             <div class="flex justify-between"><span class="small">SDK</span><span class="small text-primary">TypeScript / @solana/kit</span></div>
             <div class="flex justify-between"><span class="small">Dashboard</span><span class="small text-primary">React + Vite + Tailwind</span></div>
             <div class="flex justify-between"><span class="small">Spec</span><span class="small text-primary">sRFC 38 v1 + V0 (dual-support)</span></div>
           </div>
         </div>
-        <div class="card" style="padding: 24px;">
-          <p class="caption text-primary" style="margin-bottom: 12px;">KEY FEATURES</p>
-          <div class="flex flex-col gap-xs">
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Direct Ledger WebHID signing (no wallet-adapter middlemen)</span></div>
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Two-tier verification (known programs + IDL structural)</span></div>
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Auto-generates intents from any Anchor IDL</span></div>
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">On-chain message reconstruction &rarr; tampering rejected by ed25519 mismatch</span></div>
-          </div>
-        </div>
+      </div>
+
+      <div class="animate-in" style="margin-top: 32px; padding: 16px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+        <span class="small" style="color: var(--c-primary); font-weight: 600; letter-spacing: 0.05em;">LIVE ON DEVNET</span>
+        <span class="mono small text-muted">LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR</span>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Complete system, not a hackathon prototype. Pinocchio for performance, not Anchor. The verification engine is two-tier: Tier 1 matches known program discriminators, Tier 2 does structural IDL matching against unknown ones. 217 tests cover wallet lifecycle, proposals, approvals, execution, and security edge cases. Live on devnet — protocols can integrate today."
+        "Pinocchio for performance. The verification engine is two-tier: Tier 1 matches native program discriminators, Tier 2 does structural IDL matching against everything else. The signed envelope is the same bytes the program reconstructs on-chain — tampering between proposal and signature gets rejected by ed25519 mismatch. Live on devnet — protocols can integrate today."
       </div>
     </div>
 
-    <!-- ======================== SLIDE 8: COMPETITION ======================== -->
+    <!-- ======================== SLIDE 9: MOAT ======================== -->
     <div class="slide bg-alt">
-      <span class="caption animate-in">LANDSCAPE</span>
+      <span class="caption animate-in">MOAT</span>
 
       <h1 class="h1 animate-in" style="margin-top: 16px;">
-        The gap in every multisig.
+        A primitive, <span class="text-emphasis">not a plugin.</span>
       </h1>
 
       <div class="divider animate-in"></div>
 
-      <table class="comparison-table animate-in" style="margin-top: 32px;">
-        <thead>
-          <tr>
-            <th style="width: 280px;"></th>
-            <th>Squads</th>
-            <th>Realms</th>
-            <th style="color: var(--c-primary);">Lucid</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Multisig governance</td>
-            <td class="check">&#10003;</td>
-            <td class="check">&#10003;</td>
-            <td class="check">&#10003;</td>
-          </tr>
-          <tr>
-            <td>Time-locked execution</td>
-            <td class="check">&#10003;</td>
-            <td class="check">&#10003;</td>
-            <td class="check">&#10003;</td>
-          </tr>
-          <tr>
-            <td>Hardware wallet support</td>
-            <td class="check">&#10003;<sup style="font-size: 11px; color: var(--c-text-muted);">1</sup></td>
-            <td class="check">&#10003;</td>
-            <td class="check">&#10003;</td>
-          </tr>
-          <tr class="highlight">
-            <td>Human-readable on device</td>
-            <td class="cross">&#10007;</td>
-            <td class="cross">&#10007;</td>
-            <td class="check">&#10003;</td>
-          </tr>
-          <tr class="highlight">
-            <td>On-chain tamper detection</td>
-            <td class="cross">&#10007;</td>
-            <td class="cross">&#10007;</td>
-            <td class="check">&#10003;</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p class="small text-muted animate-in" style="margin-top: 16px; font-size: 13px;">
-        <sup>1</sup> Squads + Ledger requires blind-signing enabled.
+      <p class="body animate-in" style="margin-top: 24px; max-width: 1100px;">
+        Existing multisigs trust the frontend to render what's being signed. Lucid's program reconstructs the signed message from on-chain state and verifies it via ed25519 &mdash; the chain enforces the match, not the UI.
       </p>
+
+      <div class="grid-2 animate-in" style="margin-top: 32px;">
+        <div class="card" style="padding: 24px;">
+          <p class="caption text-muted" style="margin-bottom: 12px;">EXISTING MULTISIGS</p>
+          <div class="flex flex-col gap-sm">
+            <div class="flex justify-between"><span class="small">Signing primitive</span><span class="small mono">signTransaction</span></div>
+            <div class="flex justify-between"><span class="small">Display rendered by</span><span class="small">Frontend</span></div>
+            <div class="flex justify-between"><span class="small">Verification location</span><span class="small">Off-chain UI</span></div>
+            <div class="flex justify-between"><span class="small">Hardware wallet shows</span><span class="small">Hash + fee payer</span></div>
+          </div>
+        </div>
+        <div class="card" style="padding: 24px;">
+          <p class="caption text-primary" style="margin-bottom: 12px;">LUCID</p>
+          <div class="flex flex-col gap-sm">
+            <div class="flex justify-between"><span class="small">Signing primitive</span><span class="small mono text-primary">signMessage</span></div>
+            <div class="flex justify-between"><span class="small">Display rendered by</span><span class="small text-primary">Reconstructed on-chain</span></div>
+            <div class="flex justify-between"><span class="small">Verification location</span><span class="small text-primary">ed25519 precompile</span></div>
+            <div class="flex justify-between"><span class="small">Hardware wallet shows</span><span class="small text-primary">The actual action</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="animate-in" style="margin-top: 32px; padding: 20px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
+        <p class="small" style="color: var(--c-text); line-height: 1.6;">
+          <span class="text-primary" style="font-weight: 600;">Adopting this isn't a UI change.</span>
+          It means swapping the signing primitive end-to-end &mdash; wallet, program, verifier. Not a feature flag a competitor flips on next quarter.
+        </p>
+      </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Every existing Solana multisig — Squads, Realms — asks signers to approve raw transaction data. Neither displays what the signer is actually approving on their hardware wallet. Neither verifies on-chain that the signer saw and approved a specific action. This isn't a feature gap — it's a security-model gap. Lucid is the only multisig where the hardware wallet provides actual protection against tampered transactions."
+        "The natural question — why doesn't Squads just add this? Because the verification doesn't live in the UI. Existing multisigs sign raw transaction bytes and trust the frontend to render a human-readable preview. Lucid's signers sign a structured message, and the program reconstructs the same bytes from on-chain state and validates the ed25519 signature against the reconstruction. Tamper anything between proposal and signature, and the signature won't verify. To add this, an existing multisig has to switch from signTransaction to signMessage and rebuild the approval flow on top of on-chain verification — that's a rewrite, not a feature."
       </div>
     </div>
 
-    <!-- ======================== SLIDE 9: ASK + CONTACT ======================== -->
+    <!-- ======================== SLIDE 10: ASK + CONTACT ======================== -->
     <div class="slide bg-default" style="justify-content: center; align-items: center; text-align: center;">
       <span class="caption animate-in">COLOSSEUM FRONTIER</span>
 

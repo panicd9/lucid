@@ -56,7 +56,7 @@ pub fn approve(
 
     // Build the offchain message
     let body = format!(
-        "approve {} | wallet: {} ({}); proposal: #{}; expires: {}",
+        "approve {} | wallet: {} ({}); proposal: #{}; expires: {};",
         rendered, wallet_name, wallet_pubkey, proposal_index, expiry_str
     );
 

@@ -122,7 +122,7 @@ struct Ed25519DataOwned {
 /// Parse expiry timestamp from message body and validate against current clock
 fn validate_expiry<'a>(body: &'a [u8], clock: &Clock) -> Result<&'a [u8], ProgramError> {
     let expiry_str = parse_expiry_from_body(body)?;
-    // Parse "DD Mon YYYY HH:MM:SS" into a unix timestamp
+    // Parse "DD Mon YYYY HH:MM:SS UTC" into a unix timestamp
     let expiry_ts = parse_timestamp_to_unix(expiry_str)?;
     if clock.unix_timestamp > expiry_ts {
         return Err(ProgramError::Custom(ERR_EXPIRED));
@@ -130,9 +130,9 @@ fn validate_expiry<'a>(body: &'a [u8], clock: &Clock) -> Result<&'a [u8], Progra
     Ok(expiry_str)
 }
 
-/// Parse "DD Mon YYYY HH:MM:SS" (20 chars) → unix timestamp (no leap seconds)
+/// Parse "DD Mon YYYY HH:MM:SS UTC" (24 chars) → unix timestamp (no leap seconds)
 fn parse_timestamp_to_unix(s: &[u8]) -> Result<i64, ProgramError> {
-    if s.len() != 20 {
+    if s.len() != 24 || &s[20..24] != b" UTC" {
         return Err(ProgramError::Custom(ERR_INVALID_OFFCHAIN_HEADER));
     }
     let day = parse_decimal(&s[0..2])? as i64;

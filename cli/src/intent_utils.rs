@@ -352,11 +352,12 @@ pub fn build_offchain_message(signer_pubkey: &[u8; 32], body: &str) -> Vec<u8> {
 }
 
 /// Format an expiry timestamp from a duration in seconds from now.
-/// Returns a string like "14 Apr 2026 12:00:00".
+/// Returns a string like "14 Apr 2026 12:00:00 UTC" — the ` UTC` suffix
+/// is part of the signed body so signers can read the timezone on-device.
 pub fn format_expiry(secs: u64) -> String {
     let now = chrono::Utc::now();
     let expiry_time = now + chrono::Duration::seconds(secs as i64);
-    expiry_time.format("%d %b %Y %H:%M:%S").to_string()
+    expiry_time.format("%d %b %Y %H:%M:%S UTC").to_string()
 }
 
 /// Find a proposal account by scanning all intents for a wallet.

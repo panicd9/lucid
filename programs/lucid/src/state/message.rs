@@ -11,7 +11,7 @@ pub const MAX_BODY_LEN: usize = 450;
 /// Build the canonical body bytes for a proposal action into the caller's buffer.
 ///
 /// Body format:
-///   "{action} {rendered_template} | wallet: {name} ({base58_pda}); proposal: #{index}; expires: {timestamp}"
+///   "{action} {rendered_template} | wallet: {name} ({base58_pda}); proposal: #{index}; expires: {timestamp UTC};"
 ///
 /// Returns the number of bytes written. The caller compares
 /// `body[..bytes_written]` byte-for-byte against the body extracted from the
@@ -56,6 +56,7 @@ pub fn build_message(
 
     copy_to(body, &mut bpos, b"; expires: ")?;
     copy_to(body, &mut bpos, expiry_str)?;
+    copy_to(body, &mut bpos, b";")?;
 
     Ok(bpos)
 }
@@ -550,11 +551,12 @@ fn hex_encode_into(buf: &mut [u8], pos: &mut usize, input: &[u8]) -> Result<(), 
 }
 
 /// Parse timestamp from the end of the message body.
-/// Expected suffix: "; expires: DD Mon YYYY HH:MM:SS"
-/// Returns the timestamp string bytes.
+/// Expected suffix: "; expires: DD Mon YYYY HH:MM:SS UTC;"
+/// Returns the 24-byte timestamp string bytes (including the trailing " UTC",
+/// without the trailing ";").
 pub fn parse_expiry_from_body(body: &[u8]) -> Result<&[u8], ProgramError> {
-    // "; expires: " = 11 bytes, timestamp = 20 bytes ("DD Mon YYYY HH:MM:SS")
-    let suffix_len = 11 + 20; // 31
+    // "; expires: " = 11 bytes, timestamp = 24 bytes ("DD Mon YYYY HH:MM:SS UTC"), trailing ";" = 1 byte
+    let suffix_len = 11 + 24 + 1; // 36
     if body.len() < suffix_len {
         return Err(ProgramError::Custom(crate::state::errors::ERR_INVALID_OFFCHAIN_HEADER));
     }
@@ -562,5 +564,8 @@ pub fn parse_expiry_from_body(body: &[u8]) -> Result<&[u8], ProgramError> {
     if &body[suffix_start..suffix_start + 11] != b"; expires: " {
         return Err(ProgramError::Custom(crate::state::errors::ERR_INVALID_OFFCHAIN_HEADER));
     }
-    Ok(&body[suffix_start + 11..])
+    if body[body.len() - 1] != b';' {
+        return Err(ProgramError::Custom(crate::state::errors::ERR_INVALID_OFFCHAIN_HEADER));
+    }
+    Ok(&body[suffix_start + 11..body.len() - 1])
 }

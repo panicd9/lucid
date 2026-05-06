@@ -4,7 +4,7 @@
  * Body format (must produce byte-for-byte identical output to on-chain
  * build_message in programs/lucid/src/state/message.rs):
  *
- *   {action} {rendered_template} | wallet: {name} ({pda_b58}); proposal: #{index}; expires: {DD Mon YYYY HH:MM:SS}
+ *   {action} {rendered_template} | wallet: {name} ({pda_b58}); proposal: #{index}; expires: {DD Mon YYYY HH:MM:SS UTC};
  *
  * The wallet PDA in base58 prevents cross-wallet signature replay between two
  * wallets that share a name.
@@ -34,7 +34,7 @@ export function buildMessageBody(
   proposalIndex: bigint | number | string,
   expiryStr: string
 ): string {
-  return `${action} ${rendered} | wallet: ${walletName} (${walletPdaB58}); proposal: #${proposalIndex}; expires: ${expiryStr}`;
+  return `${action} ${rendered} | wallet: ${walletName} (${walletPdaB58}); proposal: #${proposalIndex}; expires: ${expiryStr};`;
 }
 
 /** sRFC 38 v1 single-signer envelope: prefix(16) + version(1) + numSigners(1) + pubkey(32) = 50 bytes. */
@@ -110,8 +110,9 @@ export function buildV0Envelope(body: Uint8Array, signerPubkey: Uint8Array): Uin
 }
 
 /**
- * Format an expiry timestamp as "DD Mon YYYY HH:MM:SS" (UTC).
- * Exactly 20 characters.
+ * Format an expiry timestamp as "DD Mon YYYY HH:MM:SS UTC".
+ * Exactly 24 characters. The ` UTC` suffix is part of the signed body
+ * so signers can read the timezone on-device.
  *
  * @param secondsFromNow - seconds from current time until expiry
  */
@@ -123,5 +124,5 @@ export function formatExpiry(secondsFromNow: number): string {
   const hours = String(d.getUTCHours()).padStart(2, '0');
   const minutes = String(d.getUTCMinutes()).padStart(2, '0');
   const seconds = String(d.getUTCSeconds()).padStart(2, '0');
-  return `${day} ${month} ${year} ${hours}:${minutes}:${seconds}`;
+  return `${day} ${month} ${year} ${hours}:${minutes}:${seconds} UTC`;
 }

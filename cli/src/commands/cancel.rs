@@ -56,7 +56,7 @@ pub fn cancel(
 
     // Build offchain message
     let body = format!(
-        "cancel {} | wallet: {} ({}); proposal: #{}; expires: {}",
+        "cancel {} | wallet: {} ({}); proposal: #{}; expires: {};",
         rendered, wallet_name, wallet_pubkey, proposal_index, expiry_str
     );
 

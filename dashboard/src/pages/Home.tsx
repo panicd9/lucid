@@ -230,7 +230,7 @@ export default function Home() {
                 proposal: <span className="text-neutral-400">#42</span>;
               </p>
               <p className="text-neutral-500">
-                expires: <span className="text-neutral-400">10 Apr 2026 12:00:00</span>
+                expires: <span className="text-neutral-400">10 Apr 2026 12:00:00 UTC</span>;
               </p>
               <p className="text-emerald-400/80 mt-2 text-[10px] flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>

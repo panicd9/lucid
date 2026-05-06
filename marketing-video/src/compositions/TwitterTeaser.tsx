@@ -156,10 +156,10 @@ const FEE_PAYER = "7Hk2mPqRsTuVwXyZ3aBcDeFgHjKnNpQrStUvWxYz9bXr";
 // Plain-English message — exact format from sdk/src/signer.ts:194 and
 // programs/lucid/src/state/message.rs:11
 //   "{action} {template} | wallet: {name} ({pda_b58}); proposal: #{index}; expires: {timestamp}"
-const LUCID_LINE_1 = "approve withdraw 50000 usdc to 9abc...def |";
+const LUCID_LINE_1 = "approve withdraw 50000 USDC to 9abc...def |";
 const LUCID_LINE_2 = "wallet: drift-governance (Drft9...PDA);";
 const LUCID_LINE_3 = "proposal: #42;";
-const LUCID_LINE_4 = "expires: 09 May 2026 12:00:00";
+const LUCID_LINE_4 = "expires: 09 May 2026 12:00:00 UTC;";
 
 const BlindLedger: React.FC<{ enter: number; reveal: number }> = ({ enter, reveal }) => {
   // reveal is 0..1 over the full beat — gated stages within

@@ -232,10 +232,10 @@ const ProposePanel: React.FC = () => {
   // Multi-line plain-English approval — exact format from sdk/src/signer.ts:194
   //   "{action} {template} | wallet: {name} ({pda_b58}); proposal: #{index}; expires: {timestamp}"
   const lines = [
-    { text: "approve withdraw 50000 usdc to 9abc...def |", color: COLORS.text, start: 30, end: 80 },
+    { text: "approve withdraw 50000 USDC to 9abc...def |", color: COLORS.text, start: 30, end: 80 },
     { text: "wallet: drift-governance (Drft9...PDA);", color: COLORS.muted, start: 80, end: 120 },
     { text: "proposal: #42;", color: COLORS.muted, start: 120, end: 140 },
-    { text: "expires: 09 May 2026 12:00:00", color: COLORS.emerald, start: 140, end: 175 },
+    { text: "expires: 09 May 2026 12:00:00 UTC;", color: COLORS.emerald, start: 140, end: 175 },
   ];
 
   return (

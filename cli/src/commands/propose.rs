@@ -61,7 +61,7 @@ pub fn propose(
 
     // Build the offchain message
     let body = format!(
-        "propose {} | wallet: {} ({}); proposal: #{}; expires: {}",
+        "propose {} | wallet: {} ({}); proposal: #{}; expires: {};",
         rendered, wallet_name, wallet_pubkey, proposal_index, expiry_str
     );
 
