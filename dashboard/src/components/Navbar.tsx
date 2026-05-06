@@ -26,9 +26,8 @@ export default function Navbar({ network, onNetworkChange }: Props) {
       <div className="bg-neutral-900/70 backdrop-blur-xl border-b border-neutral-800/50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-5">
           {/* Logo */}
-          <Link to="/" className="shrink-0 relative" style={{ fontFamily: "'Orbitron', monospace", fontSize: '17px', fontWeight: 600, letterSpacing: '6px', background: 'linear-gradient(90deg, #e2e8f0, #f8fafc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase' as const }}>
-            LUCID
-            <span className="absolute bottom-[-4px] left-0 right-0 h-[1.5px] rounded-full" style={{ background: 'linear-gradient(90deg, #059669, #10B981)' }} />
+          <Link to="/" className="shrink-0 flex items-center" aria-label="Lucid home">
+            <img src="/logo.png" alt="Lucid" className="h-7 w-auto" />
           </Link>
 
           {/* Search */}

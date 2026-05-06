@@ -17,9 +17,10 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center pt-20 pb-16">
       {/* Hero — Logo */}
-      <div className="relative mb-6">
+      <div className="relative mb-6 flex items-center gap-5">
         <div className="absolute inset-0 -m-8 bg-gradient-radial from-emerald-500/10 via-emerald-800/5 to-transparent rounded-full blur-2xl" />
-        <div className="relative inline-block" style={{ fontFamily: "'Orbitron', monospace", fontSize: '48px', fontWeight: 600, letterSpacing: '12px', background: 'linear-gradient(90deg, #e2e8f0, #f8fafc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase' as const }}>
+        <img src="/logo.png" alt="" className="relative h-16 w-auto" />
+        <div className="relative" style={{ fontSize: '48px', fontWeight: 600, letterSpacing: '12px', background: 'linear-gradient(90deg, #e2e8f0, #f8fafc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase' as const }}>
           LUCID
           <span className="absolute bottom-[-6px] left-0 right-0 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, #059669, #10B981)' }} />
         </div>
