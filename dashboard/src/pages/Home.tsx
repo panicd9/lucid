@@ -202,13 +202,14 @@ export default function Home() {
                 What signers see today
               </p>
             </div>
-            <div className="bg-neutral-900/80 p-5 font-mono text-xs leading-relaxed">
-              <p className="text-neutral-600 mb-1">Program: dRif...3xQp</p>
-              <p className="text-red-400/60">01 00 00 03 9a 2f b7 c4 e8 1d</p>
-              <p className="text-red-400/60">a3 f0 42 8b 5c f6 dd 91 7e 2b</p>
-              <p className="text-red-400/60">c0 14 88 3a 9f 62 d4 5e 71 b8</p>
-              <p className="text-neutral-600 mt-1">Data: 0x8f3a9b2c4d5e6f...</p>
-              <p className="text-neutral-700 mt-2 text-[10px]">Sign transaction?</p>
+            <div className="bg-neutral-900/80 p-5 font-mono text-xs leading-relaxed break-all">
+              <p className="text-red-400 mb-1">⚠ Blind signing ahead</p>
+              <p className="text-neutral-600">Unrecognized format</p>
+              <p className="text-neutral-600 mt-3">Message Hash</p>
+              <p className="text-red-400/70">a3f9d8c7b6a5e4d3c2b1a0f9e8d7c6b5a4938271605f4e3d2c1b0a9f8e7d60c2d</p>
+              <p className="text-neutral-600 mt-2">Fee payer</p>
+              <p className="text-red-400/70">7Hk2mPqRsTuVwXyZ3aBcDeFgHjKnNpQrStUvWxYz9bXr</p>
+              <p className="text-neutral-700 mt-3 text-[10px]">Accept risk and sign?</p>
             </div>
           </div>
 
@@ -221,10 +222,10 @@ export default function Home() {
             </div>
             <div className="bg-neutral-900/80 p-5 font-mono text-xs leading-relaxed break-all">
               <p className="text-emerald-300/80">
-                approve <span className="text-emerald-400">add market 5 with oracle 9abc...def</span>
+                approve <span className="text-emerald-400">add market 5 with oracle 9abcD3F2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4def</span> |
               </p>
               <p className="text-neutral-500 mt-2">
-                | wallet: <span className="text-neutral-400">drift-governance</span> <span className="text-neutral-400">(5jHk...uV2y)</span>;
+                wallet: <span className="text-neutral-400">drift-governance</span> <span className="text-neutral-400">(5jHkM2pQrStUvWxYz3aBcDeFgHiJk8pQrSt7vWx2uV2y)</span>;
               </p>
               <p className="text-neutral-500">
                 proposal: <span className="text-neutral-400">#42</span>;

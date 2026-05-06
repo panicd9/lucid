@@ -16,7 +16,7 @@ const steps: Step[] = [
         <div className="bg-neutral-900/60 rounded-lg px-4 py-3 border border-neutral-700/30">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="text-xs font-semibold text-emerald-400">Drift Governance</span>
+            <span className="text-xs font-semibold text-emerald-400">DAO Governance</span>
           </div>
           <p className="text-sm text-neutral-300 font-mono">add market 5 with oracle 9abc...def</p>
         </div>
@@ -64,11 +64,14 @@ const steps: Step[] = [
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Ledger Display</span>
           </div>
-          <div className="font-mono text-xs text-neutral-500 leading-relaxed break-all">
-            <p>0x7b2274797065223a227472</p>
-            <p>616e73616374696f6e222c</p>
-            <p>22646174613a2230786632</p>
-            <p className="text-neutral-600">...</p>
+          <div className="font-mono text-xs leading-relaxed break-all">
+            <p className="text-red-400">⚠ Blind signing ahead</p>
+            <p className="text-neutral-600">Unrecognized format</p>
+            <p className="text-neutral-600 mt-2">Message Hash</p>
+            <p className="text-red-400/70">a3f9d8c7b6a5e4d3c2b1a0f9e8d7c6b5a4938271605f4e3d2c1b0a9f8e7d60c2d</p>
+            <p className="text-neutral-600 mt-2">Fee payer</p>
+            <p className="text-red-400/70">7Hk2mPqRsTuVwXyZ3aBcDeFgHjKnNpQrStUvWxYz9bXr</p>
+            <p className="text-neutral-700 mt-2 text-[10px]">Accept risk and sign?</p>
           </div>
         </div>
         <div className="flex items-center gap-2 px-4">
@@ -89,10 +92,11 @@ const steps: Step[] = [
           <div className="flex items-center gap-2 mb-2">
             <span className="text-[10px] font-semibold text-emerald-400/70 uppercase tracking-wider">Ledger Display</span>
           </div>
-          <div className="font-mono text-sm text-emerald-300/90 leading-relaxed">
-            <p>expires 2026-04-10 12:00:00:</p>
-            <p>approve add market 5 with oracle 9abc...def</p>
-            <p className="text-neutral-500">| wallet: drift-governance proposal: 42</p>
+          <div className="font-mono text-sm text-emerald-300/90 leading-relaxed break-all">
+            <p>approve add market 5 with oracle 9abcD3F2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4def |</p>
+            <p className="text-neutral-500">wallet: drift-governance (5jHkM2pQrStUvWxYz3aBcDeFgHiJk8pQrSt7vWx2uV2y);</p>
+            <p className="text-neutral-500">proposal: #42;</p>
+            <p className="text-neutral-500">expires: 10 Apr 2026 12:00:00 UTC;</p>
           </div>
         </div>
         <div className="flex items-center gap-2 px-4">
