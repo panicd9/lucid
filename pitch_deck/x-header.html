@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lucid — X Header</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --c-bg: #141414;
+      --c-bg-alt: #1A1A1A;
+      --c-primary: #10B981;
+      --c-primary-deep: #059669;
+      --c-text: #F0F0F0;
+      --c-text-secondary: rgba(240,240,240,0.65);
+      --c-text-muted: rgba(240,240,240,0.4);
+      --c-danger: #ef4444;
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: #000;
+      font-family: var(--font-display);
+      color: var(--c-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* X header is 1500x500 (3:1) */
+    .header {
+      width: 1500px;
+      height: 500px;
+      background: var(--c-bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Soft emerald glow weighted to the right */
+    .glow {
+      position: absolute;
+      width: 900px;
+      height: 900px;
+      right: -200px;
+      top: -300px;
+      background: radial-gradient(circle, rgba(16,185,129,0.18) 0%, rgba(16,185,129,0.06) 30%, transparent 65%);
+      filter: blur(20px);
+      pointer-events: none;
+    }
+    .glow-2 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      left: -200px;
+      bottom: -200px;
+      background: radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 60%);
+      filter: blur(20px);
+      pointer-events: none;
+    }
+
+    /* Faint hex-hash background — represents "blind signing" world */
+    .hash-bg {
+      position: absolute;
+      inset: 0;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: rgba(239,68,68,0.07);
+      letter-spacing: 0.05em;
+      line-height: 2.4;
+      padding: 32px;
+      overflow: hidden;
+      pointer-events: none;
+      user-select: none;
+      mask-image: linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.15) 60%, transparent 80%);
+      -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.15) 60%, transparent 80%);
+      word-break: break-all;
+    }
+
+    /* Subtle dot grid */
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    /* Main content grid */
+    .content {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 0 80px;
+      gap: 40px;
+    }
+
+    /* LEFT: brand block */
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding-left: 220px; /* keep clear of avatar at bottom-left */
+    }
+    .wordmark {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 96px;
+      letter-spacing: 0.02em;
+      line-height: 0.95;
+      color: var(--c-primary);
+    }
+    .tagline {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--c-text);
+      line-height: 1.2;
+    }
+    .sub {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--c-text-muted);
+      font-weight: 500;
+    }
+    .accent-bar {
+      width: 56px;
+      height: 3px;
+      background: var(--c-primary);
+      border-radius: 2px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    /* RIGHT: signing-display card */
+    .signing {
+      position: relative;
+      background: rgba(30,30,30,0.7);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 18px;
+      padding: 28px 32px;
+      box-shadow:
+        0 0 60px rgba(16,185,129,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      max-width: 620px;
+      justify-self: end;
+    }
+    .signing::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--c-primary);
+      box-shadow: 0 0 12px var(--c-primary);
+    }
+    .signing-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--c-primary);
+      font-weight: 600;
+      margin-left: 22px;
+      margin-bottom: 14px;
+    }
+    .signing-text {
+      font-family: var(--font-mono);
+      font-size: 17px;
+      line-height: 1.55;
+      color: var(--c-text);
+      font-weight: 500;
+    }
+    .signing-text .field {
+      color: var(--c-primary);
+    }
+    .signing-text .muted {
+      color: var(--c-text-secondary);
+    }
+    .signing-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+      margin: 14px 0;
+    }
+    .signing-meta {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--c-text-muted);
+      letter-spacing: 0.04em;
+      line-height: 1.7;
+    }
+    .signing-meta .key { color: rgba(240,240,240,0.55); }
+
+    /* tiny ledger badge */
+    .ledger-badge {
+      position: absolute;
+      top: -12px;
+      right: 18px;
+      background: var(--c-bg-alt);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--c-text-muted);
+      font-weight: 600;
+    }
+
+    /* corner mark */
+    .corner-mark {
+      position: absolute;
+      top: 28px;
+      right: 32px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--c-text-muted);
+      font-weight: 600;
+      z-index: 6;
+    }
+    .corner-mark .dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--c-primary);
+      margin-right: 8px;
+      vertical-align: middle;
+      box-shadow: 0 0 8px var(--c-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <!-- decorative layers -->
+    <div class="grid"></div>
+    <div class="hash-bg" id="hashBg"></div>
+    <div class="glow"></div>
+    <div class="glow-2"></div>
+
+    <!-- corner mark -->
+    <div class="corner-mark"><span class="dot"></span>SOLANA · CLEAR-SIGNING</div>
+
+    <div class="content">
+      <!-- LEFT: brand -->
+      <div class="brand">
+        <div class="sub">Human-readable multisig</div>
+        <div class="wordmark">LUCID</div>
+        <div class="accent-bar"></div>
+        <div class="tagline">Signers read what they approve <br>— on the device itself.</div>
+      </div>
+
+      <!-- RIGHT: clear-signing card -->
+      <div class="signing">
+        <div class="ledger-badge">Ledger · Display</div>
+        <div class="signing-label">APPROVE</div>
+        <div class="signing-text">
+          <span class="field">withdraw</span> 50000 USDC<br>
+          to <span class="muted">9abcD3…sH4def</span>
+        </div>
+        <div class="signing-divider"></div>
+        <div class="signing-meta">
+          <span class="key">wallet</span>&nbsp;&nbsp;dao-governance · 7Hk2vN…P9zU2A<br>
+          <span class="key">proposal</span>&nbsp;#42<br>
+          <span class="key">expires</span>&nbsp;09 May 2026 12:00:00 UTC
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fill the background with deterministic hex hashes
+    const hex = '0123456789abcdef';
+    const target = document.getElementById('hashBg');
+    let s = '';
+    // seedable rand so it renders identically each time
+    let seed = 1337;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (let i = 0; i < 24; i++) {
+      let line = '';
+      for (let j = 0; j < 90; j++) line += hex[Math.floor(rnd() * 16)];
+      s += line + '  ';
+    }
+    target.textContent = s;
+  </script>
+</body>
+</html>
