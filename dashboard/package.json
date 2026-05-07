@@ -20,6 +20,7 @@
     "@solana/react-hooks": "^1.4.1",
     "@solana/web3-compat": "^0.0.21",
     "@solana/web3.js": "^1.95.0",
+    "@vercel/analytics": "^2.0.1",
     "bs58": "^5.0.0",
     "buffer": "^6.0.3",
     "react": "^18.3.1",
