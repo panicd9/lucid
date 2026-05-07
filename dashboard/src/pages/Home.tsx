@@ -164,6 +164,52 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Protocol team CTA */}
+      <div className="w-full max-w-3xl mt-24 px-4">
+        <div className="relative overflow-hidden rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-emerald-950/30 via-neutral-900/40 to-neutral-900/60 p-8 md:p-10">
+          <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 -left-32 h-72 w-72 rounded-full bg-emerald-700/5 blur-3xl" />
+          <div className="relative">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400/80 font-heading">
+              For Protocol Teams
+            </p>
+            <h3 className="mb-3 text-2xl font-semibold text-neutral-100">
+              Running treasury for a protocol?
+            </h3>
+            <p className="mb-7 max-w-xl text-sm leading-relaxed text-neutral-400">
+              Lucid is being built for DAOs and foundations managing protocol-owned
+              assets. We're working with a small number of design partners ahead of
+              mainnet — get on the list and we'll help map your governance actions
+              to readable rulesets.
+            </p>
+            <a
+              href="https://tally.so/r/OD86Rg"
+              target="_blank"
+              rel="noreferrer"
+              className="group inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-300 transition-all hover:border-emerald-500/50 hover:bg-emerald-500/15"
+            >
+              Talk to our team
+              <svg
+                className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
+              </svg>
+            </a>
+            <p className="mt-4 text-xs text-neutral-500">
+              Takes 30 seconds — protocol, treasury size, contact.
+            </p>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }
