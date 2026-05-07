@@ -109,6 +109,10 @@ export const SOURCE_LABELS: Record<number, string> = {
   [SOURCE_HAS_ONE]: 'Has One',
 };
 
+// Data segment types (for instruction-data assembly)
+export const SEGMENT_LITERAL = 0;
+export const SEGMENT_PARAM = 1;
+
 // Seed types (for PDA derivation)
 export const SEED_LITERAL = 0;
 export const SEED_PARAM = 1;

@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useSelectedWalletAccount } from '@solana/react';
 import { useLucidWallet } from '../hooks/useWallet';
 import { FrozenStatusBadge } from '../components/StatusBadge';
 import AddressDisplay from '../components/AddressDisplay';
 import IntentCard from '../components/IntentCard';
+import PresetIntentCard from '../components/PresetIntentCard';
 import WalletDisambiguation from '../components/WalletDisambiguation';
+import { PRESET_INTENTS } from '../templates';
+import { computeTemplateHash } from '../lib/templateHash';
 
 interface Props {
   network: string;
@@ -14,6 +18,7 @@ export default function Ruleset({ network }: Props) {
   const { address } = useParams<{ address: string }>();
   const [refreshKey, setRefreshKey] = useState(0);
   const { data, candidates, loading, error } = useLucidWallet(address, network, refreshKey);
+  const [account] = useSelectedWalletAccount();
 
   if (candidates && candidates.length > 1) {
     return <WalletDisambiguation name={address ?? ''} candidates={candidates} />;
@@ -58,6 +63,32 @@ export default function Ruleset({ network }: Props) {
   const handleRefresh = () => setRefreshKey((k) => k + 1);
   const metaIntents = intents.filter((i) => i.intentIndex <= 2);
   const protocolIntents = intents.filter((i) => i.intentIndex > 2);
+
+  // ── Preset section gating ─────────────────────────────────────────
+  // Direct AddIntent (disc=1) is only accepted by the program during the
+  // setup phase — i.e. before the wallet has any proposals
+  // (programs/lucid/src/instructions/add_intent.rs:60).
+  const isSetupPhase = wallet.proposalIndex === 0n;
+  const addMetaIntent = metaIntents.find((m) => m.intentIndex === 0) ?? null;
+  const userIsApprover = useMemo(() => {
+    if (!account || !addMetaIntent) return false;
+    return addMetaIntent.approvers.some((a) => a.toBase58() === account.address);
+  }, [account, addMetaIntent]);
+
+  // Hide presets whose template-hash already exists on the wallet
+  const existingHashes = useMemo(
+    () => new Set(intents.map((i) => Buffer.from(i.templateHash).toString('hex'))),
+    [intents],
+  );
+  const availablePresets = useMemo(() => {
+    return PRESET_INTENTS.filter((p) => {
+      const hex = Buffer.from(computeTemplateHash(p)).toString('hex');
+      return !existingHashes.has(hex);
+    });
+  }, [existingHashes]);
+
+  const showPresets =
+    isSetupPhase && !wallet.frozen && availablePresets.length > 0 && addMetaIntent !== null;
 
   return (
     <div>
@@ -171,8 +202,8 @@ export default function Ruleset({ network }: Props) {
             {protocolIntents.length} intent{protocolIntents.length !== 1 ? 's' : ''}
           </span>
         </div>
-        {protocolIntents.length > 0 ? (
-          <div className="space-y-2">
+        {protocolIntents.length > 0 && (
+          <div className="space-y-2 mb-6">
             {protocolIntents.map((intent) => (
               <IntentCard
                 key={intent.intentIndex}
@@ -184,7 +215,39 @@ export default function Ruleset({ network }: Props) {
               />
             ))}
           </div>
-        ) : (
+        )}
+
+        {showPresets && addMetaIntent && (
+          <div>
+            <div className="flex items-baseline justify-between gap-3 mb-2">
+              <h3 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                Common Intents
+              </h3>
+              <span className="text-[11px] text-neutral-500">
+                Available during setup. After the first proposal, new intents require a governance vote.
+              </span>
+            </div>
+            <div className="space-y-2">
+              {availablePresets.map((preset) => (
+                <PresetIntentCard
+                  key={preset.programId + ':' + preset.template}
+                  preset={preset}
+                  walletPda={data.address}
+                  nextIntentIndex={wallet.intentCount}
+                  proposers={addMetaIntent.proposers}
+                  approvers={addMetaIntent.approvers}
+                  approvalThreshold={addMetaIntent.approvalThreshold}
+                  cancellationThreshold={addMetaIntent.cancellationThreshold}
+                  network={network}
+                  isApprover={userIsApprover}
+                  onSuccess={handleRefresh}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {protocolIntents.length === 0 && !showPresets && (
           <div className="border border-dashed border-neutral-800 rounded-xl p-10 text-center">
             <svg className="w-8 h-8 text-neutral-700 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
