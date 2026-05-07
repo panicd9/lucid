@@ -31,3 +31,5 @@ demo/intents/
 
 # Superstack working artifacts (build/review context, security reports)
 .superstack/
+
+LUCID_SPEC.md
