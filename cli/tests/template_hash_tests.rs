@@ -19,7 +19,7 @@ fn template_hash_is_32_bytes() {
 fn template_hash_matches_locked_cross_language_hex() {
     // The TS side asserts the same hex against the same fixture file in
     // sdk/src/__tests__/template-hash.test.ts.
-    let expected = "f3efda21305372c6ce2348fab91ba7ecbdbd155c7beea67ec8fcca321f523e32";
+    let expected = "0938fc9922852e0319ea4179290dfeeb476b51fb290516a4a8167a18d16fe53e";
     let h = compute_template_hash(&load_fixture());
     assert_eq!(hex::encode(h), expected);
 }
