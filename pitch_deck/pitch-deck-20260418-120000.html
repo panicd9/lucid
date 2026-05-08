@@ -609,11 +609,20 @@
 
       <div class="grid-2 animate-in" style="margin-top: 32px;">
         <div class="card" style="padding: 24px;">
-          <p class="caption text-primary" style="margin-bottom: 12px;">KEY FEATURES</p>
-          <div class="flex flex-col gap-xs">
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Two-tier verification (native programs + IDL structural)</span></div>
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Auto-generates intents from any Anchor IDL</span></div>
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">On-chain message reconstruction &rarr; tampering rejected by ed25519 mismatch</span></div>
+          <p class="caption text-primary" style="margin-bottom: 12px;">SHIPPED</p>
+          <div class="flex flex-col gap-sm">
+            <div>
+              <p class="caption text-muted" style="margin-bottom: 4px;">WALLET LIFECYCLE</p>
+              <p class="small">Create &middot; Propose &middot; Approve &middot; Cancel &middot; Execute &middot; Audit</p>
+            </div>
+            <div>
+              <p class="caption text-muted" style="margin-bottom: 4px;">INTEGRATION</p>
+              <p class="small">Any Anchor IDL &rarr; human-readable ruleset</p>
+            </div>
+            <div>
+              <p class="caption text-muted" style="margin-bottom: 4px;">INTERFACES</p>
+              <p class="small">Dashboard &middot; CLI &middot; TypeScript SDK</p>
+            </div>
           </div>
         </div>
         <div class="card" style="padding: 24px;">
@@ -635,7 +644,7 @@
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Pinocchio for performance. The verification engine is two-tier: Tier 1 matches native program discriminators, Tier 2 does structural IDL matching against everything else. The signed envelope is the same bytes the program reconstructs on-chain — tampering between proposal and signature gets rejected by ed25519 mismatch. Live on devnet — protocols can integrate today."
+        "Full multisig lifecycle works end-to-end — wallet creation through audit. Protocols integrate by pasting their Anchor IDL; no custom integration code. Three ways to consume it — dashboard for ops teams, CLI for automation, TypeScript SDK for protocol-side issuance. Pinocchio program live on devnet — protocols can integrate today."
       </div>
     </div>
 
@@ -698,46 +707,79 @@
       <div class="divider animate-in"></div>
 
       <p class="body animate-in" style="margin-top: 24px; max-width: 1100px;">
-        Every multisig wraps actions in its own program. Ledger blind-signs the wrapper. Lucid closes that gap &mdash; and charges the deploying entity per registered intent. Two markets, same primitive, same fee.
+        Per-intent fees on every wallet, SaaS dashboard tiers on top. Three markets, all day one.
       </p>
 
-      <div class="grid-2 animate-in" style="margin-top: 32px;">
-        <div class="card" style="padding: 24px;">
-          <p class="caption text-primary" style="margin-bottom: 12px;">BEACHHEAD &mdash; PROTOCOL GOVERNANCE</p>
-          <div class="flex flex-col gap-sm">
-            <div class="flex justify-between"><span class="small">Wallet creation</span><span class="small mono text-primary">0.1 SOL</span></div>
-            <div class="flex justify-between"><span class="small">Per intent registered</span><span class="small mono text-primary">0.05 SOL</span></div>
+      <div class="card animate-in" style="margin-top: 32px; padding: 20px 28px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap;">
+        <p class="caption text-primary" style="margin: 0; letter-spacing: 0.08em; min-width: 130px;">ON-CHAIN</p>
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span class="small">Wallet creation</span>
+          <span class="small mono text-primary" style="font-weight: 600;">0.1 SOL</span>
+        </div>
+        <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.12);"></div>
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span class="small">Per intent</span>
+          <span class="small mono text-primary" style="font-weight: 600;">0.05 SOL</span>
+        </div>
+      </div>
+
+      <div class="card animate-in" style="margin-top: 16px; padding: 20px 28px;">
+        <div style="display: flex; align-items: center; gap: 32px; flex-wrap: wrap;">
+          <p class="caption text-primary" style="margin: 0; letter-spacing: 0.08em; min-width: 130px;">SUBSCRIPTION</p>
+          <div style="display: flex; align-items: baseline; gap: 10px;">
+            <span class="small">Free</span>
+            <span class="small mono text-primary" style="font-weight: 600;">$0</span>
           </div>
-          <div style="margin-top: 16px; padding: 12px 16px; background: rgba(16,185,129,0.06); border-radius: 8px;">
-            <p class="small" style="line-height: 1.5;">
-              <span class="text-primary" style="font-weight: 600;">Drift</span> &mdash; 23 admin intents = <span class="mono">1.25 SOL</span>, recurring on every IDL upgrade. High ARPU. Urgent post-Bybit.
-            </p>
+          <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.12);"></div>
+          <div style="display: flex; align-items: baseline; gap: 10px;">
+            <span class="small">Pro</span>
+            <span class="small mono text-primary" style="font-weight: 600;">$49/mo</span>
+          </div>
+          <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.12);"></div>
+          <div style="display: flex; align-items: baseline; gap: 10px;">
+            <span class="small">Enterprise</span>
+            <span class="small mono text-primary" style="font-weight: 600;">Custom</span>
           </div>
         </div>
-        <div class="card" style="padding: 24px;">
-          <p class="caption text-primary" style="margin-bottom: 12px;">EXPANSION &mdash; DAO TREASURY</p>
-          <div class="flex flex-col gap-sm">
-            <div class="flex justify-between"><span class="small">Wallet creation</span><span class="small mono text-primary">0.1 SOL</span></div>
-            <div class="flex justify-between"><span class="small">Per preset intent</span><span class="small mono text-primary">0.05 SOL</span></div>
-          </div>
-          <div style="margin-top: 16px; padding: 12px 16px; background: rgba(16,185,129,0.06); border-radius: 8px;">
-            <p class="small" style="line-height: 1.5;">
-              5-action treasury (transfer SOL, USDC, stake, unstake, swap) = <span class="mono">0.35 SOL</span>. Lower ARPU, ~10&times; the volume. Unlocked by dashboard presets, no protocol changes.
-            </p>
-          </div>
+        <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap;">
+          <p class="caption text-muted" style="margin: 0; letter-spacing: 0.08em; min-width: 130px;">FEATURES</p>
+          <p class="small text-muted" style="margin: 0; line-height: 1.6;">
+            Address book &middot; Notifications &middot; Spending limits &middot; Sub-accounts &middot; Simulation preview &middot; Bulk approve &middot; White-label &middot; SSO &middot; Audit export &middot; Compliance integrations
+          </p>
+        </div>
+      </div>
+
+      <div class="animate-in" style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+        <div class="card" style="padding: 22px;">
+          <p class="caption text-primary" style="margin-bottom: 14px;">PROTOCOL GOVERNANCE</p>
+          <p class="small" style="line-height: 1.5;">
+            <span class="text-primary" style="font-weight: 600;">Drift</span>, <span class="text-primary" style="font-weight: 600;">Jito</span>, <span class="text-primary" style="font-weight: 600;">Marinade</span> &mdash; every protocol admin action, re-registered on every IDL upgrade. Urgent post-Bybit.
+          </p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <p class="caption text-primary" style="margin-bottom: 14px;">TEAM TREASURY</p>
+          <p class="small" style="line-height: 1.5;">
+            5-action treasury (transfer SOL, USDC, stake, unstake, swap). Dashboard presets, no protocol integration.
+          </p>
+        </div>
+        <div class="card" style="padding: 22px;">
+          <p class="caption text-primary" style="margin-bottom: 14px;">PERSONAL MULTISIG</p>
+          <p class="small" style="line-height: 1.5;">
+            Hardware-wallet user with a 2-of-3 cold backup or a 3-of-5 with friends/family. Reads what they sign on-device.
+          </p>
         </div>
       </div>
 
       <div class="animate-in" style="margin-top: 32px; padding: 20px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
         <p class="small" style="color: var(--c-text); line-height: 1.6;">
-          <span class="text-primary" style="font-weight: 600;">Surface-area pricing, not transaction tax.</span>
-          Day-one fees from deploying entities. SaaS upside on top via $49/mo dashboard tiers &mdash; the same model Squads uses to run a $10B-AUM business across 350+ teams.
+          <span class="text-primary" style="font-weight: 600;">Two revenue streams.</span>
+          Squads has built a real SaaS business on operator subscriptions alone &mdash; Lucid adds per-intent revenue on top of the same baseline.
         </p>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "The structural reason Lucid has a market: Ledger blind-signs anything wrapped in a custom program, and every multisig wraps actions in its own program. So Squads users approving USDC payroll today are blind-signing too &mdash; not just protocol governance. We charge whoever deploys the wallet, per registered intent. Beachhead is protocol governance: Drift's 23 admin actions = 1.25 SOL on day one, recurring on every IDL upgrade. High ARPU, urgent pain post-Bybit. Phase 2 is DAO treasury &mdash; same pricing, much higher volume, unlocked by adding preset cards to the dashboard. SaaS dashboard tiers layer on top &mdash; same $49 Pro tier Squads uses to secure $10B across 350 teams."
+        "Two revenue streams. On-chain fees on every wallet &mdash; 0.1 SOL to create, 0.05 SOL per registered intent. SaaS subscription on top: Free tier gets the WYSIWYS protocol guarantee, Pro at $49 a month adds operational quality-of-life like address book, notifications, spending limits, audit export, Enterprise is custom for protocols and large orgs. Three markets all day one: protocol governance is the high-spend end, team treasuries are the volume play, personal multisigs are the long tail. Squads has built a real SaaS business on operator subscriptions alone &mdash; Lucid adds per-intent revenue on top."
       </div>
     </div>
 
