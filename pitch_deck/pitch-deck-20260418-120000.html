@@ -295,14 +295,104 @@
     }
 
     @media print {
-      .deck { overflow: visible; }
+      @page { size: 1920px 1080px; margin: 0; }
+      html, body { height: auto !important; overflow: visible !important; background: var(--c-bg) !important; }
+      .deck { overflow: visible !important; width: 1920px !important; height: auto !important; }
       .slide {
-        position: relative; opacity: 1; pointer-events: auto;
-        page-break-after: always; height: 100vh;
+        position: relative !important; inset: auto !important;
+        opacity: 1 !important; pointer-events: auto !important;
+        width: 1920px !important; height: 1080px !important;
+        page-break-after: always; break-after: page;
         break-inside: avoid;
       }
-      .nav-bar, .notes { display: none !important; }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .nav-bar, .notes, #presenter { display: none !important; }
       .animate-in { animation: none !important; opacity: 1 !important; transform: none !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+
+    #presenter {
+      position: fixed; inset: 0;
+      background: #0a0a0a;
+      flex-direction: column;
+      font-family: var(--font-display);
+      color: var(--c-text);
+      display: none;
+    }
+    #presenter.active { display: flex; }
+    .presenter-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px; padding: 16px;
+      min-height: 0;
+    }
+    .presenter-frame {
+      background: #000;
+      border: 1px solid var(--c-border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .presenter-stage {
+      position: absolute;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: top left;
+      pointer-events: none;
+    }
+    .presenter-stage .slide {
+      position: absolute; inset: 0; opacity: 1; pointer-events: none;
+    }
+    .presenter-stage .nav-bar, .presenter-stage .notes { display: none !important; }
+    .presenter-stage .animate-in { animation: none !important; opacity: 1 !important; transform: none !important; }
+    .presenter-side {
+      display: flex; flex-direction: column; gap: 16px;
+      min-height: 0;
+    }
+    .presenter-next { flex: 0 0 35%; }
+    .presenter-notes {
+      flex: 1;
+      background: var(--c-bg-card);
+      border: 1px solid var(--c-border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      overflow-y: auto;
+      font-size: 18px;
+      line-height: 1.65;
+      color: var(--c-text);
+    }
+    .presenter-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 20px;
+      background: var(--c-bg-card);
+      border: 1px solid var(--c-border);
+      border-radius: 12px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--c-text-secondary);
+    }
+    .presenter-meta .timer-group { display: flex; align-items: center; gap: 12px; }
+    .presenter-meta .timer { color: var(--c-primary); font-variant-numeric: tabular-nums; }
+    .presenter-meta .timer.idle { color: var(--c-text-muted); }
+    .timer-btn {
+      background: none; border: 1px solid var(--c-border); color: var(--c-text-secondary);
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+      font-family: var(--font-display); font-size: 12px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .timer-btn:hover { border-color: var(--c-primary); color: var(--c-text); }
+    .presenter-label {
+      position: absolute; top: 10px; left: 14px;
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.1em; color: rgba(255,255,255,0.55);
+      background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 6px;
+      z-index: 2;
+    }
+    .presenter-notes-label {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--c-text-muted);
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -380,7 +470,7 @@
       <span class="caption animate-in">THE STAKES</span>
 
       <h1 class="h1 animate-in" style="margin-top: 16px;">
-        <span class="text-danger">$2 billion</span> stolen in 18 months.
+        <span class="text-danger">$2 billion</span> stolen in 21 months.
       </h1>
 
       <p class="h3 animate-in" style="color: var(--c-text-secondary); margin-top: 12px; max-width: 1000px;">
@@ -398,7 +488,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$1.46B</p>
           <p class="body" style="margin-top: 12px;">
-            Lazarus pushed malicious JS into Safe's AWS-hosted frontend; signers' Ledgers blind-signed a <span class="mono">delegatecall</span> the UI hid as a 30,000 ETH transfer.
+            Lazarus injected JS into Safe's frontend. Ledgers blind-signed a <span class="mono">delegatecall</span> hidden as a 30,000 ETH transfer.
           </p>
         </div>
 
@@ -410,7 +500,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$285M</p>
           <p class="body" style="margin-top: 12px;">
-            DPRK social engineering over 6 months; Squads multisig signers pre-signed durable-nonce governance transactions they couldn't fully verify on their hardware.
+            DPRK social engineering. Signers pre-signed durable-nonce governance txs they couldn't verify on hardware.
           </p>
         </div>
 
@@ -422,7 +512,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$235M</p>
           <p class="body" style="margin-top: 12px;">
-            Liminal-managed Gnosis Safe UI displayed one transaction; signers approved another that swapped the Safe's implementation for a malicious contract.
+            UI showed one transaction; signers approved another that swapped the Safe's implementation.
           </p>
         </div>
 
@@ -434,14 +524,14 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$50M</p>
           <p class="body" style="margin-top: 12px;">
-            Malware made the Safe UI show a routine config change while signers' hardware wallets signed <span class="mono">transferOwnership</span> on the lending pool.
+            Malware showed a routine config change while wallets signed <span class="mono">transferOwnership</span> on the lending pool.
           </p>
         </div>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Two billion dollars stolen in eighteen months across four multisig hacks. Bybit — the largest crypto theft in history. Drift — the largest Solana DeFi protocol hack ever. WazirX — India's largest exchange. Radiant on Arbitrum. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. Every single one, trust fell back to the UI — and the UI lied. The pattern doesn't change. Until the wallet itself can read the transaction, this keeps happening."
+        "Two billion dollars stolen in twenty-one months across four multisig hacks. Bybit — the largest crypto theft in history. Drift — the largest Solana DeFi protocol hack ever. WazirX — India's largest exchange. Radiant on Arbitrum. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. Every single one, trust fell back to the UI — and the UI lied. The pattern doesn't change. Until the wallet itself can read the transaction, this keeps happening."
       </div>
     </div>
 
@@ -482,21 +572,21 @@
           <div style="font-size: 48px; margin-bottom: 16px;">&#128220;</div>
           <p class="h3">Intent Definitions</p>
           <p class="small" style="margin-top: 8px;">
-            Auto-generate governance rulesets from program IDL. Every action gets a human-readable template.
+            Anchor IDL &rarr; human-readable ruleset. Every action templated.
           </p>
         </div>
         <div class="card" style="text-align: center;">
           <div style="font-size: 48px; margin-bottom: 16px;">&#128274;</div>
           <p class="h3">Plain-English Signing</p>
           <p class="small" style="margin-top: 8px;">
-            Signers approve via <span class="mono text-primary">signMessage</span>. The wallet renders the action as text — on a hardware wallet, on the device itself, outside any compromised host.
+            Signers approve via <span class="mono text-primary">signMessage</span>. The wallet renders the action as text &mdash; on the device, outside any compromised host.
           </p>
         </div>
         <div class="card" style="text-align: center;">
           <div style="font-size: 48px; margin-bottom: 16px;">&#9889;</div>
           <p class="h3">On-Chain Verify</p>
           <p class="small" style="margin-top: 8px;">
-            Program reconstructs the expected message from state, verifies the signature via Solana's native ed25519 precompile. Sub-cent cost. Tampering &rarr; signature mismatch &rarr; reject.
+            Program reconstructs the message from state and verifies via ed25519 precompile. Tamper &rarr; signature fails &rarr; reject.
           </p>
         </div>
       </div>
@@ -567,7 +657,7 @@
       </div>
     </div>
 
-    <!-- ======================== SLIDE 7: DEMO — BEFORE/AFTER (VIDEO) ======================== -->
+    <!-- ======================== SLIDE 7: DEMO — BEFORE/AFTER (FILMSTRIPS) ======================== -->
     <div class="slide bg-default" style="padding: 60px 80px;">
       <span class="caption animate-in">LIVE DEMO</span>
 
@@ -575,25 +665,37 @@
         Same device. <span class="text-emphasis">Different display.</span>
       </h1>
 
-      <div class="grid-2 animate-in" style="flex: 1; align-items: start;">
-        <!-- Before: actual Ledger blind-signing recording -->
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <p class="caption" style="color: var(--c-danger); margin-bottom: 16px;">EVERY MULTISIG TODAY</p>
-          <video src="blind-signing.mp4" autoplay loop muted playsinline
-                 style="max-height: 520px; width: auto; border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.5); border: 1px solid rgba(239,68,68,0.25);"></video>
+      <!-- Top filmstrip: blind signing flow -->
+      <div class="animate-in" style="margin-bottom: 24px;">
+        <p class="caption" style="color: var(--c-danger); margin-bottom: 12px;">EVERY MULTISIG TODAY &mdash; 7 BLIND SCREENS</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+          <img src="blind%20signing/01-blind-signing-ahead.png" alt="Blind signing ahead?" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="blind%20signing/02-review-transaction.png" alt="Review transaction" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="blind%20signing/03-unrecognized-format.png" alt="Unrecognized format" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="blind%20signing/04-message-hash.png" alt="Message Hash (base58 blob)" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="blind%20signing/05-fee-payer.png" alt="Fee payer pubkey" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="blind%20signing/06-accept-risk-and-sign.png" alt="Accept risk and sign transaction?" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="blind%20signing/07-transaction-signed.png" alt="Transaction signed" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
         </div>
+      </div>
 
-        <!-- After: actual Ledger Lucid-signing recording -->
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <p class="caption" style="color: var(--c-accent); margin-bottom: 16px;">LUCID ON YOUR LEDGER</p>
-          <video src="lucid-signing.mp4" autoplay loop muted playsinline
-                 style="max-height: 520px; width: auto; border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.5); border: 1px solid rgba(16,185,129,0.25);"></video>
+      <!-- Bottom filmstrip: lucid signing flow -->
+      <div class="animate-in">
+        <p class="caption" style="color: var(--c-accent); margin-bottom: 12px;">LUCID ON YOUR LEDGER &mdash; HUMAN-READABLE END-TO-END</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+          <img src="lucid%20signing/01-review-message.png" alt="Review message" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="lucid%20signing/02-signer.png" alt="Signer" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="lucid%20signing/07-hash.png" alt="Hash" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="lucid%20signing/08-message-1of2.png" alt="Message 1/2: propose accept admin | wallet: treasury, proposal:" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="lucid%20signing/09-message-2of2.png" alt="Message 2/2: #0; expires: 29 Apr 2026 01:21:53" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="lucid%20signing/10-sign-message.png" alt="Sign message" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="lucid%20signing/11-message-signed.png" alt="Message signed" style="width: 420px; height: 168px; object-fit: contain; background: #000; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
         </div>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "These are real recordings. Same Ledger device, same multisig flow. Left: every multisig today — the device shows a 'blind signing' warning, asks you to override its safety check, then displays a message hash and a fee payer. You can't tell what you're signing. Right: Lucid — the device shows the actual action in plain English. Trust moves back to the hardware wallet, where it belonged. The on-chain program verifies the signer approved this exact message — if anything is tampered between proposal and signing, the ed25519 signature won't match the reconstructed message, and the program rejects it."
+        "Same Ledger device, same multisig flow, captured frame-by-frame. Top row: every multisig today &mdash; the signer overrides a 'blind signing' warning, then sees a base58 message hash and a fee payer. Seven screens, none of which tell you what you're signing. Bottom row: Lucid &mdash; the device walks through the actual action in plain English: who is being added, to which wallet, which proposal, when it expires. The on-chain program reconstructs that exact message and verifies the ed25519 signature against it &mdash; if anything is tampered between proposal and signing, the signature doesn't match, and the program rejects it."
       </div>
     </div>
 
@@ -659,7 +761,7 @@
       <div class="divider animate-in"></div>
 
       <p class="body animate-in" style="margin-top: 24px; max-width: 1100px;">
-        Existing multisigs trust the frontend to render what's being signed. Lucid's program reconstructs the signed message from on-chain state and verifies it via ed25519 &mdash; the chain enforces the match, not the UI.
+        Existing multisigs trust the frontend. Lucid reconstructs the signed message on-chain and verifies via ed25519 &mdash; the chain enforces the match, not the UI.
       </p>
 
       <div class="grid-2 animate-in" style="margin-top: 32px;">
@@ -685,8 +787,7 @@
 
       <div class="animate-in" style="margin-top: 32px; padding: 20px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
         <p class="small" style="color: var(--c-text); line-height: 1.6;">
-          <span class="text-primary" style="font-weight: 600;">Adopting this isn't a UI change.</span>
-          It means swapping the signing primitive end-to-end &mdash; wallet, program, verifier. Not a feature flag a competitor flips on next quarter.
+          <span class="text-primary" style="font-weight: 600;">Adopting this isn't a UI change</span> &mdash; it's swapping the signing primitive across wallet, program, and verifier. Not a feature flag.
         </p>
       </div>
 
@@ -753,19 +854,19 @@
         <div class="card" style="padding: 22px;">
           <p class="caption text-primary" style="margin-bottom: 14px;">PROTOCOL GOVERNANCE</p>
           <p class="small" style="line-height: 1.5;">
-            <span class="text-primary" style="font-weight: 600;">Drift</span>, <span class="text-primary" style="font-weight: 600;">Jito</span>, <span class="text-primary" style="font-weight: 600;">Marinade</span> &mdash; every protocol admin action, re-registered on every IDL upgrade. Urgent post-Bybit.
+            <span class="text-primary" style="font-weight: 600;">Drift</span>, <span class="text-primary" style="font-weight: 600;">Jito</span>, <span class="text-primary" style="font-weight: 600;">Marinade</span> &mdash; admin actions templated, re-registered on every IDL upgrade.
           </p>
         </div>
         <div class="card" style="padding: 22px;">
           <p class="caption text-primary" style="margin-bottom: 14px;">TEAM TREASURY</p>
           <p class="small" style="line-height: 1.5;">
-            5-action treasury (transfer SOL, USDC, stake, unstake, swap). Dashboard presets, no protocol integration.
+            5-action presets (transfer SOL/USDC, stake, unstake, swap). No integration needed.
           </p>
         </div>
         <div class="card" style="padding: 22px;">
           <p class="caption text-primary" style="margin-bottom: 14px;">PERSONAL MULTISIG</p>
           <p class="small" style="line-height: 1.5;">
-            Hardware-wallet user with a 2-of-3 cold backup or a 3-of-5 with friends/family. Reads what they sign on-device.
+            2-of-3 cold backup or 3-of-5 with friends/family. Reads what they sign on-device.
           </p>
         </div>
       </div>
@@ -773,7 +874,7 @@
       <div class="animate-in" style="margin-top: 32px; padding: 20px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
         <p class="small" style="color: var(--c-text); line-height: 1.6;">
           <span class="text-primary" style="font-weight: 600;">Two revenue streams.</span>
-          Squads has built a real SaaS business on operator subscriptions alone &mdash; Lucid adds per-intent revenue on top of the same baseline.
+          Squads built a real SaaS business on subscriptions alone &mdash; Lucid adds per-intent fees on top.
         </p>
       </div>
 
@@ -804,7 +905,7 @@
             Darko Panic <span class="text-muted" style="font-weight: 400;">&middot;</span>
             <span class="text-primary">darkopanic99@gmail.com</span>
           </p>
-          <p class="small" style="color: var(--c-text-secondary); margin-top: 8px;">Senior Blockchain Engineer at MetaWealth &mdash; institutional-quality, regulated tokenized real estate.</p>
+          <p class="small" style="color: var(--c-text-secondary); margin-top: 8px;">Senior Blockchain Engineer at MetaWealth &mdash; tokenized real estate.</p>
           <p class="small" style="color: var(--c-text-muted); margin-top: 12px; line-height: 1.6;">
             &euro;85M AUM on Solana &mdash; 233 properties, ~1,400 investors across 28 countries.
           </p>
@@ -832,7 +933,36 @@
     </div>
   </div>
 
+  <div id="presenter">
+    <div class="presenter-grid">
+      <div class="presenter-frame presenter-current">
+        <span class="presenter-label">Current</span>
+        <div class="presenter-stage" id="stage-current"></div>
+      </div>
+      <div class="presenter-side">
+        <div class="presenter-frame presenter-next">
+          <span class="presenter-label">Next</span>
+          <div class="presenter-stage" id="stage-next"></div>
+        </div>
+        <div class="presenter-notes">
+          <div class="presenter-notes-label">Speaker Notes</div>
+          <div id="presenter-notes-content">&mdash;</div>
+        </div>
+        <div class="presenter-meta">
+          <span id="presenter-counter">1 / 1</span>
+          <div class="timer-group">
+            <span class="timer idle" id="presenter-timer">00:00</span>
+            <button class="timer-btn" id="presenter-timer-btn">Start</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
+    const params = new URLSearchParams(location.search);
+    const isPresenter = params.has('presenter');
+
     let current = 0;
     const slides = document.querySelectorAll('.slide');
     const total = slides.length;
@@ -840,9 +970,11 @@
 
     document.getElementById('total').textContent = total;
 
-    function show(i) {
-      slides.forEach(s => s.classList.remove('active'));
+    const channel = ('BroadcastChannel' in window) ? new BroadcastChannel('lucid-deck') : null;
+
+    function renderSlide(i) {
       current = Math.max(0, Math.min(i, total - 1));
+      slides.forEach(s => s.classList.remove('active'));
       slides[current].classList.add('active');
       document.getElementById('current').textContent = current + 1;
       document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
@@ -852,26 +984,111 @@
       if (note && notesVisible) note.classList.add('visible');
     }
 
+    function getNoteHTML(slide) {
+      const noteEl = slide.querySelector('.notes');
+      if (!noteEl) return '<em style="color: var(--c-text-muted)">No notes for this slide.</em>';
+      const clone = noteEl.cloneNode(true);
+      const label = clone.querySelector('.notes-label');
+      if (label) label.remove();
+      return clone.innerHTML.trim() || '<em style="color: var(--c-text-muted)">No notes for this slide.</em>';
+    }
+
+    function fitStage(stage) {
+      const wrap = stage.parentElement;
+      const tw = 1920, th = 1080;
+      const resize = () => {
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        if (!w || !h) return;
+        const s = Math.min(w / tw, h / th);
+        stage.style.transform = `scale(${s})`;
+        stage.style.left = ((w - tw * s) / 2) + 'px';
+        stage.style.top = ((h - th * s) / 2) + 'px';
+      };
+      resize();
+      new ResizeObserver(resize).observe(wrap);
+    }
+
+    function fillStage(stage, slideIndex) {
+      stage.innerHTML = '';
+      if (slideIndex < 0 || slideIndex >= total) return;
+      const clone = slides[slideIndex].cloneNode(true);
+      clone.classList.add('active');
+      stage.appendChild(clone);
+    }
+
+    function updatePresenter() {
+      fillStage(document.getElementById('stage-current'), current);
+      const nextIdx = current + 1 < total ? current + 1 : -1;
+      fillStage(document.getElementById('stage-next'), nextIdx);
+      document.getElementById('presenter-notes-content').innerHTML = getNoteHTML(slides[current]);
+      document.getElementById('presenter-counter').textContent = `${current + 1} / ${total}`;
+    }
+
+    function show(i, silent) {
+      const clamped = Math.max(0, Math.min(i, total - 1));
+      current = clamped;
+      if (isPresenter) updatePresenter();
+      else renderSlide(clamped);
+      if (!silent && channel) channel.postMessage({ type: 'slide', index: clamped });
+    }
+
     function next() { show(current + 1); }
     function prev() { show(current - 1); }
+
+    if (channel) {
+      channel.onmessage = (e) => {
+        if (e.data && e.data.type === 'slide') show(e.data.index, true);
+      };
+    }
+
+    if (isPresenter) {
+      document.getElementById('deck').style.display = 'none';
+      document.getElementById('presenter').classList.add('active');
+      fitStage(document.getElementById('stage-current'));
+      fitStage(document.getElementById('stage-next'));
+      updatePresenter();
+      const timerEl = document.getElementById('presenter-timer');
+      const timerBtn = document.getElementById('presenter-timer-btn');
+      let timerStart = null;
+      function paint() {
+        const s = timerStart === null ? 0 : Math.floor((Date.now() - timerStart) / 1000);
+        const mm = String(Math.floor(s / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        timerEl.textContent = `${mm}:${ss}`;
+      }
+      paint();
+      setInterval(() => { if (timerStart !== null) paint(); }, 1000);
+      timerBtn.addEventListener('click', () => {
+        timerStart = Date.now();
+        timerEl.classList.remove('idle');
+        timerBtn.textContent = 'Reset';
+        paint();
+      });
+    } else {
+      renderSlide(0);
+    }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
       if (e.key === 'n' || e.key === 'N') {
+        if (isPresenter) return;
         notesVisible = !notesVisible;
         document.querySelectorAll('.notes').forEach(n => {
           n.classList.toggle('visible', notesVisible && n.closest('.slide').classList.contains('active'));
         });
       }
+      if ((e.key === 'p' || e.key === 'P') && !isPresenter) {
+        window.open(location.pathname + '?presenter', 'lucid-presenter', 'width=1400,height=900');
+      }
     });
 
-    document.getElementById('deck').addEventListener('click', (e) => {
-      if (e.target.closest('.nav-bar') || e.target.closest('.nav-btn')) return;
-      if (e.clientX > window.innerWidth / 2) next(); else prev();
-    });
-
-    show(0);
+    if (!isPresenter) {
+      document.getElementById('deck').addEventListener('click', (e) => {
+        if (e.target.closest('.nav-bar') || e.target.closest('.nav-btn')) return;
+        if (e.clientX > window.innerWidth / 2) next(); else prev();
+      });
+    }
   </script>
 </body>
 </html>

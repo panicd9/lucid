@@ -95,7 +95,7 @@ export const Stakes: React.FC<{ durationInFrames: number }> = ({ durationInFrame
               margin: 0,
             }}
           >
-            stolen across 4 multisig hacks. 18 months.
+            stolen across 4 multisig hacks. 21 months.
           </p>
         </div>
 

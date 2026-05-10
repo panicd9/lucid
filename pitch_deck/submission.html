@@ -89,7 +89,7 @@
 
 <div class="card section-copy" id="description">
 
-<p><strong>The problem.</strong> Multisig signers approve transactions they cannot read. <strong>$2 billion stolen in 18 months across four multisig hacks</strong>: Bybit ($1.46B, Feb 2025) — Lazarus pushed malicious JS into Safe's frontend, signers' Ledgers blind-signed a <code>delegatecall</code> the UI hid as a 30,000 ETH transfer. Drift ($285M, Apr 2026) — DPRK social-engineered Squads multisig signers into pre-signing durable-nonce governance transactions they couldn't fully verify on hardware. WazirX ($235M, Jul 2024) — Liminal-managed Safe UI displayed one transaction; signers approved another that swapped the implementation for a malicious contract. Radiant ($50M, Oct 2024) — malware showed a routine config change while hardware wallets signed <code>transferOwnership</code> on the lending pool. Every hack used hardware wallets. Every hack, the wallet couldn't read what was signed. Every hack, trust fell back to a UI that lied.</p>
+<p><strong>The problem.</strong> Multisig signers approve transactions they cannot read. <strong>$2 billion stolen in 21 months across four multisig hacks</strong>: Bybit ($1.46B, Feb 2025) — Lazarus pushed malicious JS into Safe's frontend, signers' Ledgers blind-signed a <code>delegatecall</code> the UI hid as a 30,000 ETH transfer. Drift ($285M, Apr 2026) — DPRK social-engineered Squads multisig signers into pre-signing durable-nonce governance transactions they couldn't fully verify on hardware. WazirX ($235M, Jul 2024) — Liminal-managed Safe UI displayed one transaction; signers approved another that swapped the implementation for a malicious contract. Radiant ($50M, Oct 2024) — malware showed a routine config change while hardware wallets signed <code>transferOwnership</code> on the lending pool. Every hack used hardware wallets. Every hack, the wallet couldn't read what was signed. Every hack, trust fell back to a UI that lied.</p>
 
 <p><strong>What Lucid does.</strong> A multisig where signers approve human-readable intents via <code>signMessage</code>, not opaque transactions via <code>signTransaction</code>. The Ledger displays the actual action in plain text: <code>approve add market 5 with oracle 9abcD3F2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4def | wallet: dao-governance (7Hk2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4kP9zU2A); proposal: #42; expires: 09 May 2026 12:00:00 UTC;</code>. Protocols define their governance ruleset as verified intents auto-generated from their program's IDL — each intent specifies the exact CPI, parameters, and human-readable template. Proposers and approvers sign what they read, on the device itself, outside any compromised host.</p>
 
@@ -131,7 +131,7 @@
 <p><em>[Show problem slide from deck — blind-signing screenshot with hex hash]</em></p>
 
 <h3>0:15–0:45 — The stakes ($2B)</h3>
-<p>"Two billion dollars stolen in eighteen months across four multisig hacks. <strong>Bybit</strong>, February 2025 — $1.46 billion, the largest crypto theft in history. Lazarus pushed malicious JS into Safe's frontend; signers' Ledgers blind-signed a delegatecall the UI hid as a 30,000 ETH transfer. <strong>Drift</strong>, April 2026 — $285 million, the largest Solana DeFi protocol hack ever. <strong>WazirX</strong>, July 2024 — $235 million from India's largest exchange. <strong>Radiant</strong>, October 2024 — $50 million. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. The pattern doesn't change until the wallet itself can read the transaction."</p>
+<p>"Two billion dollars stolen in twenty-one months across four multisig hacks. <strong>Bybit</strong>, February 2025 — $1.46 billion, the largest crypto theft in history. Lazarus pushed malicious JS into Safe's frontend; signers' Ledgers blind-signed a delegatecall the UI hid as a 30,000 ETH transfer. <strong>Drift</strong>, April 2026 — $285 million, the largest Solana DeFi protocol hack ever. <strong>WazirX</strong>, July 2024 — $235 million from India's largest exchange. <strong>Radiant</strong>, October 2024 — $50 million. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. The pattern doesn't change until the wallet itself can read the transaction."</p>
 <p><em>[Show stakes slide — 4-card grid with the hacks]</em></p>
 
 <h3>0:45–1:00 — The solution</h3>
@@ -277,7 +277,7 @@ npx netlify deploy --prod --dir=dashboard/dist</code></pre>
 
 <p><strong>Technical Execution (20%):</strong> Pinocchio (not Anchor) for zero-copy performance. Byte-pool pattern for variable-length on-chain data. LiteSVM integration tests with real ed25519 signatures verified on-chain. Direct Ledger WebHID — no wallet-adapter middlemen. Clean four-surface separation: program / CLI / SDK / dashboard. ~22K LOC, all tested.</p>
 
-<p><strong>Potential Impact (15%):</strong> $2B stolen in 18 months across four multisig hacks — Bybit ($1.46B), Drift ($285M), WazirX ($235M), Radiant ($50M). Every one used hardware wallets that couldn't read the transaction. Lucid eliminates the attack vector at the hardware level. Public good: the signing primitive is open and protocol-agnostic. Any program with admin keys can adopt it from the IDL.</p>
+<p><strong>Potential Impact (15%):</strong> $2B stolen in 21 months across four multisig hacks — Bybit ($1.46B), Drift ($285M), WazirX ($235M), Radiant ($50M). Every one used hardware wallets that couldn't read the transaction. Lucid eliminates the attack vector at the hardware level. Public good: the signing primitive is open and protocol-agnostic. Any program with admin keys can adopt it from the IDL.</p>
 
 <p><strong>Presentation (10%):</strong> Direct, technical, no fluff. Architecture diagram in README. Real before/after Ledger recordings (<code>blind-signing.mp4</code>, <code>lucid-signing.mp4</code>) demonstrating the primitive on the device itself. Demo script with tamper detection. Dashboard is polished with animations, error handling, explorer links.</p>
 
@@ -313,7 +313,7 @@ npx netlify deploy --prod --dir=dashboard/dist</code></pre>
 <p>Human-readable multisig. Read what you sign.</p>
 
 <h3>One-liner</h3>
-<p>$2B has been stolen in 18 months because multisig signers can't read what their hardware wallet signs. Lucid is the multisig where they can — plain English, on the device itself, verified on-chain via Solana's ed25519 precompile.</p>
+<p>$2B has been stolen in 21 months because multisig signers can't read what their hardware wallet signs. Lucid is the multisig where they can — plain English, on the device itself, verified on-chain via Solana's ed25519 precompile.</p>
 
 <h3>Categories</h3>
 <p>DeFi Infrastructure, Security, Public Good</p>

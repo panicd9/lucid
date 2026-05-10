@@ -8,7 +8,7 @@ Multisig signers on Solana approve transactions their hardware wallet can't read
 
 ## The Stakes
 
-**$2 billion stolen in 18 months across four multisig hacks. Every one used hardware wallets. Every one, the wallet couldn't read what was being signed.**
+**$2 billion stolen in 21 months across four multisig hacks. Every one used hardware wallets. Every one, the wallet couldn't read what was being signed.**
 
 | Hack | Date | Loss | Mechanic |
 |------|------|------|----------|
