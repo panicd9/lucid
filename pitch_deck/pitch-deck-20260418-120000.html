@@ -404,12 +404,12 @@
       <h1 class="hero text-emphasis animate-in" style="letter-spacing: 0.02em; font-weight: 800;">LUCID</h1>
 
       <p class="h3 animate-in" style="color: var(--c-text-secondary); margin-top: 24px; max-width: 800px;">
-        Human-readable multisig.
+        Human-readable multisig
       </p>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Lucid is the human-readable multisig — signers read what they approve on the device itself, in plain English. Every multisig today forces a blind-signing warning on the hardware wallet. We fix that." Keep it under 15 seconds. Create curiosity about the signing problem.
+        Lucid is human-readable multisig.
       </div>
     </div>
 
@@ -422,7 +422,7 @@
       </h1>
 
       <p class="body animate-in" style="margin-top: 20px; max-width: 1000px; color: var(--c-text-secondary);">
-        Ethereum solved this with <span class="mono text-primary">ERC-7730</span> (2024) &mdash; Ledger's clear-signing standard, adopted by Uniswap, Aave, Lido, Safe, and 40+ others. <span class="text-danger">Solana has no equivalent.</span>
+        Ethereum solved this with <span class="mono text-primary">ERC-7730</span> (2024). <span class="text-danger">Solana has no equivalent.</span>
       </p>
 
       <div class="divider animate-in"></div>
@@ -446,14 +446,10 @@
         <div class="flex flex-col gap-sm" style="justify-content: center;">
           <div class="flex items-center gap-sm">
             <span class="text-danger" style="font-size: 28px; font-weight: 800; width: 40px;">01</span>
-            <span class="body">Hardware wallet shows nothing readable</span>
-          </div>
-          <div class="flex items-center gap-sm">
-            <span class="text-danger" style="font-size: 28px; font-weight: 800; width: 40px;">02</span>
             <span class="body">Trust falls back to the multisig UI</span>
           </div>
           <div class="flex items-center gap-sm">
-            <span class="text-danger" style="font-size: 28px; font-weight: 800; width: 40px;">03</span>
+            <span class="text-danger" style="font-size: 28px; font-weight: 800; width: 40px;">02</span>
             <span class="body">Compromised UI = signers approve attacks they can't see</span>
           </div>
         </div>
@@ -461,7 +457,7 @@
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Every multisig on Solana today — Squads, Realms, all of them — sends a transaction the hardware wallet can't read. The Ledger throws a 'blind signing' warning and asks you to accept the risk. So signers fall back to trusting the multisig UI. When that UI is compromised, the hardware wallet you bought as your trust anchor offers zero protection." Pause. "Ethereum already solved this — ERC-7730, ratified in 2024, is Ledger's clear-signing standard for smart-contract calls. Uniswap shipped it. Aave shipped it. Lido. Safe. Forty-plus protocols in the registry today. Solana has nothing equivalent, anywhere." Pause. "Let me show you what that's already cost."
+        Imagine you're a signer on protocol governance. You buy a hardware wallet, you open your multisig, go to sign a transaction, and you get this: no idea what you're signing, just a warning that you have to blind sign. Ethereum solved this with ERC-7730. Solana has nothing like it.
       </div>
     </div>
 
@@ -488,7 +484,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$1.46B</p>
           <p class="body" style="margin-top: 12px;">
-            Lazarus injected JS into Safe's frontend. Ledgers blind-signed a <span class="mono">delegatecall</span> hidden as a 30,000 ETH transfer.
+            Lazarus injected JS into Safe's frontend. Ledgers blind-signed a <span class="mono">delegatecall</span>.
           </p>
         </div>
 
@@ -500,7 +496,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$285M</p>
           <p class="body" style="margin-top: 12px;">
-            DPRK social engineering. Signers pre-signed durable-nonce governance txs they couldn't verify on hardware.
+            DPRK social engineering. Signers pre-signed durable-nonce txs they couldn't verify.
           </p>
         </div>
 
@@ -512,7 +508,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$235M</p>
           <p class="body" style="margin-top: 12px;">
-            UI showed one transaction; signers approved another that swapped the Safe's implementation.
+            UI showed one tx; signers approved another that swapped Safe's implementation.
           </p>
         </div>
 
@@ -524,14 +520,14 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$50M</p>
           <p class="body" style="margin-top: 12px;">
-            Malware showed a routine config change while wallets signed <span class="mono">transferOwnership</span> on the lending pool.
+            Malware showed routine config; wallets signed <span class="mono">transferOwnership</span>.
           </p>
         </div>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Two billion dollars stolen in twenty-one months across four multisig hacks. Bybit — the largest crypto theft in history. Drift — the largest Solana DeFi protocol hack ever. WazirX — India's largest exchange. Radiant on Arbitrum. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. Every single one, trust fell back to the UI — and the UI lied. The pattern doesn't change. Until the wallet itself can read the transaction, this keeps happening."
+        So the hardware wallet shows nothing. Trust falls back to the UI. And when that UI gets compromised, you lose $2 billion in 21 months across four hacks&hellip;
       </div>
     </div>
 
@@ -548,12 +544,12 @@
       </h2>
 
       <p class="body animate-in" style="margin-top: 16px; max-width: 880px;">
-        Every signer on a cold wallet. <span class="text-danger">$285M still gone.</span> The key was safe — the signer was blind.
+        <span class="text-danger">$285M gone.</span> The key was safe; the signer was blind.
       </p>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "After the hack, Drift specifically confirmed: every multisig signer used cold wallets. They wanted to make clear they were following best practice. And they still lost two hundred and eighty-five million dollars. The hardware wallet's job is to protect the private key. It doesn't tell the human what they're signing. That's a different problem — and that's the one Lucid solves."
+        &hellip;even though every signer was on a cold wallet.
       </div>
     </div>
 
@@ -569,24 +565,21 @@
 
       <div class="grid-3 animate-in" style="margin-top: 32px;">
         <div class="card" style="text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 16px;">&#128220;</div>
           <p class="h3">Intent Definitions</p>
           <p class="small" style="margin-top: 8px;">
             Anchor IDL &rarr; human-readable ruleset. Every action templated.
           </p>
         </div>
         <div class="card" style="text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 16px;">&#128274;</div>
           <p class="h3">Plain-English Signing</p>
           <p class="small" style="margin-top: 8px;">
-            Signers approve via <span class="mono text-primary">signMessage</span>. The wallet renders the action as text &mdash; on the device, outside any compromised host.
+            Signers approve via <span class="mono text-primary">signMessage</span>. Wallet renders on-device, outside any compromised host.
           </p>
         </div>
         <div class="card" style="text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 16px;">&#9889;</div>
           <p class="h3">On-Chain Verify</p>
           <p class="small" style="margin-top: 8px;">
-            Program reconstructs the message from state and verifies via ed25519 precompile. Tamper &rarr; signature fails &rarr; reject.
+            Program reconstructs the message and verifies the signature. Tamper &rarr; reject.
           </p>
         </div>
       </div>
@@ -597,67 +590,11 @@
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Lucid uses signMessage instead of signTransaction. Any wallet that displays signed messages — Phantom, Backpack, hardware wallets — renders the action in plain English. The security guarantee gets stronger when signers use hardware wallets, because the host can't lie about what's on the device's own screen. The on-chain program reconstructs the expected message from state and verifies the ed25519 signature; if anything was tampered, the signature won't match. We're aligned with sRFC 38: Offchain Message Specification Version 1 — Anza's standard for human-readable offchain signing, published December 2025."
+        How we solved it? We changed the flow. Before any transaction runs, the wallet defines a ruleset. We call those templates intents &mdash; each one carries human-readable text that renders on the hardware wallet. After you sign, the program reconstructs the message and verifies your signature. If anything doesn't match, the chain rejects it.
       </div>
     </div>
 
-    <!-- ======================== SLIDE 6: ON-DEVICE COMPARISON (TEXT) ======================== -->
-    <div class="slide bg-default" style="padding: 60px 80px;">
-      <span class="caption animate-in">SAME LEDGER. SAME MULTISIG FLOW.</span>
-
-      <h1 class="h2 animate-in" style="margin-top: 16px; margin-bottom: 32px; max-width: 1100px;">
-        What the device shows <span class="text-emphasis">when a signer approves.</span>
-      </h1>
-
-      <div class="grid-2 animate-in" style="flex: 1; align-items: stretch; gap: 40px;">
-        <!-- BEFORE (blind signing) -->
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--c-danger); box-shadow: 0 0 12px var(--c-danger);"></div>
-            <p class="caption" style="color: var(--c-danger); letter-spacing: 0.12em;">EVERY MULTISIG TODAY</p>
-          </div>
-          <div style="flex: 1; background: #0a0a0a; border: 2px solid var(--c-danger); border-radius: 16px; padding: 28px 32px; box-shadow: 0 0 80px rgba(239,68,68,0.15); display: flex; flex-direction: column; gap: 14px;">
-            <div style="display: flex; align-items: center; gap: 12px; color: var(--c-danger); font-size: 24px; font-weight: 700;">
-              <span style="font-size: 28px;">&#9888;</span> Blind signing ahead
-            </div>
-            <div style="color: var(--c-text-muted); font-size: 18px;">Unrecognized format</div>
-            <div style="color: var(--c-text-muted); font-size: 13px; letter-spacing: 0.08em; margin-top: 8px;">MESSAGE HASH</div>
-            <div class="mono" style="color: var(--c-danger); font-size: 17px; line-height: 1.5; word-break: break-all;">a3f9d8c7b6a5e4d3c2b1a0f9e8d7c6b5a4938271605f4e3d2c1b0a9f8e7d60c2d</div>
-            <div style="color: var(--c-text-muted); font-size: 13px; letter-spacing: 0.08em; margin-top: 4px;">FEE PAYER</div>
-            <div class="mono" style="color: var(--c-danger); font-size: 17px; line-height: 1.4; word-break: break-all;">7Hk2mPqRsTuVwXyZ3aBcDeFgHjKnNpQrStUvWxYz9bXr</div>
-            <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--c-border); color: var(--c-text-muted); font-size: 18px;">Accept risk and sign?</div>
-          </div>
-        </div>
-
-        <!-- AFTER (Lucid) -->
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--c-primary); box-shadow: 0 0 12px var(--c-primary);"></div>
-            <p class="caption text-primary" style="letter-spacing: 0.12em;">LUCID</p>
-          </div>
-          <div style="flex: 1; background: #0a0a0a; border: 2px solid var(--c-primary); border-radius: 16px; padding: 28px 32px; box-shadow: 0 0 80px rgba(16,185,129,0.20); display: flex; flex-direction: column; gap: 14px;">
-            <div style="display: flex; align-items: center; gap: 12px; color: var(--c-primary); font-size: 24px; font-weight: 700;">
-              <span style="font-size: 28px;">&#10003;</span> Sign Message
-            </div>
-            <div style="color: var(--c-text-muted); font-size: 18px;">Human-readable approval</div>
-            <div class="mono" style="margin-top: 8px; font-size: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
-              <div style="color: var(--c-text);">approve withdraw 50000 USDC to 9abcD3F2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4def |</div>
-              <div style="color: var(--c-text-secondary);">wallet: dao-governance (7Hk2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4kP9zU2A);</div>
-              <div style="color: var(--c-text-secondary);">proposal: #42;</div>
-              <div class="text-primary">expires: 09 May 2026 12:00:00 UTC;</div>
-            </div>
-            <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--c-border); color: var(--c-primary); font-size: 19px; font-weight: 700; letter-spacing: 0.04em;">Approve</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="notes">
-        <div class="notes-label">Speaker Notes</div>
-        "Same Ledger device, same multisig flow. Left: every multisig today — the device shows a 'blind signing' warning, asks the signer to override its safety check, then displays a 32-byte hash and a fee payer. You cannot tell what you are approving. Right: Lucid — the device displays the actual action in plain English: who is being paid, from which wallet, which proposal, when it expires. Trust moves back to the hardware wallet, which is the only surface a compromised host can't lie about."
-      </div>
-    </div>
-
-    <!-- ======================== SLIDE 7: DEMO — BEFORE/AFTER (FILMSTRIPS) ======================== -->
+    <!-- ======================== SLIDE 6: DEMO — BEFORE/AFTER (FILMSTRIPS) ======================== -->
     <div class="slide bg-default" style="padding: 60px 80px;">
       <span class="caption animate-in">LIVE DEMO</span>
 
@@ -695,7 +632,61 @@
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Same Ledger device, same multisig flow, captured frame-by-frame. Top row: every multisig today &mdash; the signer overrides a 'blind signing' warning, then sees a base58 message hash and a fee payer. Seven screens, none of which tell you what you're signing. Bottom row: Lucid &mdash; the device walks through the actual action in plain English: who is being added, to which wallet, which proposal, when it expires. The on-chain program reconstructs that exact message and verifies the ed25519 signature against it &mdash; if anything is tampered between proposal and signing, the signature doesn't match, and the program rejects it."
+        Here's what that looks like. Top row is Ledger today. Bottom row is the same Ledger with Lucid.
+      </div>
+    </div>
+
+    <!-- ======================== SLIDE 7: WHY NOW ======================== -->
+    <div class="slide bg-default">
+      <span class="caption animate-in">WHY NOW</span>
+
+      <h1 class="h1 animate-in" style="margin-top: 16px; max-width: 1100px;">
+        The rails for human-readable signing <span class="text-emphasis">just landed.</span>
+      </h1>
+
+      <div class="divider animate-in"></div>
+
+      <p class="body animate-in" style="margin-top: 20px; max-width: 1100px;">
+        Standard, hardware, and urgency. All this quarter.
+      </p>
+
+      <div class="grid-3 animate-in" style="margin-top: 36px;">
+        <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">APR 2026 &middot; LAST MONTH</p>
+          <p class="h3" style="line-height: 1.2;">Drift forces the issue</p>
+          <p class="small" style="line-height: 1.55;">
+            $285M hack. Every Solana governance team is rethinking how they sign.
+          </p>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">DEC 2025 &middot; 5 MONTHS AGO</p>
+          <p class="h3" style="line-height: 1.2;">sRFC 38 ratified</p>
+          <p class="small" style="line-height: 1.55;">
+            Anza ratifies Solana's off-chain message spec &mdash; the standard Lucid signs against.
+          </p>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">JUN 2026 &middot; NEXT MONTH</p>
+          <p class="h3" style="line-height: 1.2;">Trezor adds signMessage</p>
+          <p class="small" style="line-height: 1.55;">
+            Ledger has it. Trezor adds it in June. Both converge on Lucid's primitive.
+          </p>
+          <p class="small text-muted" style="margin-top: 4px; line-height: 1.45; font-size: 16px;">&mdash; Zbyněk Kubiš, Trezor Firmware PM <span class="mono">(GH #4371)</span></p>
+        </div>
+      </div>
+
+      <div class="animate-in" style="margin-top: 36px; padding: 24px 28px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
+        <p class="small" style="color: var(--c-text); line-height: 1.6;">
+          <span class="text-primary" style="font-weight: 600;">Pioneer window.</span>
+          Standard is months old, hardware converging now. Copying requires a core rewrite &mdash; first-mover lock-in.
+        </p>
+      </div>
+
+      <div class="notes">
+        <div class="notes-label">Speaker Notes</div>
+        Why now? Last month was one of the biggest DeFi hacks in history &mdash; every governance team is rethinking how they sign. Anza shipped the off-chain message signing standard five months ago. Trezor adds signMessage in June. The momentum is here, and we want to be first.
       </div>
     </div>
 
@@ -719,11 +710,11 @@
             </div>
             <div>
               <p class="caption text-muted" style="margin-bottom: 4px;">INTEGRATION</p>
-              <p class="small">Any Anchor IDL &rarr; human-readable ruleset</p>
+              <p class="small">Anchor IDL &rarr; human-readable ruleset</p>
             </div>
             <div>
               <p class="caption text-muted" style="margin-bottom: 4px;">INTERFACES</p>
-              <p class="small">Dashboard &middot; CLI &middot; TypeScript SDK</p>
+              <p class="small">App &middot; CLI &middot; SDK</p>
             </div>
           </div>
         </div>
@@ -733,26 +724,32 @@
             <div class="flex justify-between"><span class="small">On-chain program</span><span class="small text-primary">Pinocchio</span></div>
             <div class="flex justify-between"><span class="small">CLI</span><span class="small text-primary">Rust / Clap</span></div>
             <div class="flex justify-between"><span class="small">SDK</span><span class="small text-primary">TypeScript / @solana/kit</span></div>
-            <div class="flex justify-between"><span class="small">Dashboard</span><span class="small text-primary">React + Vite + Tailwind</span></div>
+            <div class="flex justify-between"><span class="small">App</span><span class="small text-primary">React + Vite + Tailwind</span></div>
             <div class="flex justify-between"><span class="small">Spec</span><span class="small text-primary">sRFC 38 v1 + V0 (dual-support)</span></div>
           </div>
         </div>
       </div>
 
-      <div class="animate-in" style="margin-top: 32px; padding: 16px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
-        <span class="small" style="color: var(--c-primary); font-weight: 600; letter-spacing: 0.05em;">LIVE ON DEVNET</span>
-        <span class="mono small text-muted">LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR</span>
+      <div class="animate-in" style="margin-top: 32px; padding: 20px 28px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+          <span class="small" style="color: var(--c-primary); font-weight: 700; letter-spacing: 0.06em;">TRY IT &middot; LIVE ON DEVNET</span>
+          <a href="https://uselucid.xyz" class="mono text-primary" style="font-weight: 600; text-decoration: none; font-size: 24px;">uselucid.xyz</a>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 10px; border-top: 1px solid rgba(16,185,129,0.15);">
+          <span class="caption text-muted" style="letter-spacing: 0.06em;">PROGRAM ID</span>
+          <span class="mono small text-muted">LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR</span>
+        </div>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Full multisig lifecycle works end-to-end — wallet creation through audit. Protocols integrate by pasting their Anchor IDL; no custom integration code. Three ways to consume it — dashboard for ops teams, CLI for automation, TypeScript SDK for protocol-side issuance. Pinocchio program live on devnet — protocols can integrate today."
+        We built complete multisig platform. Our Core product is the on-chain program. But we built UI on top for users to create wallet and interact, no coding knowledge needed.
       </div>
     </div>
 
-    <!-- ======================== SLIDE 9: MOAT ======================== -->
+    <!-- ======================== SLIDE 9: WHY THIS IS HARD TO COPY ======================== -->
     <div class="slide bg-alt">
-      <span class="caption animate-in">MOAT</span>
+      <span class="caption animate-in">WHY THIS IS HARD TO COPY</span>
 
       <h1 class="h1 animate-in" style="margin-top: 16px;">
         A primitive, <span class="text-emphasis">not a plugin.</span>
@@ -761,7 +758,7 @@
       <div class="divider animate-in"></div>
 
       <p class="body animate-in" style="margin-top: 24px; max-width: 1100px;">
-        Existing multisigs trust the frontend. Lucid reconstructs the signed message on-chain and verifies via ed25519 &mdash; the chain enforces the match, not the UI.
+        Existing multisigs trust the frontend. Lucid reconstructs the message on-chain and verifies the signature. The chain enforces the match.
       </p>
 
       <div class="grid-2 animate-in" style="margin-top: 32px;">
@@ -787,13 +784,13 @@
 
       <div class="animate-in" style="margin-top: 32px; padding: 20px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
         <p class="small" style="color: var(--c-text); line-height: 1.6;">
-          <span class="text-primary" style="font-weight: 600;">Adopting this isn't a UI change</span> &mdash; it's swapping the signing primitive across wallet, program, and verifier. Not a feature flag.
+          <span class="text-primary" style="font-weight: 600;">Not a UI change.</span> A primitive swap across wallet, program, and verifier.
         </p>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "The natural question — why doesn't Squads just add this? Because the verification doesn't live in the UI. Existing multisigs sign raw transaction bytes and trust the frontend to render a human-readable preview. Lucid's signers sign a structured message, and the program reconstructs the same bytes from on-chain state and validates the ed25519 signature against the reconstruction. Tamper anything between proposal and signature, and the signature won't verify. To add this, an existing multisig has to switch from signTransaction to signMessage and rebuild the approval flow on top of on-chain verification — that's a rewrite, not a feature."
+        Lucid is Built on the new signMessage primitive. No other multisig uses it. Its not something competitors can copy quickly.
       </div>
     </div>
 
@@ -808,83 +805,151 @@
       <div class="divider animate-in"></div>
 
       <p class="body animate-in" style="margin-top: 24px; max-width: 1100px;">
-        Per-intent fees on every wallet, SaaS dashboard tiers on top. Three markets, all day one.
+        Two revenue streams. On-chain fees meter every wallet. SaaS subscription tiers on top.
       </p>
 
-      <div class="card animate-in" style="margin-top: 32px; padding: 20px 28px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap;">
-        <p class="caption text-primary" style="margin: 0; letter-spacing: 0.08em; min-width: 130px;">ON-CHAIN</p>
-        <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div class="card animate-in" style="margin-top: 40px; padding: 28px 36px; display: flex; align-items: center; gap: 40px; flex-wrap: wrap;">
+        <p class="caption text-primary" style="margin: 0; letter-spacing: 0.08em; min-width: 150px;">ON-CHAIN</p>
+        <div style="display: flex; align-items: baseline; gap: 12px;">
           <span class="small">Wallet creation</span>
           <span class="small mono text-primary" style="font-weight: 600;">0.1 SOL</span>
         </div>
-        <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.12);"></div>
-        <div style="display: flex; align-items: baseline; gap: 10px;">
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.12);"></div>
+        <div style="display: flex; align-items: baseline; gap: 12px;">
           <span class="small">Per intent</span>
           <span class="small mono text-primary" style="font-weight: 600;">0.05 SOL</span>
         </div>
       </div>
 
-      <div class="card animate-in" style="margin-top: 16px; padding: 20px 28px;">
-        <div style="display: flex; align-items: center; gap: 32px; flex-wrap: wrap;">
-          <p class="caption text-primary" style="margin: 0; letter-spacing: 0.08em; min-width: 130px;">SUBSCRIPTION</p>
-          <div style="display: flex; align-items: baseline; gap: 10px;">
+      <div class="card animate-in" style="margin-top: 20px; padding: 28px 36px;">
+        <div style="display: flex; align-items: center; gap: 40px; flex-wrap: wrap;">
+          <p class="caption text-primary" style="margin: 0; letter-spacing: 0.08em; min-width: 150px;">SUBSCRIPTION</p>
+          <div style="display: flex; align-items: baseline; gap: 12px;">
             <span class="small">Free</span>
             <span class="small mono text-primary" style="font-weight: 600;">$0</span>
           </div>
-          <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.12);"></div>
-          <div style="display: flex; align-items: baseline; gap: 10px;">
-            <span class="small">Pro</span>
-            <span class="small mono text-primary" style="font-weight: 600;">$49/mo</span>
+          <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.12);"></div>
+          <div style="display: flex; align-items: baseline; gap: 12px;">
+            <span class="small">Team</span>
+            <span class="small mono text-primary" style="font-weight: 600;">$99/mo</span>
           </div>
-          <div style="width: 1px; height: 22px; background: rgba(255,255,255,0.12);"></div>
-          <div style="display: flex; align-items: baseline; gap: 10px;">
+          <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.12);"></div>
+          <div style="display: flex; align-items: baseline; gap: 12px;">
             <span class="small">Enterprise</span>
             <span class="small mono text-primary" style="font-weight: 600;">Custom</span>
           </div>
         </div>
-        <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap;">
-          <p class="caption text-muted" style="margin: 0; letter-spacing: 0.08em; min-width: 130px;">FEATURES</p>
+        <div style="margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap;">
+          <p class="caption text-muted" style="margin: 0; letter-spacing: 0.08em; min-width: 150px;">TEAM ADDS</p>
           <p class="small text-muted" style="margin: 0; line-height: 1.6;">
-            Address book &middot; Notifications &middot; Spending limits &middot; Sub-accounts &middot; Simulation preview &middot; Bulk approve &middot; White-label &middot; SSO &middot; Audit export &middot; Compliance integrations
+            Accounting &middot; Risk screening &middot; Multi-wallet &middot; Workflows &middot; Audit export
+          </p>
+        </div>
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap;">
+          <p class="caption text-muted" style="margin: 0; letter-spacing: 0.08em; min-width: 150px;">ENTERPRISE ADDS</p>
+          <p class="small text-muted" style="margin: 0; line-height: 1.6;">
+            Insurance &middot; Volume discounts &middot; SLA &amp; Support
           </p>
         </div>
       </div>
 
-      <div class="animate-in" style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-        <div class="card" style="padding: 22px;">
-          <p class="caption text-primary" style="margin-bottom: 14px;">PROTOCOL GOVERNANCE</p>
-          <p class="small" style="line-height: 1.5;">
-            <span class="text-primary" style="font-weight: 600;">Drift</span>, <span class="text-primary" style="font-weight: 600;">Jito</span>, <span class="text-primary" style="font-weight: 600;">Marinade</span> &mdash; admin actions templated, re-registered on every IDL upgrade.
-          </p>
-        </div>
-        <div class="card" style="padding: 22px;">
-          <p class="caption text-primary" style="margin-bottom: 14px;">TEAM TREASURY</p>
-          <p class="small" style="line-height: 1.5;">
-            5-action presets (transfer SOL/USDC, stake, unstake, swap). No integration needed.
-          </p>
-        </div>
-        <div class="card" style="padding: 22px;">
-          <p class="caption text-primary" style="margin-bottom: 14px;">PERSONAL MULTISIG</p>
-          <p class="small" style="line-height: 1.5;">
-            2-of-3 cold backup or 3-of-5 with friends/family. Reads what they sign on-device.
-          </p>
-        </div>
-      </div>
-
-      <div class="animate-in" style="margin-top: 32px; padding: 20px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
+      <div class="animate-in" style="margin-top: 40px; padding: 24px 28px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
         <p class="small" style="color: var(--c-text); line-height: 1.6;">
-          <span class="text-primary" style="font-weight: 600;">Two revenue streams.</span>
-          Squads built a real SaaS business on subscriptions alone &mdash; Lucid adds per-intent fees on top.
+          <span class="text-primary" style="font-weight: 600;">Security ships free.</span>
+          Trust lives in the program, not in a corporate certificate.
         </p>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Two revenue streams. On-chain fees on every wallet &mdash; 0.1 SOL to create, 0.05 SOL per registered intent. SaaS subscription on top: Free tier gets the WYSIWYS protocol guarantee, Pro at $49 a month adds operational quality-of-life like address book, notifications, spending limits, audit export, Enterprise is custom for protocols and large orgs. Three markets all day one: protocol governance is the high-spend end, team treasuries are the volume play, personal multisigs are the long tail. Squads has built a real SaaS business on operator subscriptions alone &mdash; Lucid adds per-intent revenue on top."
+        We charge per wallet created and per intent added, plus Team and Enterprise subscriptions for additional features.
       </div>
     </div>
 
-    <!-- ======================== SLIDE 11: ASK + CONTACT ======================== -->
+    <!-- ======================== SLIDE 11: MARKET ======================== -->
+    <div class="slide bg-alt">
+      <span class="caption animate-in">MARKET</span>
+
+      <h1 class="h1 animate-in" style="margin-top: 16px;">
+        Three markets, <span class="text-emphasis">all day one.</span>
+      </h1>
+
+      <div class="divider animate-in"></div>
+
+      <p class="body animate-in" style="margin-top: 20px; max-width: 1100px;">
+        Three buyer profiles. Same protocol, three price points.
+      </p>
+
+      <div class="grid-3 animate-in" style="margin-top: 36px;">
+        <div class="card" style="padding: 28px; display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">PROTOCOL GOVERNANCE</p>
+          <p class="h3" style="line-height: 1.15;">Highest spend,<br>fewest customers.</p>
+          <p class="small" style="line-height: 1.55;">
+            <span class="text-primary" style="font-weight: 600;">Drift, Jito, Marinade</span> and the rest. Upgraded admin instructions re-register &mdash; spend recurs.
+          </p>
+          <p class="caption text-muted" style="margin-top: 4px;">PRICING</p>
+          <p class="small mono text-primary" style="font-weight: 600; line-height: 1.5;">0.05 SOL per intent &middot; recurs on upgrades &middot; Enterprise tier</p>
+        </div>
+
+        <div class="card" style="padding: 28px; display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">TEAM TREASURY</p>
+          <p class="h3" style="line-height: 1.15;">Mid spend,<br>volume play.</p>
+          <p class="small" style="line-height: 1.55;">
+            Every funded Solana team holding stablecoins. 5-action presets ship out of the box &mdash; no integration code.
+          </p>
+          <p class="caption text-muted" style="margin-top: 4px;">PRICING</p>
+          <p class="small mono text-primary" style="font-weight: 600; line-height: 1.5;">0.1 SOL setup + presets &middot; Team $99/mo</p>
+        </div>
+
+        <div class="card" style="padding: 28px; display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">PERSONAL MULTISIG</p>
+          <p class="h3" style="line-height: 1.15;">Free tier,<br>broad reach.</p>
+          <p class="small" style="line-height: 1.55;">
+            2-of-3 cold backup or 3-of-5 with family. Reads what they sign &mdash; no UI to trust.
+          </p>
+          <p class="caption text-muted" style="margin-top: 4px;">PRICING</p>
+          <p class="small mono text-primary" style="font-weight: 600; line-height: 1.5;">0.1 SOL setup &middot; Free tier</p>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="notes-label">Speaker Notes</div>
+        Three types of customers: protocol governance, team treasuries, and personal multisigs.
+      </div>
+    </div>
+
+    <!-- ======================== SLIDE 12: EARLY TRACTION ======================== -->
+    <div class="slide bg-default">
+      <span class="caption animate-in">VALIDATION</span>
+
+      <p class="body animate-in" style="margin-top: 16px; max-width: 1500px;">
+        Ledger's CTO endorsed <span class="text-emphasis" style="font-weight: 700;">clear signing.</span>
+        Helius's CEO asked for it on Solana. Then we shipped it.
+      </p>
+
+      <div class="grid-2 animate-in" style="margin-top: 24px; align-items: start; gap: 32px;">
+
+        <!-- LEFT: Ledger CTO endorses clear signing; Helius CEO asks for it on Solana -->
+        <div class="flex flex-col" style="gap: 14px;">
+          <p class="caption text-primary">LEDGER &times; HELIUS &middot; <span class="mono text-muted" style="font-size: 14px; letter-spacing: 0;">@P3b7_ &times; @mert &middot; Sep 8 2025</span></p>
+          <img src="charles-mert-clear-signing.png" alt="Charles Guillemet (Ledger CTO) tweet: 'If you use a Ledger or hardware wallet with clear signing, you are not at risk.' Mert Mumtaz (Helius CEO) reply asking for clear signing on Solana, ending 'PLEASE'." style="width: 100%; max-height: 800px; object-fit: contain; border-radius: 12px; border: 1px solid var(--c-border); display: block;" />
+        </div>
+
+        <!-- RIGHT: Mert post-Bybit alarm, naming Solana blind signing -->
+        <div class="flex flex-col" style="gap: 14px;">
+          <p class="caption text-primary">POST-BYBIT, SOLANA NAMED &middot; <span class="mono text-muted" style="font-size: 14px; letter-spacing: 0;">@mert &middot; Feb 21 2025</span></p>
+          <img src="mert-bybit-alarm.png" alt="Mert Mumtaz (Helius CEO) tweet hours after the Bybit hack: Solana teams should lock down multisigs; 'is blind signing with ledger on Solana even fixed yet'." style="width: 100%; max-height: 800px; object-fit: contain; border-radius: 12px; border: 1px solid var(--c-border); display: block;" />
+        </div>
+
+      </div>
+
+      <div class="notes">
+        <div class="notes-label">Speaker Notes</div>
+        Validated by Ledger's CTO and Helius's CEO &mdash; both publicly asked for clear signing on Solana before we existed.
+      </div>
+    </div>
+
+    <!-- ======================== SLIDE 13: ASK + CONTACT ======================== -->
     <div class="slide bg-default" style="justify-content: center; align-items: center; text-align: center;">
       <span class="caption animate-in">COLOSSEUM FRONTIER</span>
 
@@ -920,7 +985,7 @@
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Lucid is a complete, working system — not a prototype. On-chain program, CLI, SDK, and dashboard with direct hardware-wallet signing. The problem is real: every multisig today asks signers to approve transactions their wallet can't read. We fix that at the protocol level. Try the demo, read the code, run the tests. Thank you."
+        I'm Darko, Senior Blockchain Engineer at MetaWealth where I lead development of real estate tokenization on Solana with over &euro;85 million AUM.
       </div>
     </div>
 
