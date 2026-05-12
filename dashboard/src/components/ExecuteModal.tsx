@@ -120,7 +120,8 @@ export default function ExecuteModal({
       setTimeout(onSuccess, 2000);
     } catch (err: any) {
       console.error('[Execute] Transaction failed:', err);
-      if (err?.logs) console.error('[Execute] Program logs:', err.logs);
+      const logs = err?.logs ?? err?.context?.logs ?? err?.cause?.context?.logs;
+      if (logs) console.error('[Execute] Program logs:', logs);
       if (err?.context) console.error('[Execute] Context:', err.context);
       const parsed = parseTransactionError(err);
       setStatus('error');

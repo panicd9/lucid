@@ -33,7 +33,7 @@ The narration below is the locked script. **Do not paraphrase.** Each block maps
 ---
 
 ### `stakes` — 0:15–0:45 (30s)
-"Two billion dollars stolen in eighteen months across four multisig hacks. Bybit, February twenty twenty-five — one point four six billion, the largest crypto theft in history. Lazarus pushed malicious JavaScript into Safe's frontend; signers' Ledgers blind-signed a delegatecall the UI hid as a thirty-thousand-ETH transfer. Drift, April twenty twenty-six — two hundred eighty-five million, the largest Solana DeFi protocol hack ever. WazirX, July twenty twenty-four — two hundred thirty-five million from India's largest exchange. Radiant, October twenty twenty-four — fifty million. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. The pattern doesn't change until the wallet itself can read the transaction."
+"Two billion dollars stolen in twenty-one months across four multisig hacks. Bybit, February twenty twenty-five — one point four six billion, the largest crypto theft in history. Lazarus pushed malicious JavaScript into Safe's frontend; signers' Ledgers blind-signed a delegatecall the UI hid as a thirty-thousand-ETH transfer. Drift, April twenty twenty-six — two hundred eighty-five million, the largest Solana DeFi protocol hack ever. WazirX, July twenty twenty-four — two hundred thirty-five million from India's largest exchange. Radiant, October twenty twenty-four — fifty million. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. The pattern doesn't change until the wallet itself can read the transaction."
 
 ---
 

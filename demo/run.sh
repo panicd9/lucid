@@ -8,6 +8,8 @@ set -euo pipefail
 #   --bpf-program 6N4KJsm6TPooxvGMrp8PVLXXcp5vMEZJpffzRS29rG6h demo/crowdfunding_programs/rwa_transfer_hook.so \
 #   --bpf-program SQDS4ep65T869zMMBKyuUq6aD6EgTu8psMjkvj52pCf demo/squads_programs/squads_v4.so \
 #   --account BSTq9w3kZwNwpBXJEvTZz2G9ZTNyKBvoSeXMvwb4cNZr demo/squads_programs/program_config.json \
+#   --url https://api.mainnet-beta.solana.com \
+#   --clone EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v \
 #   --reset
 
 # Lucid Demo Script — runs on solana-test-validator
@@ -198,9 +200,20 @@ CREATE_OUTPUT=$($LUCID wallet create \
 echo "$CREATE_OUTPUT"
 
 WALLET_ADDR=$(echo "$CREATE_OUTPUT" | grep "Wallet:" | head -1 | awk '{print $2}')
+VAULT_ADDR=$(echo "$CREATE_OUTPUT" | grep "Vault:" | head -1 | awk '{print $2}')
 echo ""
 echo "  Wallet address: $WALLET_ADDR"
+echo "  Vault address:  $VAULT_ADDR"
 echo ""
+
+# Fund vault so CPIs that create child accounts (e.g. crowdfunding CreatePool)
+# have rent. 0-byte PDA is created with only 890_880 lamports of rent.
+VAULT_BAL=$(solana balance "$VAULT_ADDR" --url "$RPC" 2>/dev/null | awk '{print $1}')
+if (( $(echo "$VAULT_BAL < 1" | bc -l 2>/dev/null || echo 1) )); then
+  echo "  Airdropping SOL to vault..."
+  solana airdrop 2 "$VAULT_ADDR" --url "$RPC" 2>/dev/null || true
+  echo ""
+fi
 
 # ────────────────────────────────────────────────
 # Step 4: Add intents with different approver sets

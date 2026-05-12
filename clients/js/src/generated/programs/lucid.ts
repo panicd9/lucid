@@ -33,14 +33,11 @@ import {
 import {
   getIntentHeaderCodec,
   getProposalCodec,
-  getVaultCodec,
   getWalletCodec,
   type IntentHeader,
   type IntentHeaderArgs,
   type Proposal,
   type ProposalArgs,
-  type Vault,
-  type VaultArgs,
   type Wallet,
   type WalletArgs,
 } from "../accounts";
@@ -96,7 +93,6 @@ export const LUCID_PROGRAM_ADDRESS =
 
 export enum LucidAccount {
   Wallet,
-  Vault,
   IntentHeader,
   Proposal,
 }
@@ -293,8 +289,6 @@ export type LucidPlugin = {
 export type LucidPluginAccounts = {
   wallet: ReturnType<typeof getWalletCodec> &
     SelfFetchFunctions<WalletArgs, Wallet>;
-  vault: ReturnType<typeof getVaultCodec> &
-    SelfFetchFunctions<VaultArgs, Vault>;
   intentHeader: ReturnType<typeof getIntentHeaderCodec> &
     SelfFetchFunctions<IntentHeaderArgs, IntentHeader>;
   proposal: ReturnType<typeof getProposalCodec> &
@@ -353,7 +347,6 @@ export function lucidProgram() {
       lucid: <LucidPlugin>{
         accounts: {
           wallet: addSelfFetchFunctions(client, getWalletCodec()),
-          vault: addSelfFetchFunctions(client, getVaultCodec()),
           intentHeader: addSelfFetchFunctions(client, getIntentHeaderCodec()),
           proposal: addSelfFetchFunctions(client, getProposalCodec()),
         },

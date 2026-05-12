@@ -133,6 +133,38 @@ export function buildCreateWalletInstruction(
   };
 }
 
+/**
+ * AddIntent instruction (discriminator = 1).
+ *
+ * Accepted by the program only during *setup phase* (wallet.proposalIndex === 0)
+ * and only when the signer is in the ADD meta-intent's approver list. After
+ * any proposal exists, intents must be added via the governance ADD meta-intent
+ * proposal flow instead.
+ */
+export function buildAddIntentInstruction(
+  wallet: Address,
+  intent: Address,
+  payer: Address,
+  addMetaIntent: Address,
+  intentBytes: Uint8Array,
+): LucidInstruction {
+  const data = new Uint8Array(1 + intentBytes.length);
+  data[0] = 1;
+  data.set(intentBytes, 1);
+
+  return {
+    programAddress: LUCID_PROGRAM_ADDR,
+    accounts: [
+      { address: wallet, role: ROLE_WRITABLE },
+      { address: intent, role: ROLE_WRITABLE },
+      { address: payer, role: ROLE_WRITABLE_SIGNER },
+      { address: SYSTEM_PROGRAM_ADDR, role: ROLE_READONLY },
+      { address: addMetaIntent, role: ROLE_READONLY },
+    ],
+    data,
+  };
+}
+
 /** Propose instruction (discriminator = 10) */
 export function buildProposeInstruction(
   wallet: Address,

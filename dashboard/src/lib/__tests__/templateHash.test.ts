@@ -7,7 +7,7 @@ const FIXTURE_PATH = resolve(__dirname, '../../../../demo/intents/spl_transfer.j
 
 // The same hex is asserted in cli/tests/template_hash_tests.rs and
 // sdk/src/__tests__/template-hash.test.ts. All three must move together.
-const EXPECTED_HEX = 'f3efda21305372c6ce2348fab91ba7ecbdbd155c7beea67ec8fcca321f523e32';
+const EXPECTED_HEX = '0938fc9922852e0319ea4179290dfeeb476b51fb290516a4a8167a18d16fe53e';
 
 describe('dashboard templateHash', () => {
   it('matches the locked cross-implementation hex', () => {

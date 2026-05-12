@@ -7,10 +7,8 @@
 
 pub(crate) mod r#intent_header;
 pub(crate) mod r#proposal;
-pub(crate) mod r#vault;
 pub(crate) mod r#wallet;
 
 pub use self::r#intent_header::*;
 pub use self::r#proposal::*;
-pub use self::r#vault::*;
 pub use self::r#wallet::*;

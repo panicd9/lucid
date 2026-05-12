@@ -22,18 +22,16 @@ pub struct Wallet {
     pub frozen: u8,
     pub bump: u8,
     pub name_len: u8,
-    pub reserved: [u8; 4],
+    pub vault_bump: u8,
+    pub reserved: [u8; 3],
     pub create_key: [u8; 32],
     pub name: [u8; 32],
 }
 
-/// Vault PDA that holds SOL/tokens on behalf of a wallet.
-/// Seeds: ["vault", wallet]
-#[derive(ShankAccount)]
-pub struct Vault {
-    pub wallet: [u8; 32],
-    pub bump: u8,
-}
+// Vault is a 0-byte, System-Program–owned PDA (seeds: ["vault", wallet]).
+// It has no account data, so there's no ShankAccount to declare — clients
+// derive the address from the wallet seed and read vault_bump off the
+// Wallet account.
 
 /// Intent template header — defines an allowed action for the wallet.
 /// Seeds: ["intent", wallet, intent_index.to_le_bytes()]

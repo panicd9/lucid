@@ -1,15 +1,26 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { DEMO_WALLETS } from '../lib/constants';
 
 export default function Home() {
+  const [search, setSearch] = useState('');
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const value = search.trim();
+    if (value) {
+      navigate(`/wallet/${value}`);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center pt-10 pb-12 sm:pt-20 sm:pb-16">
       {/* Hero — Logo */}
       <div className="relative mb-5 sm:mb-6 flex items-center gap-3 sm:gap-5">
         <div className="absolute inset-0 -m-8 bg-gradient-radial from-emerald-500/10 via-emerald-800/5 to-transparent rounded-full blur-2xl" />
         <img src="/logo.png" alt="" className="relative h-12 w-auto sm:h-16" />
-        <div
-          className="relative font-semibold uppercase bg-clip-text text-transparent bg-gradient-to-r from-slate-200 to-slate-50 text-[32px] sm:text-[40px] md:text-[48px] tracking-[6px] sm:tracking-[10px] md:tracking-[12px]"
-        >
+        <div className="relative font-semibold uppercase bg-clip-text text-transparent bg-gradient-to-r from-slate-200 to-slate-50 text-[32px] sm:text-[40px] md:text-[48px] tracking-[6px] sm:tracking-[10px] md:tracking-[12px]">
           LUCID
           <span className="absolute bottom-[-6px] left-0 right-0 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, #059669, #10B981)' }} />
         </div>
@@ -32,18 +43,12 @@ export default function Home() {
           </svg>
           Try the Demo
         </Link>
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          title="Available after public launch"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-neutral-800/40 border border-neutral-700/30 text-neutral-500 cursor-not-allowed"
+        <Link
+          to="/create"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-neutral-800/60 border border-neutral-700/40 text-neutral-300 hover:text-emerald-300 hover:border-emerald-500/30 hover:bg-neutral-800/80 transition-all cursor-pointer"
         >
           Create Wallet
-          <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider px-1.5 py-0.5 bg-neutral-700/40 rounded font-heading">
-            Soon
-          </span>
-        </button>
+        </Link>
       </div>
 
       {/* Feature pills */}
@@ -59,6 +64,77 @@ export default function Home() {
         </span>
       </div>
 
+      {/* Search */}
+      <form onSubmit={handleSubmit} className="w-full max-w-lg mb-16">
+        <div className="relative group">
+          {/* Gradient border glow on focus */}
+          <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-emerald-500/20 via-emerald-700/20 to-emerald-500/20 opacity-0 group-focus-within:opacity-100 transition-opacity blur-sm" />
+          <div className="relative">
+            <svg
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500 group-focus-within:text-emerald-400/70 transition-colors"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Enter wallet address or name..."
+              aria-label="Search by wallet address or name"
+              className="w-full pl-12 pr-24 py-3.5 bg-neutral-900/80 border border-neutral-700/50 rounded-xl text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-emerald-500/30 transition-all text-base"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white text-sm font-semibold rounded-lg transition-all cursor-pointer shadow-glow-green hover:shadow-glow-green-lg"
+            >
+              View
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {/* Demo wallets */}
+      {DEMO_WALLETS.length > 0 && (
+        <div className="w-full max-w-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-neutral-800" />
+            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-widest">
+              Demo Wallets
+            </h3>
+            <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-neutral-800" />
+          </div>
+          <div className="space-y-2">
+            {DEMO_WALLETS.map((w) => (
+              <button
+                key={w.name}
+                onClick={() => navigate(`/wallet/${w.name}`)}
+                className="w-full text-left px-5 py-4 bg-neutral-900/50 border border-neutral-800/80 rounded-xl hover:border-neutral-700/80 hover:bg-neutral-800/50 transition-all group cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-200 group-hover:text-emerald-300 transition-colors">
+                      {w.name}
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-0.5">{w.description}</p>
+                  </div>
+                  <svg
+                    className="w-4 h-4 text-neutral-700 group-hover:text-emerald-400/50 group-hover:translate-x-0.5 transition-all"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* How It Works */}
       <div className="w-full max-w-6xl mt-16 sm:mt-24">
@@ -211,7 +287,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

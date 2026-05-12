@@ -75,7 +75,7 @@ const HookBeat: React.FC = () => {
           marginTop: 28,
         }}
       >
-        stolen across 4 multisig hacks. 18 months.
+        stolen across 4 multisig hacks. 21 months.
       </div>
       <div
         style={{

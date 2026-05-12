@@ -8,5 +8,4 @@
 
 export * from "./intentHeader";
 export * from "./proposal";
-export * from "./vault";
 export * from "./wallet";

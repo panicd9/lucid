@@ -53,11 +53,13 @@ fn test_create_wallet_vault_exists() {
     let mut svm = setup::new_svm();
     let ws = setup::create_test_wallet(&mut svm, b"vtest", 1, 1, 1, 1, 0);
 
-    let data = setup::get_account_data(&svm, &ws.vault);
-    assert!(data.is_some(), "vault not found");
-    let data = data.unwrap();
-    assert_eq!(data[0], helpers::DISC_VAULT);
-    assert_eq!(data[1], helpers::ACCOUNT_VERSION);
+    // Vault is a 0-byte, System-Program–owned PDA. We assert that it
+    // exists (has lamports for rent) and carries no data, which is what
+    // lets it serve as a System::Transfer `from` / Anchor `init` payer.
+    let account = svm.get_account(&ws.vault).expect("vault account missing");
+    assert_eq!(account.data.len(), 0, "vault must be 0-byte");
+    assert_eq!(account.owner, solana_sdk_ids::system_program::id(), "vault must be system-owned");
+    assert!(account.lamports > 0, "vault must be rent-funded");
 }
 
 // ──────────────────────────────────────────────────���─────────────────────

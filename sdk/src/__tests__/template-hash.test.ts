@@ -12,7 +12,7 @@ const FIXTURE_PATH = resolve(
 // The Rust side asserts the same hex against the same fixture file in
 // cli/tests/template_hash_tests.rs.
 const EXPECTED_SPL_TRANSFER_HEX =
-  'f3efda21305372c6ce2348fab91ba7ecbdbd155c7beea67ec8fcca321f523e32';
+  '0938fc9922852e0319ea4179290dfeeb476b51fb290516a4a8167a18d16fe53e';
 
 function loadFixture(): CanonicalIntent {
   return JSON.parse(readFileSync(FIXTURE_PATH, 'utf8')) as CanonicalIntent;

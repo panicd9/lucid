@@ -68,7 +68,6 @@
       padding: 80px 100px;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.5s var(--ease-out);
       font-family: var(--font-body);
       background: var(--c-bg);
     }
@@ -76,23 +75,6 @@
     .slide.active {
       opacity: 1;
       pointer-events: auto;
-    }
-
-    .slide.active .animate-in {
-      animation: slideUp var(--duration-enter) var(--ease-out) both;
-    }
-    .slide.active .animate-in:nth-child(1) { animation-delay: 0s; }
-    .slide.active .animate-in:nth-child(2) { animation-delay: 0.08s; }
-    .slide.active .animate-in:nth-child(3) { animation-delay: 0.16s; }
-    .slide.active .animate-in:nth-child(4) { animation-delay: 0.24s; }
-    .slide.active .animate-in:nth-child(5) { animation-delay: 0.32s; }
-    .slide.active .animate-in:nth-child(6) { animation-delay: 0.4s; }
-    .slide.active .animate-in:nth-child(7) { animation-delay: 0.48s; }
-    .slide.active .animate-in:nth-child(8) { animation-delay: 0.56s; }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .hero { font-family: var(--font-display); font-size: var(--f-hero); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
@@ -295,14 +277,107 @@
     }
 
     @media print {
-      .deck { overflow: visible; }
+      @page { size: 1920px 1080px; margin: 0; }
+      html, body { height: auto !important; overflow: visible !important; background: var(--c-bg) !important; }
+      .deck { overflow: visible !important; width: 1920px !important; height: auto !important; }
       .slide {
-        position: relative; opacity: 1; pointer-events: auto;
-        page-break-after: always; height: 100vh;
+        position: relative !important; inset: auto !important;
+        opacity: 1 !important; pointer-events: auto !important;
+        width: 1920px !important; height: 1080px !important;
+        page-break-after: always; break-after: page;
         break-inside: avoid;
       }
-      .nav-bar, .notes { display: none !important; }
+      .slide:last-child { page-break-after: auto; break-after: auto; }
+      .nav-bar, .notes, #presenter { display: none !important; }
       .animate-in { animation: none !important; opacity: 1 !important; transform: none !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+
+    #presenter {
+      position: fixed; inset: 0;
+      background: #0a0a0a;
+      flex-direction: column;
+      font-family: var(--font-display);
+      color: var(--c-text);
+      display: none;
+      gap: 12px;
+      padding: 0 16px 16px;
+    }
+    #presenter.active { display: flex; }
+    .presenter-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      min-height: 0;
+    }
+    .presenter-frame {
+      background: #000;
+      border: 1px solid var(--c-border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .presenter-stage {
+      position: absolute;
+      width: 1920px;
+      height: 1080px;
+      transform-origin: top left;
+      pointer-events: none;
+    }
+    .presenter-stage .slide {
+      position: absolute; inset: 0; opacity: 1; pointer-events: none;
+    }
+    .presenter-stage .nav-bar, .presenter-stage .notes { display: none !important; }
+    .presenter-stage .animate-in { animation: none !important; opacity: 1 !important; transform: none !important; }
+    .presenter-notes {
+      flex: 0 0 auto;
+      max-height: 38vh;
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      background: var(--c-bg-card);
+      border: 1px solid var(--c-border);
+      border-top: 0;
+      border-radius: 0 0 12px 12px;
+      padding: 14px 28px;
+      overflow-y: auto;
+      font-size: 22px;
+      line-height: 1.55;
+      color: var(--c-text);
+      text-align: center;
+    }
+    .presenter-notes-label { display: none; }
+    .presenter-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 18px;
+      background: var(--c-bg-card);
+      border: 1px solid var(--c-border);
+      border-radius: 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--c-text-secondary);
+    }
+    .presenter-meta .timer-group { display: flex; align-items: center; gap: 12px; }
+    .presenter-meta .timer { color: var(--c-primary); font-variant-numeric: tabular-nums; }
+    .presenter-meta .timer.idle { color: var(--c-text-muted); }
+    .timer-btn {
+      background: none; border: 1px solid var(--c-border); color: var(--c-text-secondary);
+      padding: 6px 12px; border-radius: 8px; cursor: pointer;
+      font-family: var(--font-display); font-size: 12px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .timer-btn:hover { border-color: var(--c-primary); color: var(--c-text); }
+    .presenter-label {
+      position: absolute; top: 10px; left: 14px;
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.1em; color: rgba(255,255,255,0.55);
+      background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 6px;
+      z-index: 2;
+    }
+    .presenter-notes-label {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--c-text-muted);
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -311,15 +386,18 @@
 
     <!-- ======================== SLIDE 1: TITLE ======================== -->
     <div class="slide bg-alt" style="justify-content: center; align-items: center; text-align: center;">
-      <h1 class="hero text-emphasis animate-in" style="letter-spacing: 0.02em; font-weight: 800;">LUCID</h1>
+      <div class="animate-in" style="display: flex; align-items: center; gap: 16px;">
+        <img src="lucid-logo.png" alt="Lucid logo" style="height: 38px; width: auto; display: block;" />
+        <span class="text-emphasis" style="font-family: var(--font-display); font-size: 32px; font-weight: 800; letter-spacing: 0.04em;">LUCID</span>
+      </div>
 
-      <p class="h3 animate-in" style="color: var(--c-text-secondary); margin-top: 24px; max-width: 800px;">
-        Human-readable multisig.
-      </p>
+      <h1 class="hero animate-in" style="margin-top: 40px; max-width: 1400px;">
+        Solving <span class="text-emphasis">blind signing</span><br>on Solana
+      </h1>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Lucid is the human-readable multisig — signers read what they approve on the device itself, in plain English. Every multisig today forces a blind-signing warning on the hardware wallet. We fix that." Keep it under 15 seconds. Create curiosity about the signing problem.
+        This is Lucid and we are solving blind signing on Solana.
       </div>
     </div>
 
@@ -328,11 +406,11 @@
       <span class="caption animate-in">THE PROBLEM</span>
 
       <h1 class="h1 animate-in" style="margin-top: 16px; max-width: 1000px;">
-        Multisig signers approve transactions<br>they <span class="text-danger">cannot read</span>.
+        Signers approve transactions<br>they <span class="text-danger">cannot read</span>.
       </h1>
 
       <p class="body animate-in" style="margin-top: 20px; max-width: 1000px; color: var(--c-text-secondary);">
-        Ethereum solved this with <span class="mono text-primary">ERC-7730</span> (2024) &mdash; Ledger's clear-signing standard, adopted by Uniswap, Aave, Lido, Safe, and 40+ others. <span class="text-danger">Solana has no equivalent.</span>
+        Ethereum solved this with <span class="mono text-primary">ERC-7730</span> (2024). <span class="text-danger">Solana has no equivalent.</span>
       </p>
 
       <div class="divider animate-in"></div>
@@ -356,14 +434,10 @@
         <div class="flex flex-col gap-sm" style="justify-content: center;">
           <div class="flex items-center gap-sm">
             <span class="text-danger" style="font-size: 28px; font-weight: 800; width: 40px;">01</span>
-            <span class="body">Hardware wallet shows nothing readable</span>
+            <span class="body">Trust falls back to the UI</span>
           </div>
           <div class="flex items-center gap-sm">
             <span class="text-danger" style="font-size: 28px; font-weight: 800; width: 40px;">02</span>
-            <span class="body">Trust falls back to the multisig UI</span>
-          </div>
-          <div class="flex items-center gap-sm">
-            <span class="text-danger" style="font-size: 28px; font-weight: 800; width: 40px;">03</span>
             <span class="body">Compromised UI = signers approve attacks they can't see</span>
           </div>
         </div>
@@ -371,7 +445,7 @@
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Every multisig on Solana today — Squads, Realms, all of them — sends a transaction the hardware wallet can't read. The Ledger throws a 'blind signing' warning and asks you to accept the risk. So signers fall back to trusting the multisig UI. When that UI is compromised, the hardware wallet you bought as your trust anchor offers zero protection." Pause. "Ethereum already solved this — ERC-7730, ratified in 2024, is Ledger's clear-signing standard for smart-contract calls. Uniswap shipped it. Aave shipped it. Lido. Safe. Forty-plus protocols in the registry today. Solana has nothing equivalent, anywhere." Pause. "Let me show you what that's already cost."
+        Imagine you're a signer on protocol governance. You buy a hardware wallet, open your multisig, go to sign a transaction, and you get this - you have no idea what you're signing, just a warning that you have to blind sign. Ethereum has a standard for this. Solana doesn't.
       </div>
     </div>
 
@@ -380,7 +454,7 @@
       <span class="caption animate-in">THE STAKES</span>
 
       <h1 class="h1 animate-in" style="margin-top: 16px;">
-        <span class="text-danger">$2 billion</span> stolen in 18 months.
+        <span class="text-danger">$2 billion</span> stolen in 21 months.
       </h1>
 
       <p class="h3 animate-in" style="color: var(--c-text-secondary); margin-top: 12px; max-width: 1000px;">
@@ -398,7 +472,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$1.46B</p>
           <p class="body" style="margin-top: 12px;">
-            Lazarus pushed malicious JS into Safe's AWS-hosted frontend; signers' Ledgers blind-signed a <span class="mono">delegatecall</span> the UI hid as a 30,000 ETH transfer.
+            Lazarus injected JS into Safe's frontend. Ledgers blind-signed a <span class="mono">delegatecall</span>.
           </p>
         </div>
 
@@ -410,7 +484,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$285M</p>
           <p class="body" style="margin-top: 12px;">
-            DPRK social engineering over 6 months; Squads multisig signers pre-signed durable-nonce governance transactions they couldn't fully verify on their hardware.
+            DPRK social engineering. Signers pre-signed durable-nonce txs they couldn't verify.
           </p>
         </div>
 
@@ -422,7 +496,7 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$235M</p>
           <p class="body" style="margin-top: 12px;">
-            Liminal-managed Gnosis Safe UI displayed one transaction; signers approved another that swapped the Safe's implementation for a malicious contract.
+            UI showed one tx; signers approved another that swapped Safe's implementation.
           </p>
         </div>
 
@@ -434,14 +508,14 @@
           </div>
           <p class="h2" style="margin-top: 8px;">$50M</p>
           <p class="body" style="margin-top: 12px;">
-            Malware made the Safe UI show a routine config change while signers' hardware wallets signed <span class="mono">transferOwnership</span> on the lending pool.
+            Malware showed routine config; wallets signed <span class="mono">transferOwnership</span>.
           </p>
         </div>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Two billion dollars stolen in eighteen months across four multisig hacks. Bybit — the largest crypto theft in history. Drift — the largest Solana DeFi protocol hack ever. WazirX — India's largest exchange. Radiant on Arbitrum. Every single one used hardware wallets. Every single one, the wallet couldn't read what was being signed. Every single one, trust fell back to the UI — and the UI lied. The pattern doesn't change. Until the wallet itself can read the transaction, this keeps happening."
+        So the hardware wallet shows nothing. Trust falls back to the UI. And when that UI gets compromised, you lose $2 billion in 21 months across four hacks&hellip;
       </div>
     </div>
 
@@ -458,45 +532,46 @@
       </h2>
 
       <p class="body animate-in" style="margin-top: 16px; max-width: 880px;">
-        Every signer on a cold wallet. <span class="text-danger">$285M still gone.</span> The key was safe — the signer was blind.
+        <span class="text-danger">$285M gone.</span> The key was safe; the signer was blind.
       </p>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "After the hack, Drift specifically confirmed: every multisig signer used cold wallets. They wanted to make clear they were following best practice. And they still lost two hundred and eighty-five million dollars. The hardware wallet's job is to protect the private key. It doesn't tell the human what they're signing. That's a different problem — and that's the one Lucid solves."
+        &hellip;even though every signer was on a cold wallet.
       </div>
     </div>
 
     <!-- ======================== SLIDE 5: AGITATE + SOLUTION ======================== -->
     <div class="slide bg-alt">
-      <span class="caption animate-in">THE SOLUTION</span>
+      <span class="caption animate-in">THE PROTOCOL</span>
 
-      <h1 class="h1 animate-in" style="margin-top: 16px; max-width: 1000px;">
+      <h1 class="h1 animate-in" style="margin-top: 16px; max-width: 1100px;">
         Read what you sign &mdash; <span class="text-emphasis">on the device itself.</span>
       </h1>
 
+      <p class="body animate-in" style="margin-top: 16px; max-width: 1100px; color: var(--c-text-secondary);">
+        Lucid is a clear-signing protocol for Solana programs.
+      </p>
+
       <div class="divider animate-in"></div>
 
-      <div class="grid-3 animate-in" style="margin-top: 32px;">
+      <div class="grid-3 animate-in" style="margin-top: 28px;">
         <div class="card" style="text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 16px;">&#128220;</div>
           <p class="h3">Intent Definitions</p>
           <p class="small" style="margin-top: 8px;">
-            Auto-generate governance rulesets from program IDL. Every action gets a human-readable template.
+            Anchor IDL &rarr; human-readable ruleset. Every action templated.
           </p>
         </div>
         <div class="card" style="text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 16px;">&#128274;</div>
           <p class="h3">Plain-English Signing</p>
           <p class="small" style="margin-top: 8px;">
-            Signers approve via <span class="mono text-primary">signMessage</span>. The wallet renders the action as text — on a hardware wallet, on the device itself, outside any compromised host.
+            Signers approve via <span class="mono text-primary">signMessage</span>. Wallet renders on-device, outside any compromised host.
           </p>
         </div>
         <div class="card" style="text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 16px;">&#9889;</div>
           <p class="h3">On-Chain Verify</p>
           <p class="small" style="margin-top: 8px;">
-            Program reconstructs the expected message from state, verifies the signature via Solana's native ed25519 precompile. Sub-cent cost. Tampering &rarr; signature mismatch &rarr; reject.
+            Program reconstructs the message and verifies the signature. Tamper &rarr; reject.
           </p>
         </div>
       </div>
@@ -507,193 +582,195 @@
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Lucid uses signMessage instead of signTransaction. Any wallet that displays signed messages — Phantom, Backpack, hardware wallets — renders the action in plain English. The security guarantee gets stronger when signers use hardware wallets, because the host can't lie about what's on the device's own screen. The on-chain program reconstructs the expected message from state and verifies the ed25519 signature; if anything was tampered, the signature won't match. We're aligned with sRFC 38: Offchain Message Specification Version 1 — Anza's standard for human-readable offchain signing, published December 2025."
+        Lucid is a clear-signing protocol for Solana. Programs ship intents &mdash; which are templates generated from their IDL, each with human-readable text. Signers approve via signMessage so the wallet renders the action on the device, outside any compromised host. The on-chain program reconstructs the exact message and verifies the signature. Any tampering results in transaction rejection.
       </div>
     </div>
 
-    <!-- ======================== SLIDE 6: ON-DEVICE COMPARISON (TEXT) ======================== -->
-    <div class="slide bg-default" style="padding: 60px 80px;">
-      <span class="caption animate-in">SAME LEDGER. SAME MULTISIG FLOW.</span>
-
-      <h1 class="h2 animate-in" style="margin-top: 16px; margin-bottom: 32px; max-width: 1100px;">
-        What the device shows <span class="text-emphasis">when a signer approves.</span>
-      </h1>
-
-      <div class="grid-2 animate-in" style="flex: 1; align-items: stretch; gap: 40px;">
-        <!-- BEFORE (blind signing) -->
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--c-danger); box-shadow: 0 0 12px var(--c-danger);"></div>
-            <p class="caption" style="color: var(--c-danger); letter-spacing: 0.12em;">EVERY MULTISIG TODAY</p>
-          </div>
-          <div style="flex: 1; background: #0a0a0a; border: 2px solid var(--c-danger); border-radius: 16px; padding: 28px 32px; box-shadow: 0 0 80px rgba(239,68,68,0.15); display: flex; flex-direction: column; gap: 14px;">
-            <div style="display: flex; align-items: center; gap: 12px; color: var(--c-danger); font-size: 24px; font-weight: 700;">
-              <span style="font-size: 28px;">&#9888;</span> Blind signing ahead
-            </div>
-            <div style="color: var(--c-text-muted); font-size: 18px;">Unrecognized format</div>
-            <div style="color: var(--c-text-muted); font-size: 13px; letter-spacing: 0.08em; margin-top: 8px;">MESSAGE HASH</div>
-            <div class="mono" style="color: var(--c-danger); font-size: 17px; line-height: 1.5; word-break: break-all;">a3f9d8c7b6a5e4d3c2b1a0f9e8d7c6b5a4938271605f4e3d2c1b0a9f8e7d60c2d</div>
-            <div style="color: var(--c-text-muted); font-size: 13px; letter-spacing: 0.08em; margin-top: 4px;">FEE PAYER</div>
-            <div class="mono" style="color: var(--c-danger); font-size: 17px; line-height: 1.4; word-break: break-all;">7Hk2mPqRsTuVwXyZ3aBcDeFgHjKnNpQrStUvWxYz9bXr</div>
-            <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--c-border); color: var(--c-text-muted); font-size: 18px;">Accept risk and sign?</div>
-          </div>
-        </div>
-
-        <!-- AFTER (Lucid) -->
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--c-primary); box-shadow: 0 0 12px var(--c-primary);"></div>
-            <p class="caption text-primary" style="letter-spacing: 0.12em;">LUCID</p>
-          </div>
-          <div style="flex: 1; background: #0a0a0a; border: 2px solid var(--c-primary); border-radius: 16px; padding: 28px 32px; box-shadow: 0 0 80px rgba(16,185,129,0.20); display: flex; flex-direction: column; gap: 14px;">
-            <div style="display: flex; align-items: center; gap: 12px; color: var(--c-primary); font-size: 24px; font-weight: 700;">
-              <span style="font-size: 28px;">&#10003;</span> Sign Message
-            </div>
-            <div style="color: var(--c-text-muted); font-size: 18px;">Human-readable approval</div>
-            <div class="mono" style="margin-top: 8px; font-size: 20px; line-height: 1.6; display: flex; flex-direction: column; gap: 6px;">
-              <div style="color: var(--c-text);">approve withdraw 50000 USDC to 9abcD3F2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4def |</div>
-              <div style="color: var(--c-text-secondary);">wallet: dao-governance (7Hk2vN5pQ8rR4mT9wF2jB6cL3nE1xY5dG7sH4kP9zU2A);</div>
-              <div style="color: var(--c-text-secondary);">proposal: #42;</div>
-              <div class="text-primary">expires: 09 May 2026 12:00:00 UTC;</div>
-            </div>
-            <div style="margin-top: auto; padding-top: 14px; border-top: 1px solid var(--c-border); color: var(--c-primary); font-size: 19px; font-weight: 700; letter-spacing: 0.04em;">Approve</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="notes">
-        <div class="notes-label">Speaker Notes</div>
-        "Same Ledger device, same multisig flow. Left: every multisig today — the device shows a 'blind signing' warning, asks the signer to override its safety check, then displays a 32-byte hash and a fee payer. You cannot tell what you are approving. Right: Lucid — the device displays the actual action in plain English: who is being paid, from which wallet, which proposal, when it expires. Trust moves back to the hardware wallet, which is the only surface a compromised host can't lie about."
-      </div>
-    </div>
-
-    <!-- ======================== SLIDE 7: DEMO — BEFORE/AFTER (VIDEO) ======================== -->
-    <div class="slide bg-default" style="padding: 60px 80px;">
+    <!-- ======================== SLIDE 6: DEMO — BEFORE/AFTER (FILMSTRIPS) ======================== -->
+    <div class="slide bg-default" style="padding: 40px 60px;">
       <span class="caption animate-in">LIVE DEMO</span>
 
-      <h1 class="h2 animate-in" style="margin-top: 16px; margin-bottom: 24px;">
+      <h1 class="h2 animate-in" style="margin-top: 12px; margin-bottom: 20px;">
         Same device. <span class="text-emphasis">Different display.</span>
       </h1>
 
-      <div class="grid-2 animate-in" style="flex: 1; align-items: start;">
-        <!-- Before: actual Ledger blind-signing recording -->
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <p class="caption" style="color: var(--c-danger); margin-bottom: 16px;">EVERY MULTISIG TODAY</p>
-          <video src="blind-signing.mp4" autoplay loop muted playsinline
-                 style="max-height: 520px; width: auto; border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.5); border: 1px solid rgba(239,68,68,0.25);"></video>
+      <!-- Top filmstrip: blind signing on actual Ledger -->
+      <div class="animate-in" style="margin-bottom: 24px;">
+        <p class="caption" style="color: var(--c-danger); margin-bottom: 10px;">EVERY MULTISIG TODAY &mdash; A WARNING AND A SHRUG</p>
+        <div style="display: flex; gap: 16px; justify-content: center;">
+          <img src="photo_5_2026-05-12_02-31-45.processed.jpg" alt="Ledger showing 'Blind signing ahead. To accept risk, press both buttons'" style="width: 760px; height: 428px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.55);" />
+          <img src="photo_4_2026-05-12_02-31-45.processed.jpg" alt="Ledger showing 'Accept risk and sign transaction?'" style="width: 760px; height: 428px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(239,68,68,0.45); box-shadow: 0 8px 24px rgba(0,0,0,0.55);" />
         </div>
+      </div>
 
-        <!-- After: actual Ledger Lucid-signing recording -->
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <p class="caption" style="color: var(--c-accent); margin-bottom: 16px;">LUCID ON YOUR LEDGER</p>
-          <video src="lucid-signing.mp4" autoplay loop muted playsinline
-                 style="max-height: 520px; width: auto; border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.5); border: 1px solid rgba(16,185,129,0.25);"></video>
+      <!-- Bottom filmstrip: lucid signing on actual Ledger -->
+      <div class="animate-in">
+        <p class="caption" style="color: var(--c-accent); margin-bottom: 10px;">LUCID ON YOUR LEDGER &mdash; HUMAN-READABLE END-TO-END</p>
+        <div style="display: flex; gap: 14px; justify-content: center;">
+          <img src="photo_1_2026-05-12_02-31-45.zoom.jpg" alt="Ledger showing 'Review message'" style="width: 348px; height: 196px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="photo_2_2026-05-12_02-31-45.zoom.jpg" alt="Ledger showing 'Message (1/3) propose create pool: 1000 | wallet: treasury'" style="width: 348px; height: 196px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="photo_7_2026-05-12_02-31-45.zoom.jpg" alt="Ledger showing 'Message (2/3) {DNY6KLK6jb6dV95Kh...}' template hash" style="width: 348px; height: 196px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="photo_3_2026-05-12_02-31-45.zoom.jpg" alt="Ledger showing 'Message (3/3) proposal: #0; expires: 12 May 2026 00:26:57 UTC'" style="width: 348px; height: 196px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
+          <img src="photo_6_2026-05-12_02-31-45.zoom.jpg" alt="Ledger showing 'Sign message'" style="width: 348px; height: 196px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(16,185,129,0.45); box-shadow: 0 6px 18px rgba(0,0,0,0.5);" />
         </div>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "These are real recordings. Same Ledger device, same multisig flow. Left: every multisig today — the device shows a 'blind signing' warning, asks you to override its safety check, then displays a message hash and a fee payer. You can't tell what you're signing. Right: Lucid — the device shows the actual action in plain English. Trust moves back to the hardware wallet, where it belonged. The on-chain program verifies the signer approved this exact message — if anything is tampered between proposal and signing, the ed25519 signature won't match the reconstructed message, and the program rejects it."
+        Here's what that looks like. Top row is Ledger today. Bottom row is the same Ledger with Lucid showing human-readable messages.
       </div>
     </div>
 
-    <!-- ======================== SLIDE 8: TRACTION / BUILT ======================== -->
+    <!-- ======================== SLIDE 7: WHY NOW ======================== -->
     <div class="slide bg-default">
-      <span class="caption animate-in">WHAT WE BUILT</span>
+      <span class="caption animate-in">WHY NOW</span>
 
-      <h1 class="h1 animate-in" style="margin-top: 16px;">
-        Complete <span class="text-emphasis">multisig platform.</span>
+      <h1 class="h1 animate-in" style="margin-top: 16px; max-width: 1100px;">
+        The rails for human-readable signing <span class="text-emphasis">just landed.</span>
       </h1>
 
       <div class="divider animate-in"></div>
 
-      <div class="grid-2 animate-in" style="margin-top: 32px;">
-        <div class="card" style="padding: 24px;">
-          <p class="caption text-primary" style="margin-bottom: 12px;">KEY FEATURES</p>
-          <div class="flex flex-col gap-xs">
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Two-tier verification (native programs + IDL structural)</span></div>
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">Auto-generates intents from any Anchor IDL</span></div>
-            <div class="flex items-center gap-sm"><span class="check">&#10003;</span><span class="small">On-chain message reconstruction &rarr; tampering rejected by ed25519 mismatch</span></div>
-          </div>
-        </div>
-        <div class="card" style="padding: 24px;">
-          <p class="caption text-primary" style="margin-bottom: 12px;">STACK</p>
-          <div class="flex flex-col gap-xs">
-            <div class="flex justify-between"><span class="small">On-chain program</span><span class="small text-primary">Pinocchio</span></div>
-            <div class="flex justify-between"><span class="small">CLI</span><span class="small text-primary">Rust / Clap</span></div>
-            <div class="flex justify-between"><span class="small">SDK</span><span class="small text-primary">TypeScript / @solana/kit</span></div>
-            <div class="flex justify-between"><span class="small">Dashboard</span><span class="small text-primary">React + Vite + Tailwind</span></div>
-            <div class="flex justify-between"><span class="small">Spec</span><span class="small text-primary">sRFC 38 v1 + V0 (dual-support)</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="animate-in" style="margin-top: 32px; padding: 16px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 24px;">
-        <span class="small" style="color: var(--c-primary); font-weight: 600; letter-spacing: 0.05em;">LIVE ON DEVNET</span>
-        <span class="mono small text-muted">LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR</span>
-      </div>
-
-      <div class="notes">
-        <div class="notes-label">Speaker Notes</div>
-        "Pinocchio for performance. The verification engine is two-tier: Tier 1 matches native program discriminators, Tier 2 does structural IDL matching against everything else. The signed envelope is the same bytes the program reconstructs on-chain — tampering between proposal and signature gets rejected by ed25519 mismatch. Live on devnet — protocols can integrate today."
-      </div>
-    </div>
-
-    <!-- ======================== SLIDE 9: MOAT ======================== -->
-    <div class="slide bg-alt">
-      <span class="caption animate-in">MOAT</span>
-
-      <h1 class="h1 animate-in" style="margin-top: 16px;">
-        A primitive, <span class="text-emphasis">not a plugin.</span>
-      </h1>
-
-      <div class="divider animate-in"></div>
-
-      <p class="body animate-in" style="margin-top: 24px; max-width: 1100px;">
-        Existing multisigs trust the frontend to render what's being signed. Lucid's program reconstructs the signed message from on-chain state and verifies it via ed25519 &mdash; the chain enforces the match, not the UI.
+      <p class="body animate-in" style="margin-top: 20px; max-width: 1100px;">
+        Standard, hardware, and urgency. All this quarter.
       </p>
 
-      <div class="grid-2 animate-in" style="margin-top: 32px;">
-        <div class="card" style="padding: 24px;">
-          <p class="caption text-muted" style="margin-bottom: 12px;">EXISTING MULTISIGS</p>
-          <div class="flex flex-col gap-sm">
-            <div class="flex justify-between"><span class="small">Signing primitive</span><span class="small mono">signTransaction</span></div>
-            <div class="flex justify-between"><span class="small">Display rendered by</span><span class="small">Frontend</span></div>
-            <div class="flex justify-between"><span class="small">Verification location</span><span class="small">Off-chain UI</span></div>
-            <div class="flex justify-between"><span class="small">Hardware wallet shows</span><span class="small">Hash + fee payer</span></div>
-          </div>
+      <div class="grid-3 animate-in" style="margin-top: 36px;">
+        <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">APR 2026 &middot; LAST MONTH</p>
+          <p class="h3" style="line-height: 1.2;">Drift forces the issue</p>
+          <p class="small" style="line-height: 1.55;">
+            $285M hack. Every Solana governance team is rethinking how they sign.
+          </p>
         </div>
-        <div class="card" style="padding: 24px;">
-          <p class="caption text-primary" style="margin-bottom: 12px;">LUCID</p>
-          <div class="flex flex-col gap-sm">
-            <div class="flex justify-between"><span class="small">Signing primitive</span><span class="small mono text-primary">signMessage</span></div>
-            <div class="flex justify-between"><span class="small">Display rendered by</span><span class="small text-primary">Reconstructed on-chain</span></div>
-            <div class="flex justify-between"><span class="small">Verification location</span><span class="small text-primary">ed25519 precompile</span></div>
-            <div class="flex justify-between"><span class="small">Hardware wallet shows</span><span class="small text-primary">The actual action</span></div>
-          </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">DEC 2025 &middot; 5 MONTHS AGO</p>
+          <p class="h3" style="line-height: 1.2;">sRFC 38 ratified</p>
+          <p class="small" style="line-height: 1.55;">
+            Anza ratifies Solana's off-chain message spec &mdash; the standard Lucid signs against.
+          </p>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 14px;">
+          <p class="caption text-primary">JUN 2026 &middot; NEXT MONTH</p>
+          <p class="h3" style="line-height: 1.2;">Trezor adds signMessage</p>
+          <p class="small" style="line-height: 1.55;">
+            Ledger has it. Trezor adds it in June. Both converge on Lucid's primitive.
+          </p>
+          <p class="small text-muted" style="margin-top: 4px; line-height: 1.45; font-size: 16px;">&mdash; Zbyněk Kubiš, Trezor Firmware PM <span class="mono">(GH #4371)</span></p>
         </div>
       </div>
 
-      <div class="animate-in" style="margin-top: 32px; padding: 20px 24px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
+      <div class="animate-in" style="margin-top: 36px; padding: 24px 28px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: 12px;">
         <p class="small" style="color: var(--c-text); line-height: 1.6;">
-          <span class="text-primary" style="font-weight: 600;">Adopting this isn't a UI change.</span>
-          It means swapping the signing primitive end-to-end &mdash; wallet, program, verifier. Not a feature flag a competitor flips on next quarter.
+          <span class="text-primary" style="font-weight: 600;">Pioneer window.</span>
+          Standard is months old, hardware converging now. Copying requires a core rewrite &mdash; first-mover lock-in.
         </p>
       </div>
 
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "The natural question — why doesn't Squads just add this? Because the verification doesn't live in the UI. Existing multisigs sign raw transaction bytes and trust the frontend to render a human-readable preview. Lucid's signers sign a structured message, and the program reconstructs the same bytes from on-chain state and validates the ed25519 signature against the reconstruction. Tamper anything between proposal and signature, and the signature won't verify. To add this, an existing multisig has to switch from signTransaction to signMessage and rebuild the approval flow on top of on-chain verification — that's a rewrite, not a feature."
+        Why now? Last month happened one of the biggest DeFi hacks in history &mdash; every governance team is now rethinking how they sign. Anza shipped the off-chain message signing standard five months ago and Trezor adds signMessage in June. The momentum is here, and we want to be first.
       </div>
     </div>
 
-    <!-- ======================== SLIDE 10: ASK + CONTACT ======================== -->
+    <!-- ======================== SLIDE 8: TRACTION / BUILT ======================== -->
+    <div class="slide bg-default" style="justify-content: center; align-items: center; text-align: center;">
+      <span class="caption animate-in">WHAT WE BUILT</span>
+
+      <h1 class="hero animate-in" style="margin-top: 24px; max-width: 1400px;">
+        Protocol shipped. <span class="text-emphasis">Multisig live on devnet.</span>
+      </h1>
+
+      <div class="notes">
+        <div class="notes-label">Speaker Notes</div>
+        Core product is the on-chain protocol and we've shipped the first product on top of it &mdash; a complete multisig with UI so users can interact with no coding knowledge required.
+      </div>
+    </div>
+
+    <!-- ======================== SLIDE 9: STRATEGIC POSITION ======================== -->
+    <div class="slide bg-default">
+      <span class="caption animate-in">STRATEGIC POSITION</span>
+
+      <h1 class="h1 animate-in" style="margin-top: 16px; max-width: 1200px;">
+        Programs already expose IDLs. Wallets already render <span class="mono text-primary">signMessage</span>.<br>
+        <span class="text-emphasis">Lucid is the protocol that connects them.</span>
+      </h1>
+
+      <div class="divider animate-in"></div>
+
+      <div class="grid-3 animate-in" style="margin-top: 40px;">
+        <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+          <p class="caption text-primary">UPSTREAM &middot; PROGRAMS</p>
+          <p class="h3" style="line-height: 1.2;">Any Anchor IDL</p>
+          <p class="small" style="line-height: 1.55;">
+            Generator turns any Anchor IDL into human-readable intents.
+          </p>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+          <p class="caption text-primary">CORE &middot; PROTOCOL</p>
+          <p class="h3" style="line-height: 1.2;">On-chain reconstruction</p>
+          <p class="small" style="line-height: 1.55;">
+            Program rebuilds the message and verifies ed25519 &mdash; trust lives in the bytecode.
+          </p>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; gap: 12px;">
+          <p class="caption text-primary">DOWNSTREAM &middot; WALLETS</p>
+          <p class="h3" style="line-height: 1.2;">signMessage everywhere</p>
+          <p class="small" style="line-height: 1.55;">
+            Phantom, Solflare, Backpack, Ledger today. Trezor June 2026.
+          </p>
+        </div>
+      </div>
+
+      <div class="notes">
+        <div class="notes-label">Speaker Notes</div>
+        Programs ship IDLs. Wallets render signMessage. Lucid is the protocol in the middle.
+      </div>
+    </div>
+
+    <!-- ======================== SLIDE 10: EARLY TRACTION ======================== -->
+    <div class="slide bg-default">
+      <span class="caption animate-in">VALIDATION</span>
+
+      <p class="body animate-in" style="margin-top: 16px; max-width: 1500px;">
+        Ledger's CTO endorsed <span class="text-emphasis" style="font-weight: 700;">clear signing.</span>
+        Helius's CEO asked for it on Solana. Then we shipped it.
+      </p>
+
+      <div class="grid-2 animate-in" style="margin-top: 24px; align-items: start; gap: 32px;">
+
+        <!-- LEFT: Ledger CTO endorses clear signing; Helius CEO asks for it on Solana -->
+        <div class="flex flex-col" style="gap: 14px;">
+          <p class="caption text-primary">LEDGER &times; HELIUS &middot; <span class="mono text-muted" style="font-size: 14px; letter-spacing: 0;">@P3b7_ &times; @mert &middot; Sep 8 2025</span></p>
+          <img src="charles-mert-clear-signing.png" alt="Charles Guillemet (Ledger CTO) tweet: 'If you use a Ledger or hardware wallet with clear signing, you are not at risk.' Mert Mumtaz (Helius CEO) reply asking for clear signing on Solana, ending 'PLEASE'." style="width: 100%; max-height: 800px; object-fit: contain; border-radius: 12px; border: 1px solid var(--c-border); display: block;" />
+        </div>
+
+        <!-- RIGHT: Mert post-Bybit alarm, naming Solana blind signing -->
+        <div class="flex flex-col" style="gap: 14px;">
+          <p class="caption text-primary">POST-BYBIT, SOLANA NAMED &middot; <span class="mono text-muted" style="font-size: 14px; letter-spacing: 0;">@mert &middot; Feb 21 2025</span></p>
+          <img src="mert-bybit-alarm.png" alt="Mert Mumtaz (Helius CEO) tweet hours after the Bybit hack: Solana teams should lock down multisigs; 'is blind signing with ledger on Solana even fixed yet'." style="width: 100%; max-height: 800px; object-fit: contain; border-radius: 12px; border: 1px solid var(--c-border); display: block;" />
+        </div>
+
+      </div>
+
+      <div class="notes">
+        <div class="notes-label">Speaker Notes</div>
+        Idea is validated by Ledger's CTO and Helius's CEO &mdash; both publicly asked for clear signing on Solana before we existed.
+      </div>
+    </div>
+
+    <!-- ======================== SLIDE 11: ASK + CONTACT ======================== -->
     <div class="slide bg-default" style="justify-content: center; align-items: center; text-align: center;">
       <span class="caption animate-in">COLOSSEUM FRONTIER</span>
 
-      <h1 class="hero animate-in" style="margin-top: 24px;">
-        <span class="text-emphasis">LUCID</span>
-      </h1>
+      <div class="animate-in" style="margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 28px;">
+        <img src="lucid-logo.png" alt="Lucid logo" style="height: 96px; width: auto; display: block;" />
+        <span class="text-emphasis" style="font-family: var(--font-display); font-size: var(--f-hero); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05;">LUCID</span>
+      </div>
 
       <p class="h2 animate-in" style="margin-top: 32px; max-width: 1100px;">
         Blind signing as the only option <span class="text-danger">is unacceptable.</span>
@@ -708,22 +785,16 @@
             Darko Panic <span class="text-muted" style="font-weight: 400;">&middot;</span>
             <span class="text-primary">darkopanic99@gmail.com</span>
           </p>
-          <p class="small" style="color: var(--c-text-secondary); margin-top: 8px;">Senior Blockchain Engineer at MetaWealth &mdash; institutional-quality, regulated tokenized real estate.</p>
+          <p class="small" style="color: var(--c-text-secondary); margin-top: 8px;">Senior Blockchain Engineer at MetaWealth &mdash; tokenized real estate.</p>
           <p class="small" style="color: var(--c-text-muted); margin-top: 12px; line-height: 1.6;">
             &euro;85M AUM on Solana &mdash; 233 properties, ~1,400 investors across 28 countries.
           </p>
         </div>
       </div>
 
-      <div class="animate-in" style="margin-top: 64px;">
-        <p class="small text-muted">
-          Program: <span class="mono">LUC5TbUhLpT2dZuC2qA4vMZdxJXsbcsUVejTqLJBJWR</span>
-        </p>
-      </div>
-
       <div class="notes">
         <div class="notes-label">Speaker Notes</div>
-        "Lucid is a complete, working system — not a prototype. On-chain program, CLI, SDK, and dashboard with direct hardware-wallet signing. The problem is real: every multisig today asks signers to approve transactions their wallet can't read. We fix that at the protocol level. Try the demo, read the code, run the tests. Thank you."
+        I'm Darko, Senior Blockchain Engineer at MetaWealth where I lead development of real estate tokenization protocol on Solana with over 85 million euros in AUM.
       </div>
     </div>
 
@@ -736,17 +807,47 @@
     </div>
   </div>
 
+  <div id="presenter">
+    <div class="presenter-notes">
+      <div class="presenter-notes-label">Speaker Notes</div>
+      <div id="presenter-notes-content">&mdash;</div>
+    </div>
+    <div class="presenter-grid">
+      <div class="presenter-frame presenter-current">
+        <span class="presenter-label">Current</span>
+        <div class="presenter-stage" id="stage-current"></div>
+      </div>
+      <div class="presenter-frame presenter-next">
+        <span class="presenter-label">Next</span>
+        <div class="presenter-stage" id="stage-next"></div>
+      </div>
+    </div>
+    <div class="presenter-meta">
+      <span id="presenter-counter">1 / 1</span>
+      <div class="timer-group">
+        <span class="timer idle" id="presenter-timer">00:00</span>
+        <button class="timer-btn" id="presenter-timer-btn">Start</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    let current = 0;
+    const params = new URLSearchParams(location.search);
+    const isPresenter = params.has('presenter');
+
+    const hashSlide = parseInt(location.hash.replace('#', ''), 10);
+    let current = Number.isFinite(hashSlide) ? hashSlide : 0;
     const slides = document.querySelectorAll('.slide');
     const total = slides.length;
     let notesVisible = false;
 
     document.getElementById('total').textContent = total;
 
-    function show(i) {
-      slides.forEach(s => s.classList.remove('active'));
+    const channel = ('BroadcastChannel' in window) ? new BroadcastChannel('lucid-deck') : null;
+
+    function renderSlide(i) {
       current = Math.max(0, Math.min(i, total - 1));
+      slides.forEach(s => s.classList.remove('active'));
       slides[current].classList.add('active');
       document.getElementById('current').textContent = current + 1;
       document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
@@ -756,26 +857,114 @@
       if (note && notesVisible) note.classList.add('visible');
     }
 
+    function getNoteHTML(slide) {
+      const noteEl = slide.querySelector('.notes');
+      if (!noteEl) return '<em style="color: var(--c-text-muted)">No notes for this slide.</em>';
+      const clone = noteEl.cloneNode(true);
+      const label = clone.querySelector('.notes-label');
+      if (label) label.remove();
+      return clone.innerHTML.trim() || '<em style="color: var(--c-text-muted)">No notes for this slide.</em>';
+    }
+
+    function fitStage(stage) {
+      const wrap = stage.parentElement;
+      const tw = 1920, th = 1080;
+      const resize = () => {
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        if (!w || !h) return;
+        const s = Math.min(w / tw, h / th);
+        stage.style.transform = `scale(${s})`;
+        stage.style.left = ((w - tw * s) / 2) + 'px';
+        stage.style.top = ((h - th * s) / 2) + 'px';
+      };
+      resize();
+      new ResizeObserver(resize).observe(wrap);
+    }
+
+    function fillStage(stage, slideIndex) {
+      stage.innerHTML = '';
+      if (slideIndex < 0 || slideIndex >= total) return;
+      const clone = slides[slideIndex].cloneNode(true);
+      clone.classList.add('active');
+      stage.appendChild(clone);
+    }
+
+    function updatePresenter() {
+      fillStage(document.getElementById('stage-current'), current);
+      const nextIdx = current + 1 < total ? current + 1 : -1;
+      fillStage(document.getElementById('stage-next'), nextIdx);
+      document.getElementById('presenter-notes-content').innerHTML = getNoteHTML(slides[current]);
+      document.getElementById('presenter-counter').textContent = `${current + 1} / ${total}`;
+    }
+
+    function show(i, silent) {
+      const clamped = Math.max(0, Math.min(i, total - 1));
+      current = clamped;
+      if (isPresenter) updatePresenter();
+      else renderSlide(clamped);
+      if (!silent && channel) channel.postMessage({ type: 'slide', index: clamped });
+    }
+
     function next() { show(current + 1); }
     function prev() { show(current - 1); }
+
+    if (channel) {
+      channel.onmessage = (e) => {
+        if (e.data && e.data.type === 'slide') show(e.data.index, true);
+      };
+    }
+
+    if (isPresenter) {
+      document.getElementById('deck').style.display = 'none';
+      document.getElementById('presenter').classList.add('active');
+      fitStage(document.getElementById('stage-current'));
+      fitStage(document.getElementById('stage-next'));
+      updatePresenter();
+      const timerEl = document.getElementById('presenter-timer');
+      const timerBtn = document.getElementById('presenter-timer-btn');
+      let timerStart = null;
+      function paint() {
+        const s = timerStart === null ? 0 : Math.floor((Date.now() - timerStart) / 1000);
+        const mm = String(Math.floor(s / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        timerEl.textContent = `${mm}:${ss}`;
+      }
+      paint();
+      setInterval(() => { if (timerStart !== null) paint(); }, 1000);
+      timerBtn.addEventListener('click', () => {
+        timerStart = Date.now();
+        timerEl.classList.remove('idle');
+        timerBtn.textContent = 'Reset';
+        paint();
+      });
+    } else {
+      renderSlide(current);
+    }
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
       if (e.key === 'n' || e.key === 'N') {
+        if (isPresenter) return;
         notesVisible = !notesVisible;
         document.querySelectorAll('.notes').forEach(n => {
           n.classList.toggle('visible', notesVisible && n.closest('.slide').classList.contains('active'));
         });
       }
+      if ((e.key === 'p' || e.key === 'P') && !isPresenter) {
+        const url = new URL(location.href);
+        url.searchParams.set('presenter', '');
+        url.hash = `#${current}`;
+        window.open(url.toString(), 'lucid-presenter', `width=${screen.availWidth},height=${screen.availHeight},left=0,top=0`);
+      }
     });
 
-    document.getElementById('deck').addEventListener('click', (e) => {
-      if (e.target.closest('.nav-bar') || e.target.closest('.nav-btn')) return;
-      if (e.clientX > window.innerWidth / 2) next(); else prev();
-    });
-
-    show(0);
+    if (!isPresenter) {
+      document.getElementById('deck').addEventListener('click', (e) => {
+        if (e.target.closest('.nav-bar') || e.target.closest('.nav-btn')) return;
+        if (e.clientX > window.innerWidth / 2) next(); else prev();
+      });
+    }
   </script>
 </body>
 </html>

@@ -30,7 +30,9 @@ impl Execute {
         }
 
         require_owner!(accounts[0], program_id); // wallet
-        require_owner!(accounts[1], program_id); // vault
+        // Vault is 0-byte and System-Program–owned by design; ownership
+        // can't be used as the integrity check. Instead we re-derive the
+        // vault PDA from wallet_address + cached vault_bump below.
         require_owner!(accounts[2], program_id); // intent
         require_owner!(accounts[3], program_id); // proposal
 
@@ -55,14 +57,20 @@ impl Execute {
             let wallet = Wallet::from_bytes(&wdata)?;
             wallet_name_buf = wallet.name;
             wallet_name_len = wallet.name_len;
+            vault_bump = wallet.vault_bump;
         }
+        // Verify accounts[1] really is the vault PDA for this wallet.
+        // Without this an attacker could pass any account here; SOURCE_VAULT
+        // resolution and invoke_signed would otherwise trust that address.
         {
-            let vdata = accounts[1].try_borrow()?;
-            let vault = Vault::from_bytes(&vdata)?;
-            if vault.wallet != wallet_address {
-                return Err(ProgramError::InvalidAccountData);
+            let vault_bump_arr = [vault_bump];
+            let expected_vault = Address::create_program_address(
+                &[VAULT_SEED, &wallet_address, &vault_bump_arr],
+                program_id,
+            ).map_err(|_| ProgramError::InvalidSeeds)?;
+            if accounts[1].address() != &expected_vault {
+                return Err(ProgramError::InvalidSeeds);
             }
-            vault_bump = vault.bump;
         }
         {
             let pdata = accounts[3].try_borrow()?;
