@@ -20,8 +20,13 @@ export const CHAIN_MAP: Record<string, `solana:${string}`> = {
   mainnet: 'solana:mainnet',
 };
 
+// Production builds (uselucid.xyz) cannot reach localhost from HTTPS — Chrome's
+// loopback CORS policy blocks the warm-up fetch and leaves the client in a
+// partial state. Default to devnet there; keep localhost as the dev default.
+const DEFAULT_NETWORK = import.meta.env.PROD ? 'devnet' : 'localhost';
+
 export default function App() {
-  const [network, setNetwork] = useState('localhost');
+  const [network, setNetwork] = useState(DEFAULT_NETWORK);
 
   const cluster = network === 'mainnet' ? 'mainnet' : 'devnet';
 
