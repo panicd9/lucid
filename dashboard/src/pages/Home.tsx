@@ -25,7 +25,7 @@ export default function Home() {
           <span className="absolute bottom-[-6px] left-0 right-0 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, #059669, #10B981)' }} />
         </div>
       </div>
-      <p className="text-base sm:text-lg text-neutral-200 mb-2 font-medium text-center px-2">See what you sign. On your Ledger.</p>
+      <p className="text-base sm:text-lg text-neutral-200 mb-2 font-medium text-center px-2">See what you sign. On your Hardware Wallet.</p>
       <p className="text-sm text-neutral-500 max-w-md text-center mb-6 px-2">
         The multisig where hardware wallets display human-readable actions
         instead of hex. Auto-generated rulesets verified against program.
