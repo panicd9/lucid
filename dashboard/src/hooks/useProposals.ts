@@ -7,6 +7,7 @@ import {
   IntentAccount,
   deserializeProposal,
 } from '../lib/deserialize';
+import { DEMO_WALLET_ADDRESS, getDemoWalletData } from '../lib/demoWalletData';
 
 export interface ProposalWithMeta extends ProposalAccount {
   address: PublicKey;
@@ -29,6 +30,21 @@ export function useProposals(
     let cancelled = false;
     setLoading(true);
     setError(null);
+
+    // Demo wallet: serve from bundled fixture, never hit RPC.
+    if (walletAddress === DEMO_WALLET_ADDRESS) {
+      const demo = getDemoWalletData();
+      const results: ProposalWithMeta[] = demo.proposals.map((p) => {
+        const intent = (intents ?? demo.intents).find((i) => {
+          const [intentPda] = findIntentPDA(new PublicKey(walletAddress), i.intentIndex);
+          return intentPda.equals(p.data.intent);
+        });
+        return { ...p.data, address: p.address, intentData: intent };
+      });
+      setProposals(results);
+      setLoading(false);
+      return;
+    }
 
     (async () => {
       try {

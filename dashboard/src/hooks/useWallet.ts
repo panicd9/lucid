@@ -9,12 +9,14 @@ import {
   deserializeWallet,
   deserializeIntent,
 } from '../lib/deserialize';
+import { getDemoWalletData, isDemoWalletId } from '../lib/demoWalletData';
 
 export interface WalletData {
   address: PublicKey;
   vaultAddress: PublicKey;
   wallet: WalletAccount;
   intents: IntentAccount[];
+  isDemo?: boolean;
 }
 
 export interface WalletCandidate {
@@ -78,6 +80,20 @@ export function useLucidWallet(addressOrName: string | undefined, network: strin
     setError(null);
     setData(null);
     setCandidates(null);
+
+    // Demo wallet: serve from bundled fixture, never hit RPC.
+    if (isDemoWalletId(addressOrName)) {
+      const demo = getDemoWalletData();
+      setData({
+        address: demo.address,
+        vaultAddress: demo.vaultAddress,
+        wallet: demo.wallet,
+        intents: demo.intents,
+        isDemo: true,
+      });
+      setLoading(false);
+      return;
+    }
 
     (async () => {
       try {

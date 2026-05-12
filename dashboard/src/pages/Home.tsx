@@ -116,9 +116,14 @@ export default function Home() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-neutral-200 group-hover:text-emerald-300 transition-colors">
-                      {w.name}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-neutral-200 group-hover:text-emerald-300 transition-colors">
+                        {w.name}
+                      </p>
+                      <span className="text-[9px] font-semibold tracking-[0.12em] uppercase px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/80 border border-amber-500/20">
+                        Demo
+                      </span>
+                    </div>
                     <p className="text-xs text-neutral-500 mt-0.5">{w.description}</p>
                   </div>
                   <svg

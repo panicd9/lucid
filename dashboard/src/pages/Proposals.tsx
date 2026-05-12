@@ -5,6 +5,7 @@ import { useProposals } from '../hooks/useProposals';
 import ProposalCard from '../components/ProposalCard';
 import { STATUS_ACTIVE, STATUS_APPROVED } from '../lib/constants';
 import WalletDisambiguation from '../components/WalletDisambiguation';
+import DemoBanner from '../components/DemoBanner';
 
 interface Props {
   network: string;
@@ -71,8 +72,12 @@ export default function Proposals({ network }: Props) {
     (p) => p.status !== STATUS_ACTIVE && p.status !== STATUS_APPROVED
   );
 
+  const isDemo = walletData?.isDemo === true;
+
   return (
     <div>
+      {isDemo && <DemoBanner />}
+
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
         <Link to="/" className="text-neutral-500 hover:text-emerald-400 transition-colors cursor-pointer flex items-center">
@@ -105,15 +110,28 @@ export default function Proposals({ network }: Props) {
             </p>
           )}
         </div>
-        <Link
-          to={`/wallet/${address}`}
-          className="inline-flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/15 hover:border-emerald-500/30 transition-all cursor-pointer"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span className="hidden sm:inline">New Proposal</span>
-        </Link>
+        {isDemo ? (
+          <span
+            aria-disabled="true"
+            title="Read-only demo"
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold rounded-lg bg-neutral-800/40 border border-neutral-700/40 text-neutral-500 cursor-not-allowed select-none"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span className="hidden sm:inline">New Proposal</span>
+          </span>
+        ) : (
+          <Link
+            to={`/wallet/${address}`}
+            className="inline-flex items-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 hover:bg-emerald-500/15 hover:border-emerald-500/30 transition-all cursor-pointer"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span className="hidden sm:inline">New Proposal</span>
+          </Link>
+        )}
       </div>
 
       {/* Active */}

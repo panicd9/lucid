@@ -142,10 +142,11 @@ export const RPC_ENDPOINTS: Record<string, string> = {
   mainnet: 'https://api.mainnet-beta.solana.com',
 };
 
-// Demo wallets for home page
+// Demo wallets for home page. Resolved by name in `useLucidWallet`; the
+// `demo-wallet` slug is special-cased to a bundled fixture (no RPC, read-only).
 export const DEMO_WALLETS = [
   {
-    name: 'treasury',
-    description: 'Demo treasury multisig wallet',
+    name: 'demo-wallet',
+    description: 'Read-only preview of a Lucid wallet',
   },
 ];

@@ -7,6 +7,7 @@ import AddressDisplay from '../components/AddressDisplay';
 import IntentCard from '../components/IntentCard';
 import PresetIntentCard from '../components/PresetIntentCard';
 import WalletDisambiguation from '../components/WalletDisambiguation';
+import DemoBanner from '../components/DemoBanner';
 import { PRESET_INTENTS } from '../templates';
 import { computeTemplateHash } from '../lib/templateHash';
 
@@ -97,6 +98,8 @@ export default function Ruleset({ network }: Props) {
 
   return (
     <div>
+      {data.isDemo && <DemoBanner />}
+
       {/* Header card */}
       <div className="relative rounded-2xl overflow-hidden mb-8">
         {/* Gradient border */}

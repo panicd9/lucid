@@ -6,6 +6,7 @@ import { RPC_ENDPOINTS, PROGRAM_ID } from '../lib/constants';
 import { getExplorerTxUrl } from '../lib/explorer';
 import { findVaultPDA } from '../lib/pda';
 import WalletDisambiguation from '../components/WalletDisambiguation';
+import DemoBanner from '../components/DemoBanner';
 
 interface TxEntry {
   signature: string;
@@ -58,8 +59,18 @@ export default function History({ network }: Props) {
 
   const walletAddr = walletData?.address.toBase58();
 
+  const isDemo = walletData?.isDemo === true;
+
   useEffect(() => {
     if (!walletAddr) return;
+
+    // Demo wallet: skip RPC, show synthesized empty state.
+    if (isDemo) {
+      setTransactions([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
 
     let cancelled = false;
     setLoading(true);
@@ -152,7 +163,7 @@ export default function History({ network }: Props) {
     })();
 
     return () => { cancelled = true; };
-  }, [walletAddr, network]);
+  }, [walletAddr, network, isDemo]);
 
   const handleCopy = async (sig: string) => {
     await navigator.clipboard.writeText(sig);
@@ -195,6 +206,8 @@ export default function History({ network }: Props) {
 
   return (
     <div>
+      {isDemo && <DemoBanner />}
+
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-sm mb-6" aria-label="Breadcrumb">
         <Link to="/" className="text-neutral-500 hover:text-emerald-400 transition-colors cursor-pointer flex items-center">
@@ -329,8 +342,14 @@ export default function History({ network }: Props) {
           <svg className="w-12 h-12 text-neutral-700 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-sm text-neutral-400 font-medium mb-1">No transactions yet</p>
-          <p className="text-xs text-neutral-600">Transactions will appear here once proposals are created or executed.</p>
+          <p className="text-sm text-neutral-400 font-medium mb-1">
+            {isDemo ? 'Audit log unavailable in demo' : 'No transactions yet'}
+          </p>
+          <p className="text-xs text-neutral-600">
+            {isDemo
+              ? 'Real wallets show every propose, approve, cancel, and execute here.'
+              : 'Transactions will appear here once proposals are created or executed.'}
+          </p>
         </div>
       )}
     </div>
