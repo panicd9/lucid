@@ -13,7 +13,8 @@ pub struct Wallet {
     pub frozen: u8,
     pub bump: u8,
     pub name_len: u8,
-    pub _reserved: [u8; 4],
+    pub vault_bump: u8,
+    pub _reserved: [u8; 3],
     pub create_key: [u8; 32],
     pub name: [u8; 32],
 }
@@ -43,32 +44,13 @@ impl Wallet {
 }
 
 // ─── Vault ────────────────────────────────────────────────────────────
-/// Seeds: ["vault", wallet]
-#[repr(C)]
-pub struct Vault {
-    pub wallet: [u8; 32],
-    pub bump: u8,
-}
-
-assert_no_padding!(Vault, 33);
-
-impl Vault {
-    pub const DATA_LEN: usize = 33;
-    pub const LEN: usize = PREFIX_LEN + Self::DATA_LEN;
-    pub const DISCRIMINATOR: u8 = DISC_VAULT;
-
-    pub fn from_bytes(data: &[u8]) -> Result<&Self, ProgramError> {
-        validate_discriminator!(data, Self::DISCRIMINATOR);
-        require_account_len!(data, Self::LEN);
-        Ok(unsafe { &*(data[PREFIX_LEN..].as_ptr() as *const Self) })
-    }
-
-    pub fn from_bytes_mut(data: &mut [u8]) -> Result<&mut Self, ProgramError> {
-        validate_discriminator!(data, Self::DISCRIMINATOR);
-        require_account_len!(data, Self::LEN);
-        Ok(unsafe { &mut *(data[PREFIX_LEN..].as_mut_ptr() as *mut Self) })
-    }
-}
+// The vault is a 0-byte, System-Program–owned PDA.
+//   Seeds: ["vault", wallet]
+// It carries no data — its address is the only thing that matters.
+// Keeping it data-less lets it serve as the `from` of `system::transfer`
+// and the `payer` of an Anchor `init` constraint, the same as Squads.
+// `vault_bump` is cached on the Wallet account to avoid recomputing it
+// on every execute.
 
 // ─── IntentHeader ─────────────────────────────────────────────────────
 /// Seeds: ["intent", wallet, index.to_le_bytes()]

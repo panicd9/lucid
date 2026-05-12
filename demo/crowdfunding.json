@@ -568,7 +568,7 @@
       ],
       "accounts": [
         {
-          "name": "admin",
+          "name": "payer",
           "writable": true,
           "signer": true
         },
@@ -603,7 +603,12 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "admin",
+          "type": "pubkey"
+        }
+      ]
     },
     {
       "name": "propose_admin",

@@ -27,10 +27,11 @@ import {
   PARAM_TYPE_U16,
   PARAM_TYPE_U32,
   PARAM_TYPE_U128,
+  SOURCE_PARAM,
   CONSTRAINT_LESS_THAN_U64,
   CONSTRAINT_GREATER_THAN_U64,
 } from '../lib/constants';
-import { findProposalPDA, findIntentPDA } from '../lib/pda';
+import { findProposalPDA, findIntentPDA, findVaultPDA } from '../lib/pda';
 import { deserializeWallet } from '../lib/deserialize';
 import { signWithLedger } from '../lib/ledger';
 import { CHAIN_MAP } from '../App';
@@ -120,11 +121,33 @@ export default function ProposeModal({
   const [txSig, setTxSig] = useState('');
   const [txCopied, setTxCopied] = useState(false);
   const [expirySeconds, setExpirySeconds] = useState(300);
-  const [paramValues, setParamValues] = useState<string[]>(
-    intent.params.map(() => '')
+
+  // Params referenced as the value of an isSigner account must equal the vault
+  // PDA — that's the only address Lucid signs CPIs with. Auto-fill those
+  // entries; let the user edit anything else.
+  const vaultAddress = useMemo(() => {
+    try {
+      const [pda] = findVaultPDA(new PublicKey(walletAddress));
+      return pda.toBase58();
+    } catch {
+      return '';
+    }
+  }, [walletAddress]);
+  const signerParamIndices = useMemo(() => {
+    const set = new Set<number>();
+    for (const acc of intent.accounts) {
+      if (acc.isSigner && acc.source === SOURCE_PARAM && acc.sourceData.length > 0) {
+        set.add(acc.sourceData[0]);
+      }
+    }
+    return set;
+  }, [intent.accounts]);
+
+  const [paramValues, setParamValues] = useState<string[]>(() =>
+    intent.params.map((_, i) => (signerParamIndices.has(i) ? vaultAddress : ''))
   );
-  const [touched, setTouched] = useState<boolean[]>(
-    intent.params.map(() => false)
+  const [touched, setTouched] = useState<boolean[]>(() =>
+    intent.params.map((_, i) => signerParamIndices.has(i))
   );
 
   const [account] = useSelectedWalletAccount();
@@ -307,6 +330,7 @@ export default function ProposeModal({
 
           {/* Param inputs */}
           {intent.params.map((param, i) => {
+            const isSignerParam = signerParamIndices.has(i);
             const error = touched[i] ? paramErrors[i] : null;
             const isValid = touched[i] && paramValues[i].trim() && !paramErrors[i];
             const borderClass = error
@@ -322,6 +346,11 @@ export default function ProposeModal({
                   <span className="text-neutral-600 ml-2 normal-case tracking-normal">
                     ({PARAM_TYPE_LABELS[param.paramType] ?? 'unknown'})
                   </span>
+                  {isSignerParam && (
+                    <span className="ml-2 normal-case tracking-normal text-emerald-400/80">
+                      Vault PDA (auto-filled — must sign the CPI)
+                    </span>
+                  )}
                 </label>
                 {param.name === 'token_program' ? (
                   <div className="flex rounded-lg border border-neutral-800/50 bg-neutral-800/40 p-1 gap-1">
@@ -351,7 +380,8 @@ export default function ProposeModal({
                       value={paramValues[i]}
                       onChange={(e) => updateParam(i, e.target.value)}
                       onBlur={() => markTouched(i)}
-                      disabled={status !== 'form'}
+                      disabled={status !== 'form' || isSignerParam}
+                      readOnly={isSignerParam}
                       placeholder={
                         param.paramType === PARAM_TYPE_ADDRESS
                           ? 'Base58 address...'

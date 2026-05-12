@@ -133,13 +133,18 @@ impl CreateWallet {
             wallet.frozen = 0;
             wallet.bump = wallet_bump;
             wallet.name_len = name.len() as u8;
-            wallet._reserved = [0; 4];
+            // vault_bump is set after the vault PDA is created below.
+            wallet.vault_bump = 0;
+            wallet._reserved = [0; 3];
             wallet.create_key = create_key.try_into().map_err(|_| ProgramError::InvalidInstructionData)?;
             wallet.name = [0; 32];
             wallet.name[..name.len()].copy_from_slice(name);
         }
 
         // ── Create vault PDA ──
+        // Vault is a 0-byte, System-Program–owned PDA so it can serve as
+        // the `from` of system::transfer (and therefore the `payer` of an
+        // Anchor `init` constraint) when Lucid signs CPIs as the vault.
         let wallet_addr_bytes = wallet_pda.to_bytes();
         let vault_seeds: &[&[u8]] = &[VAULT_SEED, &wallet_addr_bytes];
         let (vault_pda, vault_bump) = Address::find_program_address(vault_seeds, program_id);
@@ -155,25 +160,24 @@ impl CreateWallet {
         ];
         let vault_signer = [Signer::from(vault_signer_seeds.as_slice())];
 
-        let vault_space = Vault::LEN;
-        let vault_lamports = rent_exempt_lamports(vault_space);
+        // Rent for 0 data bytes — still needs to cover the account header.
+        let vault_lamports = rent_exempt_lamports(0);
 
         pinocchio_system::instructions::CreateAccount {
             from: &accounts[5],
             to: &accounts[1],
             lamports: vault_lamports,
-            space: vault_space as u64,
-            owner: program_id,
+            space: 0,
+            owner: &pinocchio_system::ID,
         }
         .invoke_signed(&vault_signer)?;
 
+        // Cache vault_bump on the wallet so execute can re-derive the
+        // vault PDA without paying for find_program_address.
         {
-            let mut vdata = accounts[1].try_borrow_mut()?;
-            vdata[0] = Vault::DISCRIMINATOR;
-            vdata[1] = ACCOUNT_VERSION;
-            let vault = Vault::from_bytes_mut(&mut vdata)?;
-            vault.wallet = wallet_addr_bytes;
-            vault.bump = vault_bump;
+            let mut wdata = accounts[0].try_borrow_mut()?;
+            let wallet = Wallet::from_bytes_mut(&mut wdata)?;
+            wallet.vault_bump = vault_bump;
         }
 
         // ── Create 3 meta-intents ──

@@ -42,6 +42,7 @@ export type Wallet = {
   frozen: number;
   bump: number;
   nameLen: number;
+  vaultBump: number;
   reserved: ReadonlyUint8Array;
   createKey: ReadonlyUint8Array;
   name: ReadonlyUint8Array;
@@ -53,6 +54,7 @@ export type WalletArgs = {
   frozen: number;
   bump: number;
   nameLen: number;
+  vaultBump: number;
   reserved: ReadonlyUint8Array;
   createKey: ReadonlyUint8Array;
   name: ReadonlyUint8Array;
@@ -66,7 +68,8 @@ export function getWalletEncoder(): FixedSizeEncoder<WalletArgs> {
     ["frozen", getU8Encoder()],
     ["bump", getU8Encoder()],
     ["nameLen", getU8Encoder()],
-    ["reserved", fixEncoderSize(getBytesEncoder(), 4)],
+    ["vaultBump", getU8Encoder()],
+    ["reserved", fixEncoderSize(getBytesEncoder(), 3)],
     ["createKey", fixEncoderSize(getBytesEncoder(), 32)],
     ["name", fixEncoderSize(getBytesEncoder(), 32)],
   ]);
@@ -80,7 +83,8 @@ export function getWalletDecoder(): FixedSizeDecoder<Wallet> {
     ["frozen", getU8Decoder()],
     ["bump", getU8Decoder()],
     ["nameLen", getU8Decoder()],
-    ["reserved", fixDecoderSize(getBytesDecoder(), 4)],
+    ["vaultBump", getU8Decoder()],
+    ["reserved", fixDecoderSize(getBytesDecoder(), 3)],
     ["createKey", fixDecoderSize(getBytesDecoder(), 32)],
     ["name", fixDecoderSize(getBytesDecoder(), 32)],
   ]);

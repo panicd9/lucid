@@ -20,6 +20,27 @@ export default function Ruleset({ network }: Props) {
   const { data, candidates, loading, error } = useLucidWallet(address, network, refreshKey);
   const [account] = useSelectedWalletAccount();
 
+  // Hooks must run unconditionally — keep them above the early returns below.
+  const intents = data?.intents;
+  const addMetaIntent = useMemo(
+    () => intents?.find((m) => m.intentIndex === 0) ?? null,
+    [intents],
+  );
+  const userIsApprover = useMemo(() => {
+    if (!account || !addMetaIntent) return false;
+    return addMetaIntent.approvers.some((a) => a.toBase58() === account.address);
+  }, [account, addMetaIntent]);
+  const existingHashes = useMemo(
+    () => new Set((intents ?? []).map((i) => Buffer.from(i.templateHash).toString('hex'))),
+    [intents],
+  );
+  const availablePresets = useMemo(() => {
+    return PRESET_INTENTS.filter((p) => {
+      const hex = Buffer.from(computeTemplateHash(p)).toString('hex');
+      return !existingHashes.has(hex);
+    });
+  }, [existingHashes]);
+
   if (candidates && candidates.length > 1) {
     return <WalletDisambiguation name={address ?? ''} candidates={candidates} />;
   }
@@ -58,34 +79,18 @@ export default function Ruleset({ network }: Props) {
     );
   }
 
-  const { wallet, intents } = data;
+  const { wallet } = data;
+  const walletIntents = data.intents;
   const walletAddr = data.address.toBase58();
   const handleRefresh = () => setRefreshKey((k) => k + 1);
-  const metaIntents = intents.filter((i) => i.intentIndex <= 2);
-  const protocolIntents = intents.filter((i) => i.intentIndex > 2);
+  const metaIntents = walletIntents.filter((i) => i.intentIndex <= 2);
+  const protocolIntents = walletIntents.filter((i) => i.intentIndex > 2);
 
   // ── Preset section gating ─────────────────────────────────────────
   // Direct AddIntent (disc=1) is only accepted by the program during the
   // setup phase — i.e. before the wallet has any proposals
   // (programs/lucid/src/instructions/add_intent.rs:60).
   const isSetupPhase = wallet.proposalIndex === 0n;
-  const addMetaIntent = metaIntents.find((m) => m.intentIndex === 0) ?? null;
-  const userIsApprover = useMemo(() => {
-    if (!account || !addMetaIntent) return false;
-    return addMetaIntent.approvers.some((a) => a.toBase58() === account.address);
-  }, [account, addMetaIntent]);
-
-  // Hide presets whose template-hash already exists on the wallet
-  const existingHashes = useMemo(
-    () => new Set(intents.map((i) => Buffer.from(i.templateHash).toString('hex'))),
-    [intents],
-  );
-  const availablePresets = useMemo(() => {
-    return PRESET_INTENTS.filter((p) => {
-      const hex = Buffer.from(computeTemplateHash(p)).toString('hex');
-      return !existingHashes.has(hex);
-    });
-  }, [existingHashes]);
 
   const showPresets =
     isSetupPhase && !wallet.frozen && availablePresets.length > 0 && addMetaIntent !== null;

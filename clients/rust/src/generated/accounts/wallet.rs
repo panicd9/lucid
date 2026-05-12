@@ -15,7 +15,8 @@ pub struct Wallet {
     pub frozen: u8,
     pub bump: u8,
     pub name_len: u8,
-    pub reserved: [u8; 4],
+    pub vault_bump: u8,
+    pub reserved: [u8; 3],
     pub create_key: [u8; 32],
     pub name: [u8; 32],
 }

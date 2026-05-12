@@ -205,194 +205,202 @@ async function resolveCustomAccounts(
   const bytePoolOffset = seedsOffset + seedCount * SEED_ENTRY_SIZE;
 
   const paramsData = proposal.paramsData;
-  const results: ResolvedAccount[] = [];
 
+  // Recursive resolution mirroring on-chain `resolve_address_inner`. An entry's
+  // SOURCE_PDA may reference other accounts (SEED_ACCOUNT / SEED_ACCOUNT_FIELD)
+  // by index — including forward references — so resolution can't be a single
+  // sequential pass.
+  const addrByIdx = new Map<number, string>();
+  const resolving = new Set<number>();
+  const MAX_DEPTH = 4;
+
+  const readEntry = (idx: number) => {
+    const entryOffset = accountsOffset + idx * ACCOUNT_ENTRY_SIZE;
+    if (entryOffset + ACCOUNT_ENTRY_SIZE > rawIntent.length) {
+      throw new Error(`account entry ${idx} out of bounds`);
+    }
+    return {
+      source: rawIntent[entryOffset],
+      writable: rawIntent[entryOffset + 1] === 1,
+      isSigner: rawIntent[entryOffset + 2] === 1,
+      sourceData: rawIntent.subarray(entryOffset + 4, entryOffset + 8),
+    };
+  };
+
+  async function resolveAt(idx: number, depth = 0): Promise<string | null> {
+    const cached = addrByIdx.get(idx);
+    if (cached) return cached;
+    if (resolving.has(idx)) {
+      throw new Error(`account ${idx} has cyclic seed reference`);
+    }
+    if (depth > MAX_DEPTH) {
+      throw new Error(`account ${idx} resolve depth exceeded`);
+    }
+    resolving.add(idx);
+    try {
+      const { source, sourceData } = readEntry(idx);
+      let resolved: string | null = null;
+
+      switch (source) {
+        case SOURCE_STATIC: {
+          const poolOff = sourceData[0] | (sourceData[1] << 8);
+          if (bytePoolOffset + poolOff + 32 <= rawIntent.length) {
+            resolved = new PublicKey(
+              rawIntent.subarray(bytePoolOffset + poolOff, bytePoolOffset + poolOff + 32)
+            ).toBase58();
+          }
+          break;
+        }
+        case SOURCE_PARAM: {
+          const addr = readParamAddress(
+            rawIntent, paramsData, sourceData[0], proposerCount, approverCount
+          );
+          if (addr) resolved = addr.toBase58();
+          break;
+        }
+        case SOURCE_VAULT:
+          resolved = vaultPda.toBase58();
+          break;
+        case SOURCE_HAS_ONE: {
+          const srcIdx = sourceData[0];
+          const dataOff = sourceData[1] | (sourceData[2] << 8);
+          const srcAddr = await resolveAt(srcIdx, depth + 1);
+          if (srcAddr) {
+            const pk = new PublicKey(srcAddr);
+            const cacheKey = pk.toBase58();
+            let data = accountDataCache.get(cacheKey);
+            if (!data) {
+              const info = await connection.getAccountInfo(pk);
+              if (info) {
+                data = info.data;
+                accountDataCache.set(cacheKey, data);
+              }
+            }
+            if (data && dataOff + 32 <= data.length) {
+              resolved = new PublicKey(data.subarray(dataOff, dataOff + 32)).toBase58();
+            }
+          }
+          break;
+        }
+        case SOURCE_PDA: {
+          const seedStart = sourceData[0];
+          const pdaSeedCount = sourceData[1];
+          const progOff = sourceData[2] | (sourceData[3] << 8);
+          const progPubkey = new PublicKey(
+            rawIntent.subarray(bytePoolOffset + progOff, bytePoolOffset + progOff + 32)
+          );
+          const seeds: Buffer[] = [];
+          for (let s = 0; s < pdaSeedCount; s++) {
+            const seOffset = seedsOffset + (seedStart + s) * SEED_ENTRY_SIZE;
+            const seedType = rawIntent[seOffset];
+            const seedData = rawIntent.subarray(seOffset + 2, seOffset + 6);
+            switch (seedType) {
+              case SEED_LITERAL: {
+                const litOff = seedData[0] | (seedData[1] << 8);
+                const litLen = seedData[2] | (seedData[3] << 8);
+                seeds.push(Buffer.from(rawIntent.subarray(
+                  bytePoolOffset + litOff, bytePoolOffset + litOff + litLen
+                )));
+                break;
+              }
+              case SEED_PARAM: {
+                const paramBytes = readParamBytes(
+                  rawIntent, paramsData, seedData[0],
+                  proposerCount, approverCount, paramCount
+                );
+                if (paramBytes) seeds.push(Buffer.from(paramBytes));
+                break;
+              }
+              case SEED_ACCOUNT: {
+                const ai = seedData[0];
+                const refAddr = await resolveAt(ai, depth + 1);
+                if (!refAddr) {
+                  throw new Error(`SEED_ACCOUNT account index ${ai} unresolved`);
+                }
+                seeds.push(Buffer.from(new PublicKey(refAddr).toBytes()));
+                break;
+              }
+              case SEED_ACCOUNT_FIELD: {
+                const ai = seedData[0];
+                const planOff = seedData[1] | (seedData[2] << 8);
+                const targetLen = seedData[3];
+                if (targetLen === 0 || targetLen > 32) {
+                  throw new Error(`SEED_ACCOUNT_FIELD target_len must be 1..=32, got ${targetLen}`);
+                }
+                const planStart = bytePoolOffset + planOff;
+                if (planStart + 1 > rawIntent.length) {
+                  throw new Error('plan_offset out of bounds');
+                }
+                const opCount = rawIntent[planStart];
+                const planBytesStart = planStart + 1;
+                if (planBytesStart + opCount * 3 > rawIntent.length) {
+                  throw new Error('plan body out of bounds');
+                }
+                const refAddr = await resolveAt(ai, depth + 1);
+                if (!refAddr) {
+                  throw new Error(`SEED_ACCOUNT_FIELD account index ${ai} unresolved`);
+                }
+                const srcPk = new PublicKey(refAddr);
+                const cacheKey = srcPk.toBase58();
+                let data = accountDataCache.get(cacheKey);
+                if (!data) {
+                  const info = await connection.getAccountInfo(srcPk);
+                  if (!info) throw new Error(`SEED_ACCOUNT_FIELD: account ${cacheKey} not found`);
+                  data = info.data;
+                  accountDataCache.set(cacheKey, data);
+                }
+                let o = 8;
+                for (let i = 0; i < opCount; i++) {
+                  const p = planBytesStart + i * 3;
+                  const op = rawIntent[p];
+                  const size = rawIntent[p + 1] | (rawIntent[p + 2] << 8);
+                  if (op === FIELD_OP_SKIP_FIXED) {
+                    o += size;
+                    if (o > data.length) throw new Error('plan SKIP_FIXED past end of data');
+                  } else if (op === FIELD_OP_SKIP_OPTION) {
+                    if (o >= data.length) throw new Error('plan SKIP_OPTION read past end');
+                    const tag = data[o];
+                    o += 1;
+                    if (tag !== 0) {
+                      o += size;
+                      if (o > data.length) throw new Error('plan SKIP_OPTION Some past end');
+                    }
+                  } else {
+                    throw new Error(`unknown plan op ${op}`);
+                  }
+                }
+                if (o + targetLen > data.length) {
+                  throw new Error(
+                    `SEED_ACCOUNT_FIELD slice [${o}, ${o + targetLen}) exceeds account data len ${data.length}`
+                  );
+                }
+                seeds.push(Buffer.from(data.subarray(o, o + targetLen)));
+                break;
+              }
+            }
+          }
+          const [pda] = PublicKey.findProgramAddressSync(seeds, progPubkey);
+          resolved = pda.toBase58();
+          break;
+        }
+      }
+
+      if (resolved) addrByIdx.set(idx, resolved);
+      return resolved;
+    } finally {
+      resolving.delete(idx);
+    }
+  }
+
+  const results: ResolvedAccount[] = [];
   for (let a = 0; a < accountCount; a++) {
     const entryOffset = accountsOffset + a * ACCOUNT_ENTRY_SIZE;
     if (entryOffset + ACCOUNT_ENTRY_SIZE > rawIntent.length) {
       console.warn(`Execute: intent buffer truncated at account ${a}/${accountCount}`);
       break;
     }
-
-    const source = rawIntent[entryOffset];
-    const writable = rawIntent[entryOffset + 1] === 1;
-    const isSigner = rawIntent[entryOffset + 2] === 1;
-    const sourceData = rawIntent.subarray(entryOffset + 4, entryOffset + 8);
-
-    let resolved: string | null = null;
-
-    switch (source) {
-      case SOURCE_STATIC: {
-        const poolOff = sourceData[0] | (sourceData[1] << 8);
-        if (bytePoolOffset + poolOff + 32 <= rawIntent.length) {
-          const pubkey = new PublicKey(
-            rawIntent.subarray(
-              bytePoolOffset + poolOff,
-              bytePoolOffset + poolOff + 32
-            )
-          );
-          resolved = pubkey.toBase58();
-        }
-        break;
-      }
-      case SOURCE_PARAM: {
-        const paramIdx = sourceData[0];
-        const addr = readParamAddress(
-          rawIntent,
-          paramsData,
-          paramIdx,
-          proposerCount,
-          approverCount
-        );
-        if (addr) resolved = addr.toBase58();
-        break;
-      }
-      case SOURCE_VAULT:
-        resolved = vaultPda.toBase58();
-        break;
-      case SOURCE_HAS_ONE: {
-        const srcIdx = sourceData[0];
-        const dataOff = sourceData[1] | (sourceData[2] << 8);
-        if (srcIdx < results.length) {
-          const srcAddr = results[srcIdx].address;
-          const srcInfo = await connection.getAccountInfo(new PublicKey(srcAddr));
-          if (srcInfo && dataOff + 32 <= srcInfo.data.length) {
-            const pk = new PublicKey(srcInfo.data.subarray(dataOff, dataOff + 32));
-            resolved = pk.toBase58();
-          }
-        }
-        break;
-      }
-      case SOURCE_PDA: {
-        const seedStart = sourceData[0];
-        const pdaSeedCount = sourceData[1];
-        const progOff = sourceData[2] | (sourceData[3] << 8);
-
-        // Read program address from byte pool
-        const progPubkey = new PublicKey(
-          rawIntent.subarray(bytePoolOffset + progOff, bytePoolOffset + progOff + 32)
-        );
-
-        // Resolve each seed
-        const seeds: Buffer[] = [];
-        for (let s = 0; s < pdaSeedCount; s++) {
-          const seOffset = seedsOffset + (seedStart + s) * SEED_ENTRY_SIZE;
-          const seedType = rawIntent[seOffset];
-          const seedData = rawIntent.subarray(seOffset + 2, seOffset + 6);
-
-          switch (seedType) {
-            case SEED_LITERAL: {
-              const litOff = seedData[0] | (seedData[1] << 8);
-              const litLen = seedData[2] | (seedData[3] << 8);
-              seeds.push(Buffer.from(rawIntent.subarray(
-                bytePoolOffset + litOff,
-                bytePoolOffset + litOff + litLen
-              )));
-              break;
-            }
-            case SEED_PARAM: {
-              const pi = seedData[0];
-              const paramBytes = readParamBytes(
-                rawIntent, paramsData, pi,
-                proposerCount, approverCount, paramCount
-              );
-              if (paramBytes) seeds.push(Buffer.from(paramBytes));
-              break;
-            }
-            case SEED_ACCOUNT: {
-              // Resolve the referenced account's address and use as seed
-              const ai = seedData[0];
-              if (ai < results.length) {
-                seeds.push(Buffer.from(new PublicKey(results[ai].address).toBytes()));
-              }
-              break;
-            }
-            case SEED_ACCOUNT_FIELD: {
-              const ai = seedData[0];
-              const planOff = seedData[1] | (seedData[2] << 8);
-              const targetLen = seedData[3];
-              if (targetLen === 0 || targetLen > 32) {
-                throw new Error(
-                  `SEED_ACCOUNT_FIELD target_len must be 1..=32, got ${targetLen}`
-                );
-              }
-              if (ai >= results.length) {
-                throw new Error(
-                  `SEED_ACCOUNT_FIELD account index ${ai} out of range`
-                );
-              }
-
-              // Read the plan from intent's byte pool.
-              const planStart = bytePoolOffset + planOff;
-              if (planStart + 1 > rawIntent.length) {
-                throw new Error('plan_offset out of bounds');
-              }
-              const opCount = rawIntent[planStart];
-              const planBytesStart = planStart + 1;
-              if (planBytesStart + opCount * 3 > rawIntent.length) {
-                throw new Error('plan body out of bounds');
-              }
-
-              const srcAddr = new PublicKey(results[ai].address);
-              const cacheKey = srcAddr.toBase58();
-              let data = accountDataCache.get(cacheKey);
-              if (!data) {
-                const info = await connection.getAccountInfo(srcAddr);
-                if (!info) {
-                  throw new Error(
-                    `SEED_ACCOUNT_FIELD: account ${cacheKey} not found`
-                  );
-                }
-                data = info.data;
-                accountDataCache.set(cacheKey, data);
-              }
-
-              let o = 8;
-              for (let i = 0; i < opCount; i++) {
-                const p = planBytesStart + i * 3;
-                const op = rawIntent[p];
-                const size = rawIntent[p + 1] | (rawIntent[p + 2] << 8);
-                if (op === FIELD_OP_SKIP_FIXED) {
-                  o += size;
-                  if (o > data.length) {
-                    throw new Error('plan SKIP_FIXED past end of data');
-                  }
-                } else if (op === FIELD_OP_SKIP_OPTION) {
-                  if (o >= data.length) {
-                    throw new Error('plan SKIP_OPTION read past end');
-                  }
-                  const tag = data[o];
-                  o += 1;
-                  if (tag !== 0) {
-                    o += size;
-                    if (o > data.length) {
-                      throw new Error('plan SKIP_OPTION Some past end');
-                    }
-                  }
-                } else {
-                  throw new Error(`unknown plan op ${op}`);
-                }
-              }
-
-              if (o + targetLen > data.length) {
-                throw new Error(
-                  `SEED_ACCOUNT_FIELD slice [${o}, ${o + targetLen}) exceeds account data len ${data.length}`
-                );
-              }
-              seeds.push(Buffer.from(data.subarray(o, o + targetLen)));
-              break;
-            }
-          }
-        }
-
-        const [pda] = PublicKey.findProgramAddressSync(seeds, progPubkey);
-        resolved = pda.toBase58();
-        break;
-      }
-      default:
-        continue;
-    }
-
+    const { source, writable, isSigner } = readEntry(a);
+    const resolved = await resolveAt(a);
     if (!resolved) continue;
 
     // VAULT and PDA sources sign via invoke_signed in CPI, not at the transaction level.

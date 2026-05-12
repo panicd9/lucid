@@ -15,27 +15,27 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center pt-20 pb-16">
+    <div className="flex flex-col items-center pt-10 pb-12 sm:pt-20 sm:pb-16">
       {/* Hero — Logo */}
-      <div className="relative mb-6 flex items-center gap-5">
+      <div className="relative mb-5 sm:mb-6 flex items-center gap-3 sm:gap-5">
         <div className="absolute inset-0 -m-8 bg-gradient-radial from-emerald-500/10 via-emerald-800/5 to-transparent rounded-full blur-2xl" />
-        <img src="/logo.png" alt="" className="relative h-16 w-auto" />
-        <div className="relative" style={{ fontSize: '48px', fontWeight: 600, letterSpacing: '12px', background: 'linear-gradient(90deg, #e2e8f0, #f8fafc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textTransform: 'uppercase' as const }}>
+        <img src="/logo.png" alt="" className="relative h-12 w-auto sm:h-16" />
+        <div className="relative font-semibold uppercase bg-clip-text text-transparent bg-gradient-to-r from-slate-200 to-slate-50 text-[32px] sm:text-[40px] md:text-[48px] tracking-[6px] sm:tracking-[10px] md:tracking-[12px]">
           LUCID
           <span className="absolute bottom-[-6px] left-0 right-0 h-[2px] rounded-full" style={{ background: 'linear-gradient(90deg, #059669, #10B981)' }} />
         </div>
       </div>
-      <p className="text-lg text-neutral-200 mb-2 font-medium">See what you sign. On your Ledger.</p>
-      <p className="text-sm text-neutral-500 max-w-md text-center mb-6">
+      <p className="text-base sm:text-lg text-neutral-200 mb-2 font-medium text-center px-2">See what you sign. On your Ledger.</p>
+      <p className="text-sm text-neutral-500 max-w-md text-center mb-6 px-2">
         The multisig where hardware wallets display human-readable actions
         instead of hex. Auto-generated rulesets verified against program.
       </p>
 
       {/* CTAs */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-6 w-full max-w-xs sm:max-w-none sm:w-auto px-2 sm:px-0">
         <Link
           to="/demo"
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white transition-all cursor-pointer shadow-glow-green"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white transition-all cursor-pointer shadow-glow-green"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -45,14 +45,14 @@ export default function Home() {
         </Link>
         <Link
           to="/create"
-          className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-neutral-800/60 border border-neutral-700/40 text-neutral-300 hover:text-emerald-300 hover:border-emerald-500/30 hover:bg-neutral-800/80 transition-all cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg bg-neutral-800/60 border border-neutral-700/40 text-neutral-300 hover:text-emerald-300 hover:border-emerald-500/30 hover:bg-neutral-800/80 transition-all cursor-pointer"
         >
           Create Wallet
         </Link>
       </div>
 
       {/* Feature pills */}
-      <div className="flex items-center gap-3 mb-12">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-12 px-2">
         <span className="px-3 py-1 text-xs font-medium text-emerald-400/80 bg-emerald-500/10 border border-emerald-500/15 rounded-full">
           Human-Readable Signing
         </span>
@@ -137,11 +137,11 @@ export default function Home() {
       )}
 
       {/* How It Works */}
-      <div className="w-full max-w-6xl mt-24">
-        <h2 className="text-2xl font-heading text-neutral-100 text-center mb-3">
+      <div className="w-full max-w-6xl mt-16 sm:mt-24">
+        <h2 className="text-xl sm:text-2xl font-heading text-neutral-100 text-center mb-3">
           HOW IT WORKS
         </h2>
-        <p className="text-sm text-neutral-500 text-center mb-14 max-w-lg mx-auto">
+        <p className="text-sm text-neutral-500 text-center mb-10 sm:mb-14 max-w-lg mx-auto px-2">
           Three steps from program source code to tamperproof governance.
         </p>
 
@@ -238,6 +238,52 @@ export default function Home() {
                 Approve on trusted device
               </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Protocol team CTA */}
+      <div className="w-full max-w-3xl mt-16 sm:mt-24 px-2 sm:px-4">
+        <div className="relative overflow-hidden rounded-2xl border border-emerald-500/15 bg-gradient-to-br from-emerald-950/30 via-neutral-900/40 to-neutral-900/60 p-6 sm:p-8 md:p-10">
+          <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-32 -left-32 h-72 w-72 rounded-full bg-emerald-700/5 blur-3xl" />
+          <div className="relative">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-400/80 font-heading">
+              For Protocol Teams
+            </p>
+            <h3 className="mb-3 text-xl sm:text-2xl font-semibold text-neutral-100">
+              Running treasury for a protocol?
+            </h3>
+            <p className="mb-7 max-w-xl text-sm leading-relaxed text-neutral-400">
+              Lucid is being built for DAOs and foundations managing protocol-owned
+              assets. We're working with a small number of design partners ahead of
+              mainnet — get on the list and we'll help map your governance actions
+              to readable rulesets.
+            </p>
+            <a
+              href="https://tally.so/r/OD86Rg"
+              target="_blank"
+              rel="noreferrer"
+              className="group inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-300 transition-all hover:border-emerald-500/50 hover:bg-emerald-500/15"
+            >
+              Talk to our team
+              <svg
+                className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
+              </svg>
+            </a>
+            <p className="mt-4 text-xs text-neutral-500">
+              Takes 30 seconds — protocol, treasury size, contact.
+            </p>
           </div>
         </div>
       </div>
