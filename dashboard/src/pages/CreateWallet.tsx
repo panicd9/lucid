@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { UiWalletAccount } from '@wallet-standard/ui';
 import { useSelectedWalletAccount, useWalletAccountTransactionSigner } from '@solana/react';
 import {
   pipe,
@@ -45,10 +46,32 @@ function isValidBase58(s: string): boolean {
 }
 
 export default function CreateWallet({ network }: Props) {
-  const navigate = useNavigate();
   const [account] = useSelectedWalletAccount();
+  if (!account) return <ConnectPrompt />;
+  return <CreateWalletForm network={network} account={account} />;
+}
+
+function ConnectPrompt() {
+  return (
+    <div className="max-w-md mx-auto mt-24 text-center">
+      <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center mb-5">
+        <svg className="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M9 12h12m0 0l-3-3m3 3l-3 3" />
+        </svg>
+      </div>
+      <h1 className="text-xl font-heading text-neutral-100 mb-2">Connect a wallet to continue</h1>
+      <p className="text-sm text-neutral-500 leading-relaxed">
+        Creating a Lucid multisig requires a signing wallet for the on-chain transaction. Use the
+        wallet button in the top right to connect Phantom, Backpack, or Solflare.
+      </p>
+    </div>
+  );
+}
+
+function CreateWalletForm({ network, account }: Props & { account: UiWalletAccount }) {
+  const navigate = useNavigate();
   const chain = CHAIN_MAP[network] ?? 'solana:localnet';
-  const signer = useWalletAccountTransactionSigner(account!, chain);
+  const signer = useWalletAccountTransactionSigner(account, chain);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [walletName, setWalletName] = useState('');
@@ -93,8 +116,6 @@ export default function CreateWallet({ network }: Props) {
   };
 
   const handleCreate = async () => {
-    if (!account) return;
-
     try {
       setStatus('sending');
       setErrorMsg('');

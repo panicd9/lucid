@@ -93,8 +93,10 @@ export default function Ruleset({ network }: Props) {
   // (programs/lucid/src/instructions/add_intent.rs:60).
   const isSetupPhase = wallet.proposalIndex === 0n;
 
+  // `PresetIntentCard` calls `useWalletAccountTransactionSigner`, which throws
+  // on undefined accounts — only mount it once a wallet is connected.
   const showPresets =
-    isSetupPhase && !wallet.frozen && availablePresets.length > 0 && addMetaIntent !== null;
+    isSetupPhase && !wallet.frozen && availablePresets.length > 0 && addMetaIntent !== null && !!account;
 
   return (
     <div>
